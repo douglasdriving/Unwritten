@@ -29,19 +29,36 @@ export async function getScenario(scenarioID) {
 
 export async function addAction(scenarioID, actionText) {
     const docRef = await doc(firestore, `scenarios/${scenarioID}`);
-    getScenario(scenarioID)
+    let actionIndex;
+    await getScenario(scenarioID)
         .then(data => {
-            const actions = data.actions;
-            actions.push(actionText);
+            let actions = data.actions || [];
+            const action = { action: actionText };
+            actions.push(action);
             updateDoc(docRef, { actions: actions });
+            actionIndex = actions.length - 1;
         })
+    return (actionIndex);
 }
 
-export async function addScenario(scenarioText, parentID) {
+export async function addScenario(scenarioText, parentID, parentActionIndex) {
+    //add the new scenario as a document
+    const newDocData = {
+        text: scenarioText,
+        parentScenarioID: parentID,
+        parentActionIndex: parentActionIndex,
+        time: new Date()
+    }
+    const newDoc = await addDoc(scenarioCollection, newDocData);
 
-    const newDoc = await addDoc(scenarioCollection, { text: scenarioText, parent: parentID, time: new Date() });
+    //update the parent document so that action refs to new scenario
     const parentDocRef = await doc(firestore, `scenarios/${parentID}`);
-    updateDoc(parentDocRef, { child: newDoc.id })
+    const parentDoc = await getDoc(parentDocRef);
+    const parentActionList = parentDoc.data().actions;
+    parentActionList[parentActionIndex].scenarioID = newDoc.id;
+    updateDoc(parentDocRef, { actions: parentActionList });
+
+    return newDoc;
 
     //what happens if the parent already has a child ID???? now it would be overwritten
     //this function needs to be upgraded so that the scenario can only be added if it does not already exist
@@ -51,8 +68,10 @@ export async function addScenario(scenarioText, parentID) {
 export async function monitorScenario(scenarioID, onUpdateFunction) {
 
     const docRef = await doc(firestore, `scenarios/${scenarioID}`);
-    await onSnapshot(docRef, document => {
-        onUpdateFunction(document.data());
+    let unsubscribe;
+    unsubscribe = await onSnapshot(docRef, document => {
+        onUpdateFunction(document.data()); //adds the document as a param to the callback function passed in
     });
+    return unsubscribe; //return the unsubscribe function as a promise to "monitorscenario"
 
 }

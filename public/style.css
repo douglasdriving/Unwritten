@@ -1,0 +1,17 @@
+#addActions {
+    padding: 5pt;
+    border-color: black;
+    border-style: solid;
+    border-width: 1px;
+    margin-top: 5px;
+    display: none;
+}
+
+#playPanel {
+    margin-top: 5px;
+    padding: 5pt;
+    background-color: aquamarine;
+    border-color: black;
+    border-style: solid;
+    border-width: 1px;
+}

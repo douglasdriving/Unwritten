@@ -1,19 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Unwritten</title>
+    <link rel="stylesheet" href="style.css?v=1">
 </head>
+
 <body>
 
-    <h1>Unwritten play page</h1>
-    <p>Click buttons and read and play and have fun pls.</p>
-    <button id="playButton">Press me!</button>
+    <div id="ingress">
+        <p>You are a young man living in Bangkok. Your dream is to design a successful game.</p>
+    </div>
+    <button id="beginPlay">Begin your adventure</button>
 
-    <script type='module' src="dbHandler.js?v=0.1" async defer></script>
-    <script type="module" src="play.js?v=0.2" async defer></script>
+    <div id="story"></div>
+
+    <div id="playPanel">
+        <div id="actionBlock">
+            <p><b>What do you want to do next?</b></p>
+            <p>Choose an existing action:</p>
+            <div id="actionButtons"></div>
+        </div>
     
+        <div id="addContentBlock">
+            <div id="addContentInstruction">What do you want to do in this scenario?</div>
+            <textarea id="addContentTextField" placeholder="write content..."></textarea>
+            <br>
+            <button id="addContentButton">Add Action</button>
+        </div>
+
+        <div id="addingContent">
+            <p id="addContentStatus">Adding content to Unwritten...</p>
+        </div>
+
+        <br>
+        <button id="replayButton">Restart Game</button>
+        <button id="keepPlayButton">Keep on Playing</button>
+    </div>
+
+
+    <!-- <script type='module' src="dbHandler.js?v=0.1" async defer></script> -->
+    <script type="module" src="play.js?v=0.2" async defer></script>
+
 </body>
+
 </html>
