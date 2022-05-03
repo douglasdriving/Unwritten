@@ -9,6 +9,7 @@
 
 #addContentStatus{
     color: green;
+    white-space: pre-wrap;
 }
 
 #addContentTextField{

@@ -78,7 +78,6 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     }
     const docData = await addDoc(scenarioCollection, newDocData)
     const newDocID = docData.id;
-    updateDoc(parentDocRef, { actions: parentActionList });
 
     if (!newDocID) {
         console.error('new scenario could not be added. "adddoc" firebase function return false');
@@ -87,6 +86,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
 
     //update the parent document so that action refs to new scenario
     parentActionList[parentActionIndex].scenarioID = newDocID;
+    updateDoc(parentDocRef, { actions: parentActionList });
     const response = {
         status: 0,
         newDocID: newDocID
