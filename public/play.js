@@ -1,54 +1,67 @@
-import { getScenario, addAction, addScenario, monitorScenario } from "/dbHandler.js?v=0.2";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe } from "/dbHandler.js?v=0.22";
 
+//DOC VARABLE DECLARATIONS
 const storyBlock = document.getElementById('story');
 const beginButton = document.getElementById('beginPlay');
-
 const actionBlock = document.getElementById('actionBlock');
 const actionButtonBlock = document.getElementById('actionButtons');
-
 const addContentBlock = document.getElementById('addContentBlock');
 const addContentButton = document.getElementById('addContentButton');
 const addContentTextField = document.getElementById('addContentTextField');
-const addContentInstruction = document.getElementById('addContentInstruction');
-
 const addingContentBlock = document.getElementById('addingContent');
 const addingContentStatusText = document.getElementById('addContentStatus');
-
 const replayButton = document.getElementById('replayButton');
 const keepPlayButton = document.getElementById('keepPlayButton');
 
+//SET WHAT TO SHOW AT START
 actionBlock.style.display = 'none';
 replayButton.style.display = 'none';
 keepPlayButton.style.display = 'none';
 addingContentBlock.style.display = 'none';
 addContentBlock.style.display = 'none';
 
-beginButton.onclick = () => { playScenario('start'); }
+//TRACKING VARIABLES
+let currentScenarioID;
+let startScenarioID = 'start';
+
+//ASSIGN BUTTON FUNCTIONS
+beginButton.onclick = () => { playScenario(startScenarioID); }
 replayButton.onclick = () => { window.location.href = 'play.html'; }
 
-let unsubscribe;
-
-async function playScenario(scenarioID) {
+async function playScenario(ID) {
+    tryUnsubscribe();
     beginButton.style.display = 'none';
-
     const scenarioTextBlock = print('scenario loading...')
-    const scenarioData = await getScenario(scenarioID);
+    const scenarioData = await getScenario(ID);
+
+    if (!scenarioData) {
+        const statusMessage = document.createElement('div');
+        statusMessage.textContent = 'Error: Could not find the next scenario. Please try again';
+        statusMessage.style.color = "red";
+        storyBlock.append(statusMessage);
+        replayButton.style.display = 'block';
+        return;
+    }
+
     const scenarioText = scenarioData.text;
     scenarioTextBlock.textContent = scenarioText;
-
-    tryDisplayActions(scenarioData.actions, scenarioID);
+    currentScenarioID = ID;
+    displayExistingActions(scenarioData.actions);
+    activateAddContentBlock('write a new action...', 'Add Action', 0);
 }
 
-function tryDisplayActions(scenarioActions, scenarioID) {
+function displayExistingActions(scenarioActions) {
+    clearActions();
 
     if (!scenarioActions) {
-        displayAddActionSection(scenarioID, 'What do you want to do?');
+        addContentTextField.placeholder = 'What do you want to do?';
         return;
     }
 
     actionBlock.style.display = 'block';
 
-    scenarioActions.forEach((element, actionIndex) => {
+    //CREATE ACTION BUTTONS
+    scenarioActions.forEach((element, actionID) => {
         const actionButton = document.createElement('button');
         actionButtonBlock.appendChild(actionButton);
         actionButton.textContent = element.action;
@@ -58,50 +71,72 @@ function tryDisplayActions(scenarioActions, scenarioID) {
             clearActions();
             print(`> ${element.action}`);
             if (nextScenarioID) playScenario(nextScenarioID);
-            else reachEndpointAction(scenarioID, actionIndex);
+            else reachEndpointAction(actionID);
         });
     });
-
-    displayAddActionSection(scenarioID, '...or write your own action and create a new branch in the story');
 }
 
-function displayAddActionSection(scenarioID, instructionText) {
-    addContentBlock.style.display = 'block';
-    addContentInstruction.textContent = instructionText;
-    addContentButton.textContent = 'Add Action';
-    addContentButton.onclick = () => {
-        const actionText = addContentTextField.value;
-
-        if (actionText != '') {
-            addContentBlock.style.display = 'none';
-            tryAddNewAction(actionText, scenarioID);
-        }
-        else {
-            console.log('please write something in the text field');
-            //change to an error shown in the game
-        }
-
-    }
-}
-
-async function tryAddNewAction(actionText, scenarioID) {
+async function tryAddNewAction() {
     //display a load text
+    const actionText = addContentTextField.value;
     addContentTextField.value = '';
     addContentBlock.style.display = 'none';
     clearActions();
     addingContentBlock.style.display = 'block';
     addingContentStatusText.textContent = 'Adding your action to Unwritten...'
+    tryUnsubscribe();
 
     //add the action to the database
-    addAction(scenarioID, actionText)
+    addAction(currentScenarioID, actionText)
         .then(newActionID => {
-            confirmContentAddition('action', actionText, scenarioID, newActionID);
+            if (newActionID === -1){
+                addingContentStatusText.textContent = 'ERROR - your action could not be added.'
+                replayButton.style.display = 'block';
+                return;
+            }
+            confirmContentAddition('action', actionText, null, newActionID);
         })
 }
 
-function confirmContentAddition(type, contentText, scenarioID, newActionID) {
+async function tryAddNewScenario(actionIndex) {
+    const scenarioText = addContentTextField.value;
+
+    if (scenarioText != '') {
+        tryUnsubscribe();
+        clearActions();
+        addContentBlock.style.display = 'none';
+        addContentTextField.value = '';
+        addingContentBlock.style.display = 'block';
+        addingContentStatusText.textContent = 'Adding your scenario to Unwritten...'
+
+        addScenario(scenarioText, currentScenarioID, actionIndex)
+            .then(response => {
+                if (response.status === -1){
+                    addingContentStatusText.textContent = 'Failed to add the scenario to Unwritten. Please try again.';
+                    replayButton.style.display = 'block';
+                    return;
+                }
+                if (response.status === -2){
+                    addingContentStatusText.textContent = 'Another player just added a scenario to this action! Keep playing to see what it was';
+                    keepPlayButton.style.display = 'block';
+                    keepPlayButton.onclick = () => {
+                        playScenario(response.newDocID);
+                    }
+                    return;
+                }
+                confirmContentAddition('scenario', scenarioText, response.newDocID, 0);
+                clearActions();
+            })
+    }
+    else {
+        console.log('please write something in the text field');
+    }
+}
+
+function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
     //confirm that it has been added succesfully
     addingContentStatusText.textContent = `The following ${type} was succesfully added to Unwritten: "${contentText}"`;
+    addingContentStatusText.style.color = "green";
 
     //show restart button
     replayButton.style.display = 'block';
@@ -117,59 +152,86 @@ function confirmContentAddition(type, contentText, scenarioID, newActionID) {
 
         if (type === 'action') {
             print(`> ${contentText}`);
-            reachEndpointAction(scenarioID, newActionID)
+            reachEndpointAction(newActionID)
         }
         else if (type === 'scenario') {
-            playScenario(scenarioID);
+            playScenario(newScenarioID);
         }
 
     }
 }
 
-function reachEndpointAction(scenarioID, actionIndex) {
+function reachEndpointAction(actionIndex) {
     clearActions();
-    addContentBlock.style.display = 'block';
-    addContentInstruction.textContent = 'What happens next?';
-    addContentButton.textContent = 'Add Scenario';
-    addContentButton.onclick = () => { tryAddNewScenario(scenarioID, actionIndex); }
-
-    //start to monitor the scenario
-    unsubscribe = monitorScenario(scenarioID, async updatedData => {
-        //check if someone else adds a scenario here (i.e. the scenario is updated with a scenario attached to the action index)
-        const newScenarioID = updatedData.actions[actionIndex].scenarioID
-        if (!newScenarioID) return; //the data was updated in some other way
-
-        //- inform the player
-        addContentBlock.style.display = 'none'
-        addingContentBlock.style.display = 'block'
-        addingContentStatusText.textContent = 'Someone else just added a scenario to this action: ';
-        getScenario()
-            .then(newScenarioData => {
-                addingContentStatusText.textContent += ('"' + newScenarioData.text + '"');
-            })
-
-        //- add a button to show the newly added scenario
-    });
-    //remember to unsubscribe after the player has successfully added a new scenario
+    activateAddContentBlock('What happens next?', 'Add Scenario', actionIndex);
 }
 
-async function tryAddNewScenario(scenarioID, actionIndex) {
-    const scenarioText = addContentTextField.value;
+function activateAddContentBlock(instructionText, buttonText, actionIndex) {
+    //show the block
+    addContentTextField.placeholder = instructionText;
+    addContentBlock.style.display = 'block';
+    addContentButton.textContent = buttonText;
 
-    if (scenarioText != '') {
-        addContentBlock.style.display = 'none';
-        addContentTextField.value = '';
-        addingContentBlock.style.display = 'block';
-        addingContentStatusText.textContent = 'Adding your scenario to Unwritten...'
-
-        addScenario(scenarioText, scenarioID, actionIndex)
-            .then(newScenarioDoc => {
-                confirmContentAddition('scenario', scenarioText, newScenarioDoc.id, 0);
-            })
+    //assign the "add" function to the button
+    if (buttonText === 'Add Scenario') {
+        addContentTextField.style.height = '36pt';
+        addContentButton.onclick = () => { tryAddNewScenario(actionIndex); }
+    }
+    else if (buttonText === 'Add Action') {
+        addContentTextField.style.height = '12pt';
+        addContentButton.onclick = () => { tryAddNewAction(); }
     }
     else {
-        console.log('please write something in the text field');
-        //change to an error shown in the game
+        console.error('cant assign a function to the "add content" button because the text was not assigned correctly.');
+    }
+
+    //start to monitor the scenario
+    tryUnsubscribe();
+    startScenarioMonitoring(actionIndex, buttonText);
+}
+
+async function startScenarioMonitoring(actionIndex, contentType) {
+    if (contentType != 'Add Scenario' && contentType != 'Add Action'){
+        console.error('content type text set incorrectly. Cannot monitor. it was set to: ' + contentType);
+        return;
+    }
+
+    const monitorSucceeded = monitorScenario(currentScenarioID, updatedData => {
+        if (contentType === 'Add Scenario') onScenarioUpdate(updatedData);
+        else if (contentType === 'Add Action') onActionUpdate(updatedData);
+    })
+    
+    if (!monitorSucceeded){
+        console.error('the monitoring was unable to start');
+    }
+
+    async function onScenarioUpdate(updatedData) {
+
+        const newScenarioID = updatedData.actions[actionIndex].scenarioID;
+        if (!newScenarioID) return;
+
+        clearActions();
+        tryUnsubscribe();
+
+        addContentBlock.style.display = 'none';
+        addingContentBlock.style.display = 'block';
+        addingContentStatusText.textContent = '!Someone else just added a scenario here!';
+
+        //add a button to keep playing
+        const button = document.createElement('button');
+        button.textContent = 'Show scenario and keep playing';
+        addingContentBlock.appendChild(button);
+        button.onclick = () => {
+            playScenario(newScenarioID);
+            button.remove();
+            addingContentBlock.style.display = 'none';
+        }
+
+    }
+
+    function onActionUpdate(updatedData) {
+        addContentTextField.placeholder = '..or add your own action';
+        displayExistingActions(updatedData.actions, currentScenarioID);
     }
 }
 

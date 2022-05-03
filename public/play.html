@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unwritten</title>
-    <link rel="stylesheet" href="style.css?v=1">
+    <link rel="stylesheet" href="style.css?v=1.1">
 </head>
 
 <body>
@@ -18,32 +18,26 @@
 
     <div id="story"></div>
 
-    <div id="playPanel">
-        <div id="actionBlock">
-            <p><b>What do you want to do next?</b></p>
-            <p>Choose an existing action:</p>
-            <div id="actionButtons"></div>
-        </div>
-    
-        <div id="addContentBlock">
-            <div id="addContentInstruction">What do you want to do in this scenario?</div>
-            <textarea id="addContentTextField" placeholder="write content..."></textarea>
-            <br>
-            <button id="addContentButton">Add Action</button>
-        </div>
-
-        <div id="addingContent">
-            <p id="addContentStatus">Adding content to Unwritten...</p>
-        </div>
-
-        <br>
-        <button id="replayButton">Restart Game</button>
-        <button id="keepPlayButton">Keep on Playing</button>
+    <div id="actionBlock">
+        <div id="actionButtons"></div>
     </div>
 
+    <div id="addContentBlock">
+        <textarea id="addContentTextField" placeholder="write content..."></textarea>
+        <br>
+        <button id="addContentButton">Add Action</button>
+    </div>
+
+    <div id="addingContent">
+        <p id="addContentStatus">Adding content to Unwritten...</p>
+    </div>
+
+    <br>
+    <button id="keepPlayButton">Keep on Playing</button>
+    <button id="replayButton">Restart Game</button>
 
     <!-- <script type='module' src="dbHandler.js?v=0.1" async defer></script> -->
-    <script type="module" src="play.js?v=0.2" async defer></script>
+    <script type="module" src="play.js?v=0.31" async defer></script>
 
 </body>
 

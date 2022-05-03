@@ -14,6 +14,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore();
 const scenarioCollection = collection(firestore, 'scenarios');
+let unsubscribe;
 
 export async function getScenario(scenarioID) {
     const docRef = await doc(firestore, `scenarios/${scenarioID}`);
@@ -23,25 +24,51 @@ export async function getScenario(scenarioID) {
         return docData;
     }
     else {
-        return 'the requested document does not exist';
+        return false;
     }
 }
 
 export async function addAction(scenarioID, actionText) {
-    const docRef = await doc(firestore, `scenarios/${scenarioID}`);
+
+    const docRef = await doc(firestore, `scenarios/${scenarioID}`)
+    if (!docRef) {
+        console.error('Attempted to add action, but a docref with the given scenario ID could not be found');
+        return -1;
+    }
+
     let actionIndex;
-    await getScenario(scenarioID)
-        .then(data => {
-            let actions = data.actions || [];
-            const action = { action: actionText };
-            actions.push(action);
-            updateDoc(docRef, { actions: actions });
-            actionIndex = actions.length - 1;
-        })
-    return (actionIndex);
+    const scenarioData = await getScenario(scenarioID);
+    if (!scenarioData) {
+        console.error('Attempted to add action, but a data for the given scenario ID could not be found');
+        return -1;
+    }
+
+    let actions = scenarioData.actions || [];
+    const action = { action: actionText };
+    actions.push(action);
+    actionIndex = actions.length - 1;
+
+    await updateDoc(docRef, { actions: actions })
+
+    return actionIndex;
 }
 
 export async function addScenario(scenarioText, parentID, parentActionIndex) {
+    //check to make sure parent is not already referencing a scenario
+    const parentDocRef = await doc(firestore, `scenarios/${parentID}`);
+    const parentDoc = await getDoc(parentDocRef);
+    const parentDocData = parentDoc.data();
+    if (!parentDocData) {   
+        console.error('could not find the parent doc to add a ref to the new ID, so cant add a new one');
+        return ({status: -1});
+    }
+    const parentActionList = parentDocData.actions;
+    
+    if (parentActionList[parentActionIndex].scenarioID) {
+        console.error('the action already has an attached scenario ID! cant add a new one');
+        return ({status: -2, newDocID: parentActionList[parentActionIndex].scenarioID});
+    }
+
     //add the new scenario as a document
     const newDocData = {
         text: scenarioText,
@@ -49,29 +76,37 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
         parentActionIndex: parentActionIndex,
         time: new Date()
     }
-    const newDoc = await addDoc(scenarioCollection, newDocData);
-
-    //update the parent document so that action refs to new scenario
-    const parentDocRef = await doc(firestore, `scenarios/${parentID}`);
-    const parentDoc = await getDoc(parentDocRef);
-    const parentActionList = parentDoc.data().actions;
-    parentActionList[parentActionIndex].scenarioID = newDoc.id;
+    const docData = await addDoc(scenarioCollection, newDocData)
+    const newDocID = docData.id;
     updateDoc(parentDocRef, { actions: parentActionList });
 
-    return newDoc;
+    if (!newDocID) {
+        console.error('new scenario could not be added. "adddoc" firebase function return false');
+        return ({status: -1});
+    }
 
-    //what happens if the parent already has a child ID???? now it would be overwritten
-    //this function needs to be upgraded so that the scenario can only be added if it does not already exist
-    //if it does already exist it should provide info about this as an error.
+    //update the parent document so that action refs to new scenario
+    parentActionList[parentActionIndex].scenarioID = newDocID;
+    const response = {
+        status: 0,
+        newDocID: newDocID
+    }
+    return (response);
 }
 
 export async function monitorScenario(scenarioID, onUpdateFunction) {
 
     const docRef = await doc(firestore, `scenarios/${scenarioID}`);
-    let unsubscribe;
     unsubscribe = await onSnapshot(docRef, document => {
         onUpdateFunction(document.data()); //adds the document as a param to the callback function passed in
     });
-    return unsubscribe; //return the unsubscribe function as a promise to "monitorscenario"
+    if (unsubscribe) return true;
+    else return false;
+    
+}
 
+export async function tryUnsubscribe() {
+    if (unsubscribe) {
+        await unsubscribe();
+    }
 }
