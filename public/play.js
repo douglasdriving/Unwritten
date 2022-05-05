@@ -1,4 +1,4 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe } from "/dbHandler.js?v=0.23";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe } from "/dbHandler.js?v=0.24";
 
 //DOC VARABLE DECLARATIONS
 const storyBlock = document.getElementById('story');
@@ -87,7 +87,7 @@ function displayExistingActions(scenarioActions) {
 
 async function tryAddNewAction() {
     const actionText = addContentTextField.value;
-    if (actionText === ''){
+    if (actionText === '') {
         console.error('please write something in the text field!')
         return;
     }
@@ -123,7 +123,7 @@ async function tryAddNewScenario(actionIndex) {
     onEnterPress = null;
     tryUnsubscribe();
     clearActions();
-    
+
     addContentBlock.style.display = 'none';
     addContentTextField.value = '';
     addingContentBlock.style.display = 'block';
@@ -152,15 +152,15 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
     //confirm that it has been added succesfully
     let confirmationText;
     confirmationText = `The following ${type} was succesfully added to Unwritten:`;
-    if(type==='scenario') confirmationText += `\r\n\r\n"${contentText}"`;
-    else if (type==='action') confirmationText += `\r\n\r\n> ${contentText}`;
+    if (type === 'scenario') confirmationText += `\r\n\r\n"${contentText}"`;
+    else if (type === 'action') confirmationText += `\r\n\r\n> ${contentText}`;
     addingContentStatusText.textContent = confirmationText
 
     //show button that allows you to keep on playing
     const continueButton = document.createElement('button');
     addingContentBlock.appendChild(continueButton);
-    
-    if (type==='action'){
+
+    if (type === 'action') {
         continueButton.textContent = 'Keep playing with this action';
         continueButton.onclick = () => {
             hideAddContentBlock();
@@ -168,7 +168,7 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
             reachEndpointAction(newActionID)
         }
     }
-    else if (type==='scenario'){
+    else if (type === 'scenario') {
         continueButton.textContent = 'Keep playing this scenario';
         continueButton.onclick = () => {
             hideAddContentBlock();
@@ -176,7 +176,7 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
         }
     }
 
-    function hideAddContentBlock(){
+    function hideAddContentBlock() {
         addContentBlock.style.display = 'none';
         addingContentBlock.style.display = 'none';
         keepPlayButton.style.display = 'none';

@@ -13,11 +13,12 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore();
-const scenarioCollection = collection(firestore, 'scenarios');
+const scenarioCollectionID = 'scenarios2';
+const scenarioCollection = collection(firestore, scenarioCollectionID);
 let unsubscribe;
 
 export async function getScenario(scenarioID) {
-    const docRef = await doc(firestore, `scenarios/${scenarioID}`);
+    const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`);
     const document = await getDoc(docRef);
     if (document.exists()) {
         const docData = document.data();
@@ -30,7 +31,7 @@ export async function getScenario(scenarioID) {
 
 export async function addAction(scenarioID, actionText) {
 
-    const docRef = await doc(firestore, `scenarios/${scenarioID}`)
+    const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`)
     if (!docRef) {
         console.error('Attempted to add action, but a docref with the given scenario ID could not be found');
         return -1;
@@ -55,7 +56,7 @@ export async function addAction(scenarioID, actionText) {
 
 export async function addScenario(scenarioText, parentID, parentActionIndex) {
     //check to make sure parent is not already referencing a scenario
-    const parentDocRef = await doc(firestore, `scenarios/${parentID}`);
+    const parentDocRef = await doc(firestore, `${scenarioCollectionID}/${parentID}`);
     const parentDoc = await getDoc(parentDocRef);
     const parentDocData = parentDoc.data();
     if (!parentDocData) {   
@@ -96,7 +97,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
 
 export async function monitorScenario(scenarioID, onUpdateFunction) {
 
-    const docRef = await doc(firestore, `scenarios/${scenarioID}`);
+    const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`);
     unsubscribe = await onSnapshot(docRef, document => {
         onUpdateFunction(document.data()); //adds the document as a param to the callback function passed in
     });
