@@ -13,7 +13,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore();
-const scenarioCollectionID = 'scenarios2';
+const scenarioCollectionID = 'testScenarios';
 const scenarioCollection = collection(firestore, scenarioCollectionID);
 let unsubscribe;
 
@@ -59,15 +59,15 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     const parentDocRef = await doc(firestore, `${scenarioCollectionID}/${parentID}`);
     const parentDoc = await getDoc(parentDocRef);
     const parentDocData = parentDoc.data();
-    if (!parentDocData) {   
+    if (!parentDocData) {
         console.error('could not find the parent doc to add a ref to the new ID, so cant add a new one');
-        return ({status: -1});
+        return ({ status: -1 });
     }
     const parentActionList = parentDocData.actions;
-    
+
     if (parentActionList[parentActionIndex].scenarioID) {
         console.error('the action already has an attached scenario ID! cant add a new one');
-        return ({status: -2, newDocID: parentActionList[parentActionIndex].scenarioID});
+        return ({ status: -2, newDocID: parentActionList[parentActionIndex].scenarioID });
     }
 
     //add the new scenario as a document
@@ -82,7 +82,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
 
     if (!newDocID) {
         console.error('new scenario could not be added. "adddoc" firebase function return false');
-        return ({status: -1});
+        return ({ status: -1 });
     }
 
     //update the parent document so that action refs to new scenario
@@ -103,11 +103,53 @@ export async function monitorScenario(scenarioID, onUpdateFunction) {
     });
     if (unsubscribe) return true;
     else return false;
-    
+
 }
 
 export async function tryUnsubscribe() {
     if (unsubscribe) {
         await unsubscribe();
     }
+}
+
+export async function updateContentCounters(actionArray) {
+
+    /*
+    adds +1 to the scenario counter in each action of the given array
+    each entry in the array should be in this format:
+    {
+        scenarioID: [id],
+        actionID: [id]
+    }
+    */
+
+    let promiseArray = [];
+
+    actionArray.forEach(actionRef => {
+
+        const promise = new Promise(async () => {
+
+            const scenarioID = actionRef.scenarioID;
+            const actionID = actionRef.actionID;
+            const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`)
+
+            const currentScenarioData = await getScenario(scenarioID);
+            let actions = currentScenarioData.actions;
+
+            if (actions[actionID].scenarioCount) actions[actionID].scenarioCount++;
+            else actions[actionID].scenarioCount = 1;
+
+            await updateDoc(docRef, { actions: actions }) //gillar inte att man måste ersätta hela arrayen. Det vore smidigare om man bara kunde uppdatera en action.
+            
+        });
+
+        promiseArray.push(promise);
+
+    });
+
+    Promise.all(promiseArray).
+        then(() => {
+            console.log('all actions updated');
+        });
+
 }

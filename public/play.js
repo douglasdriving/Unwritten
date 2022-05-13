@@ -1,36 +1,41 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe } from "/dbHandler.js?v=0.24";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters } from "/dbHandler.js?v=0.27";
+
+//BALANCING
+const timeBetweenLetters = 40; //ms
+const delayAfterPrintFinished = 500; //ms
 
 //DOC VARABLE DECLARATIONS
 const storyBlock = document.getElementById('story');
 const beginButton = document.getElementById('beginPlay');
-const actionBlock = document.getElementById('actionBlock');
+//const actionBlock = document.getElementById('actionBlock');
 const actionButtonBlock = document.getElementById('actionButtons');
 const addContentBlock = document.getElementById('addContentBlock');
-const addContentButton = document.getElementById('addContentButton');
+const tryAddContentButton = document.getElementById('tryAddContentButton');
 const addContentTextField = document.getElementById('addContentTextField');
 const addingContentBlock = document.getElementById('addingContent');
 const addingContentStatusText = document.getElementById('addContentStatus');
-const replayButton = document.getElementById('replayButton');
+const contentAddConfirmBlock = document.getElementById('contentAddConfirmBlock');
 const keepPlayButton = document.getElementById('keepPlayButton');
 
 //SET WHAT TO SHOW AT START
-actionBlock.style.display = 'none';
-replayButton.style.display = 'none';
+//actionBlock.style.display = 'none';
 keepPlayButton.style.display = 'none';
 addingContentBlock.style.display = 'none';
 addContentBlock.style.display = 'none';
+document.getElementById("contentAddConfirmBlock").style.display = 'none';
 
 //TRACKING VARIABLES
 let currentScenarioID;
 let startScenarioID = 'start';
 let onEnterPress;
+let actionsTaken = [];
+let contentIsBeingAdded = false;
 
 //ASSIGN BUTTON FUNCTIONS
 beginButton.onclick = () => {
     playScenario(startScenarioID);
-    replayButton.style.display = 'block';
+    beginButton.style.display = 'none';
 }
-replayButton.onclick = () => { window.location.href = 'play.html'; }
 
 document.addEventListener("keypress", event => {
     if (event.key != 'Enter') return;
@@ -38,11 +43,21 @@ document.addEventListener("keypress", event => {
     onEnterPress();
 });
 
-async function playScenario(ID) {
-    tryUnsubscribe();
-    beginButton.style.display = 'none';
-    const scenarioTextBlock = print('scenario loading...')
-    const scenarioData = await getScenario(ID);
+async function playScenario(scenarioID) {
+
+    TryUnsubscribe();
+
+    //clearActions();
+    addContentBlock.style.display = 'none';
+
+    const loadText = document.createElement('div');
+    loadText.textContent = 'Scenario loading...'
+    storyBlock.appendChild(loadText);
+    scrollDown();
+
+    const scenarioData = await getScenario(scenarioID);
+
+    loadText.remove();
 
     if (!scenarioData) {
         const statusMessage = document.createElement('div');
@@ -52,14 +67,48 @@ async function playScenario(ID) {
         return;
     }
 
-    const scenarioText = scenarioData.text;
-    scenarioTextBlock.textContent = scenarioText;
-    currentScenarioID = ID;
-    displayExistingActions(scenarioData.actions);
-    activateAddContentBlock('write a new action...', 'Add Action', 0);
+    currentScenarioID = scenarioID;
+
+    //start the print!
+    const scenarioTextBlock = print(scenarioData.text, true);
+
+    //Create the container
+    const scenarioBlock = document.createElement('div');
+    scenarioBlock.className = 'scenarioContainer';
+    scenarioTextBlock.className = 'scenarioText';
+    scenarioBlock.appendChild(scenarioTextBlock);
+
+    //create the button
+    //const jumpToScenarioButton = createJumpBackButton();
+    //scenarioBlock.appendChild(jumpToScenarioButton);
+
+    //put it together
+    storyBlock.appendChild(scenarioBlock);
+    scrollDown();
+
+    //delay the addition of action window and content add window.
+    const timeBeforePrintDone = Array.from(scenarioData.text).length * timeBetweenLetters;
+    setTimeout(() => {
+        //assignJumpButtonOnlick();
+        scenarioBlock.appendChild(createScenarioActionButtons(scenarioData.actions, scenarioBlock));
+        activateAddContentBlock('write a new action...', 'Add Action', 0);
+    }, timeBeforePrintDone + delayAfterPrintFinished);
+
+    function createJumpBackButton() {
+        const jumpToScenarioButton = document.createElement('button');
+        jumpToScenarioButton.textContent = '->';
+        jumpToScenarioButton.className = 'jumpToScenarioButton';
+        return jumpToScenarioButton;
+    }
+
+    function assignJumpButtonOnlick() {
+        const scenariosUntilNow = Array.from(storyBlock.childNodes);
+        jumpToScenarioButton.onclick = () => { Backtrack(scenariosUntilNow, scenarioID, scenarioData); }
+    }
+
 }
 
-function displayExistingActions(scenarioActions) {
+function createScenarioActionButtons(scenarioActions, scenarioBlock) {
     clearActions();
 
     if (!scenarioActions) {
@@ -67,94 +116,207 @@ function displayExistingActions(scenarioActions) {
         return;
     }
 
-    actionBlock.style.display = 'block';
-
     //CREATE ACTION BUTTONS
-    scenarioActions.forEach((element, actionID) => {
-        const actionButton = document.createElement('button');
-        actionButtonBlock.appendChild(actionButton);
-        actionButton.textContent = element.action;
-        const nextScenarioID = element.scenarioID;
+    const actionBlock = document.createElement('div');
+    let actionButtonArray = [];
 
-        actionButton.onclick = (() => {
-            clearActions();
-            print(`> ${element.action}`);
-            if (nextScenarioID) playScenario(nextScenarioID);
-            else reachEndpointAction(actionID);
-        });
+    scenarioActions.forEach((actionElement, actionID) => {
+        createActionButton(actionBlock, actionButtonArray, actionElement, actionID);
     });
+
+    scrollDown();
+
+    return actionBlock;
 }
 
-async function tryAddNewAction() {
-    const actionText = addContentTextField.value;
-    if (actionText === '') {
-        console.error('please write something in the text field!')
+function createActionButton(actionBlock, actionButtonArray, actionElement, actionID) {
+
+    const actionButton = document.createElement('button');
+    actionBlock.appendChild(actionButton);
+    actionButton.className = 'actionButton';
+    actionButtonArray.push(actionButton);
+
+    const scenarioCount = actionElement.scenarioCount || 0;
+    actionButton.textContent = actionElement.action + ` (${scenarioCount})`;
+
+    const scenarioIdForThisAction = currentScenarioID;
+    const scenarioBlocksUpToThisAction = Array.from(storyBlock.childNodes);
+
+    actionButton.onclick = (() => {
+
+        if (contentIsBeingAdded)
+            return;
+
+        TakeAction(actionElement, actionID);
+        actionButton.className = 'highlightedActionButton';
+
+        actionButtonArray.forEach(button => {
+            if (button === actionButton)
+                return;
+            button.className = 'fadedActionButton';
+        });
+
+        TryBacktrack();
+        function TryBacktrack() {
+            const scenarioBlocksWhenClicking = Array.from(storyBlock.childNodes);
+            if (scenarioBlocksWhenClicking.length === scenarioBlocksUpToThisAction.length)
+                return;
+
+            contentAddConfirmBlock.style.display = 'none';
+            addingContentBlock.style.display = 'none';
+            addContentBlock.style.display = 'none';
+            addContentTextField.value = '';
+
+            scenarioBlocksWhenClicking.forEach(childElement => {
+                if (!scenarioBlocksUpToThisAction.includes(childElement))
+                    childElement.remove();
+            });
+
+            currentScenarioID = scenarioIdForThisAction;
+
+            //remove taken actions from the list
+            actionsTaken.forEach((actionElement, i) => {
+                if (actionElement.scenarioID === scenarioIdForThisAction)
+                    actionsTaken.splice(i + 1);
+            });
+        }
+    });
+
+}
+
+function TakeAction(actionElement, actionID) {
+
+    actionsTaken.push({
+        scenarioID: currentScenarioID,
+        actionID: actionID
+    })
+
+    if (actionElement.scenarioID) playScenario(actionElement.scenarioID);
+    else reachEndpointAction(actionID);
+
+}
+
+async function tryAddNewContent(type, actionIndex) {
+
+    //make sure there is a value in the input field
+    const contentText = addContentTextField.value;
+    if (contentText === '') {
+        console.error('please write something in the text field!');
         return;
     }
-    onEnterPress = null;
 
-    //display a load text
-    addContentTextField.value = '';
-    addContentBlock.style.display = 'none';
-    clearActions();
-    addingContentBlock.style.display = 'block';
-    addingContentStatusText.textContent = 'Adding your action to Unwritten...'
-    tryUnsubscribe();
-
-    //add the action to the database
-    addAction(currentScenarioID, actionText)
-        .then(newActionID => {
-            if (newActionID === -1) {
-                addingContentStatusText.textContent = 'ERROR - your action could not be added.'
-                return;
-            }
-            confirmContentAddition('action', actionText, null, newActionID);
-        })
-}
-
-async function tryAddNewScenario(actionIndex) {
-    const scenarioText = addContentTextField.value;
-
-    if (scenarioText === '') {
-        console.error('please write something in the text field');
-        return
+    //make sure type is correct
+    if (type != 'action' && type != 'scenario') {
+        console.error('type was defined inapropriately to: ' + type);
+        return;
     }
 
+    //hide out the add content and action window
+    const tryAddContentFunction = onEnterPress;
     onEnterPress = null;
-    tryUnsubscribe();
-    clearActions();
-
     addContentBlock.style.display = 'none';
-    addContentTextField.value = '';
-    addingContentBlock.style.display = 'block';
-    addingContentStatusText.textContent = 'Adding your scenario to Unwritten...'
+    actionBlock.style.display = 'none';
 
-    addScenario(scenarioText, currentScenarioID, actionIndex)
-        .then(response => {
-            if (response.status === -1) {
-                addingContentStatusText.textContent = 'Failed to add the scenario to Unwritten. Please try again.';
-                return;
-            }
-            if (response.status === -2) {
-                addingContentStatusText.textContent = 'Another player just added a scenario to this action! Keep playing to see what it was';
-                keepPlayButton.style.display = 'block';
-                keepPlayButton.onclick = () => {
-                    playScenario(response.newDocID);
+    //show the confirm box
+    const contentAddConfirmBlock = document.getElementById("contentAddConfirmBlock");
+    contentAddConfirmBlock.style.display = 'block';
+    const contentToConfirmText = document.getElementById('contentToConfirm')
+    if (type === 'action') contentToConfirmText.textContent = `> ${contentText}`;
+    else if (type === 'scenario') contentToConfirmText.textContent = `"${contentText}"`;
+    scrollDown();
+
+    //assign dem buttons
+    document.getElementById('addContentButton').onclick = () => {
+
+        AddContent(type, contentAddConfirmBlock, contentText, actionIndex);
+
+    }
+
+    document.getElementById('editContentButton').onclick = () => {
+        onEnterPress = tryAddContentFunction;
+        addContentBlock.style.display = 'block';
+        actionBlock.style.display = 'block';
+        contentAddConfirmBlock.style.display = 'none';
+    }
+}
+
+function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
+
+    ShowContentAddLoadText();
+    TryUnsubscribe();
+
+    if (type === 'action') AddAction();
+    else if (type === 'scenario') AddScenario();
+
+    contentIsBeingAdded = true;
+
+    function ShowContentAddLoadText() {
+
+        contentAddConfirmBlock.style.display = 'none';
+        addContentTextField.value = '';
+        clearActions();
+
+        addingContentBlock.style.display = 'block';
+        addingContentBlock.style.backgroundColor = 'lightgrey';
+        addingContentBlock.style.bordercolor = 'grey';
+        addingContentStatusText.textContent = 'Adding your content to Unwritten...';
+
+    }
+
+    async function AddAction() {
+        addAction(currentScenarioID, contentText)
+            .then(newActionID => {
+                if (newActionID === -1) {
+                    addingContentStatusText.textContent = 'ERROR - your action could not be added.';
+                    return;
                 }
-                return;
-            }
-            confirmContentAddition('scenario', scenarioText, response.newDocID, 0);
-            clearActions();
-        })
+                confirmContentAddition('action', contentText, null, newActionID);
+                contentIsBeingAdded = false;
+            });
+    }
+
+    async function AddScenario() {
+        addScenario(contentText, currentScenarioID, actionIndex)
+            .then(response => {
+
+                if (response.status === -1) {
+                    addingContentStatusText.textContent = 'Failed to add the scenario to Unwritten. Please try again.';
+                    return;
+                }
+
+                if (response.status === -2) {
+                    addingContentStatusText.textContent = 'Another player just added a scenario to this action! Keep playing to see what it was';
+                    keepPlayButton.style.display = 'block';
+                    keepPlayButton.onclick = () => {
+                        playScenario(response.newDocID);
+                    };
+                    return;
+                }
+
+                updateContentCounters(actionsTaken);
+                confirmContentAddition('scenario', contentText, response.newDocID, 0);
+                clearActions();
+                contentIsBeingAdded = false;
+
+            });
+    }
+
 }
 
 function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
     //confirm that it has been added succesfully
-    let confirmationText;
-    confirmationText = `The following ${type} was succesfully added to Unwritten:`;
-    if (type === 'scenario') confirmationText += `\r\n\r\n"${contentText}"`;
-    else if (type === 'action') confirmationText += `\r\n\r\n> ${contentText}`;
-    addingContentStatusText.textContent = confirmationText
+    addingContentStatusText.textContent = `The following ${type} was succesfully added to Unwritten:`;
+
+    let addedContentText;
+    if (type === 'scenario') addedContentText = `"${contentText}"`;
+    else if (type === 'action') addedContentText = `> ${contentText}`;
+    const addedContent = document.createElement('p');
+    addedContent.textContent = addedContentText;
+    addedContent.className = 'contentToConfirm';
+    addingContentBlock.append(addedContent);
+
+    addingContentBlock.style.backgroundColor = 'rgb(181, 227, 181)';
+    addingContentBlock.style.bordercolor = 'rgb(118, 149, 118)';
 
     //show button that allows you to keep on playing
     const continueButton = document.createElement('button');
@@ -164,8 +326,12 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
         continueButton.textContent = 'Keep playing with this action';
         continueButton.onclick = () => {
             hideAddContentBlock();
-            print(`> ${contentText}`);
+            print(`> ${contentText}`, false);
             reachEndpointAction(newActionID)
+            actionsTaken.push({
+                scenarioID: currentScenarioID,
+                actionID: newActionID
+            })
         }
     }
     else if (type === 'scenario') {
@@ -177,34 +343,38 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
     }
 
     function hideAddContentBlock() {
+        addedContent.remove();
         addContentBlock.style.display = 'none';
         addingContentBlock.style.display = 'none';
         keepPlayButton.style.display = 'none';
         continueButton.remove();
     }
+
+    scrollDown();
 }
 
 function reachEndpointAction(actionIndex) {
     clearActions();
     activateAddContentBlock('What happens next?', 'Add Scenario', actionIndex);
+    scrollDown();
 }
 
 function activateAddContentBlock(instructionText, buttonText, actionIndex) {
     //show the block
     addContentTextField.placeholder = instructionText;
     addContentBlock.style.display = 'block';
-    addContentButton.textContent = buttonText;
+    tryAddContentButton.textContent = buttonText;
 
     //assign the "add" function to the button
     if (buttonText === 'Add Scenario') {
-        addContentTextField.style.height = '36pt';
-        addContentButton.onclick = () => { tryAddNewScenario(actionIndex); }
-        onEnterPress = () => { tryAddNewScenario(actionIndex) };
+        addContentBlock.style.height = '90pt';
+        tryAddContentButton.onclick = () => { tryAddNewContent('scenario', actionIndex); }
+        onEnterPress = () => { tryAddNewContent('scenario', actionIndex); };
     }
     else if (buttonText === 'Add Action') {
-        addContentTextField.style.height = '12pt';
-        addContentButton.onclick = () => { tryAddNewAction(); }
-        onEnterPress = () => { tryAddNewAction() };
+        addContentBlock.style.height = '30pt';
+        tryAddContentButton.onclick = () => { tryAddNewContent('action', -1); }
+        onEnterPress = () => { tryAddNewContent('action', -1); };
     }
     else {
         console.error('cant assign a function to the "add content" button because the text was not assigned correctly.');
@@ -212,8 +382,10 @@ function activateAddContentBlock(instructionText, buttonText, actionIndex) {
     }
 
     //start to monitor the scenario
-    tryUnsubscribe();
+    TryUnsubscribe();
     startScenarioMonitoring(actionIndex, buttonText);
+
+    scrollDown();
 }
 
 async function startScenarioMonitoring(actionIndex, contentType) {
@@ -237,7 +409,7 @@ async function startScenarioMonitoring(actionIndex, contentType) {
         if (!newScenarioID) return;
 
         clearActions();
-        tryUnsubscribe();
+        TryUnsubscribe();
 
         addContentBlock.style.display = 'none';
         addingContentBlock.style.display = 'block';
@@ -257,19 +429,45 @@ async function startScenarioMonitoring(actionIndex, contentType) {
 
     function onActionUpdate(updatedData) {
         addContentTextField.placeholder = '..or add your own action';
-        displayExistingActions(updatedData.actions, currentScenarioID);
+        createScenarioActionButtons(updatedData.actions, currentScenarioID);
     }
 }
 
 function clearActions() {
-    actionButtonBlock.textContent = '';
-    actionBlock.style.display = 'none';
+    //actionButtonBlock.textContent = '';
+    //actionBlock.style.display = 'none';
 }
 
-function print(text) {
+function print(text, letterByLetter) {
+
     const scenarioTextBlock = document.createElement('div');
-    scenarioTextBlock.textContent = text;
     storyBlock.appendChild(scenarioTextBlock);
-    storyBlock.appendChild(document.createElement('br'));
+
+    if (letterByLetter) {
+
+        let delayForNextLetter = 0;
+        let printedText = '';
+
+        Array.from(text).forEach(char => {
+            setTimeout(() => {
+                printedText += char;
+                scenarioTextBlock.textContent = printedText;
+            }, delayForNextLetter);
+            delayForNextLetter += timeBetweenLetters;
+        })
+
+    }
+    else {
+        scenarioTextBlock.textContent = text;
+    }
+
+    scenarioTextBlock.className = 'printedAction';
+
+    scrollDown();
+
     return scenarioTextBlock;
+}
+
+function scrollDown() {
+    window.scrollTo(0, document.body.scrollHeight);
 }
