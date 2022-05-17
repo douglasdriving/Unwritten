@@ -13,7 +13,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore();
-const scenarioCollectionID = 'testScenarios';
+const scenarioCollectionID = 'testScenarios1';
 const scenarioCollection = collection(firestore, scenarioCollectionID);
 let unsubscribe;
 
@@ -59,6 +59,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     const parentDocRef = await doc(firestore, `${scenarioCollectionID}/${parentID}`);
     const parentDoc = await getDoc(parentDocRef);
     const parentDocData = parentDoc.data();
+
     if (!parentDocData) {
         console.error('could not find the parent doc to add a ref to the new ID, so cant add a new one');
         return ({ status: -1 });
@@ -88,6 +89,8 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     //update the parent document so that action refs to new scenario
     parentActionList[parentActionIndex].scenarioID = newDocID;
     updateDoc(parentDocRef, { actions: parentActionList });
+
+    //return a "success" response
     const response = {
         status: 0,
         newDocID: newDocID

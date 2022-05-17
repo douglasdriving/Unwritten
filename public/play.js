@@ -1,4 +1,4 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters } from "/dbHandler.js?v=0.27";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters } from "/dbHandler.js?v=0.271";
 
 //BALANCING
 const timeBetweenLetters = 40; //ms
@@ -7,8 +7,6 @@ const delayAfterPrintFinished = 500; //ms
 //DOC VARABLE DECLARATIONS
 const storyBlock = document.getElementById('story');
 const beginButton = document.getElementById('beginPlay');
-//const actionBlock = document.getElementById('actionBlock');
-const actionButtonBlock = document.getElementById('actionButtons');
 const addContentBlock = document.getElementById('addContentBlock');
 const tryAddContentButton = document.getElementById('tryAddContentButton');
 const addContentTextField = document.getElementById('addContentTextField');
@@ -18,7 +16,6 @@ const contentAddConfirmBlock = document.getElementById('contentAddConfirmBlock')
 const keepPlayButton = document.getElementById('keepPlayButton');
 
 //SET WHAT TO SHOW AT START
-//actionBlock.style.display = 'none';
 keepPlayButton.style.display = 'none';
 addingContentBlock.style.display = 'none';
 addContentBlock.style.display = 'none';
@@ -30,10 +27,13 @@ let startScenarioID = 'start';
 let onEnterPress;
 let actionsTaken = [];
 let contentIsBeingAdded = false;
+let currentActionBlock;
+let lastActionPressed;
 
 //ASSIGN BUTTON FUNCTIONS
 beginButton.onclick = () => {
-    playScenario(startScenarioID);
+    lastActionPressed = beginButton;
+    playScenario(startScenarioID, beginButton);
     beginButton.style.display = 'none';
 }
 
@@ -43,20 +43,19 @@ document.addEventListener("keypress", event => {
     onEnterPress();
 });
 
-async function playScenario(scenarioID) {
+async function playScenario(scenarioID, actionButtonThatLeadToThisScenario) {
 
     TryUnsubscribe();
 
-    //clearActions();
     addContentBlock.style.display = 'none';
 
     const loadText = document.createElement('div');
     loadText.textContent = 'Scenario loading...'
     storyBlock.appendChild(loadText);
+
     scrollDown();
 
     const scenarioData = await getScenario(scenarioID);
-
     loadText.remove();
 
     if (!scenarioData) {
@@ -70,92 +69,89 @@ async function playScenario(scenarioID) {
     currentScenarioID = scenarioID;
 
     //start the print!
-    const scenarioTextBlock = print(scenarioData.text, true);
+    const scenarioTextBlock = document.createElement('div');
+    scenarioTextBlock.className = 'printedAction';
+    storyBlock.appendChild(scenarioTextBlock);
+
+    let delayForNextLetter = 0;
+    let printedText = '';
+    let printTerminated = false;
+
+    Array.from(scenarioData.text).forEach(char => {
+        setTimeout(() => {
+            if (printTerminated) return;
+            if (actionButtonThatLeadToThisScenario !== lastActionPressed) {
+                scenarioTextBlock.remove();
+                printTerminated = true;
+                return;
+            }
+            printedText += char;
+            scenarioTextBlock.textContent = printedText;
+        }, delayForNextLetter);
+        delayForNextLetter += timeBetweenLetters;
+    })
 
     //Create the container
     const scenarioBlock = document.createElement('div');
     scenarioBlock.className = 'scenarioContainer';
     scenarioTextBlock.className = 'scenarioText';
     scenarioBlock.appendChild(scenarioTextBlock);
-
-    //create the button
-    //const jumpToScenarioButton = createJumpBackButton();
-    //scenarioBlock.appendChild(jumpToScenarioButton);
+    const actionBlock = document.createElement('div');
+    currentActionBlock = actionBlock;
+    scenarioBlock.appendChild(actionBlock);
 
     //put it together
     storyBlock.appendChild(scenarioBlock);
     scrollDown();
 
-    //delay the addition of action window and content add window.
+    //delay the addition of action window and content add window. //PROBLEMATIC IF YOU CHOOSE DO SO SOMETHING MID_PRINT
     const timeBeforePrintDone = Array.from(scenarioData.text).length * timeBetweenLetters;
     setTimeout(() => {
-        //assignJumpButtonOnlick();
-        scenarioBlock.appendChild(createScenarioActionButtons(scenarioData.actions, scenarioBlock));
+
+        if (actionButtonThatLeadToThisScenario !== lastActionPressed) return;
+
+        LoadActionButtons(scenarioData.actions);
         activateAddContentBlock('write a new action...', 'Add Action', 0);
+
     }, timeBeforePrintDone + delayAfterPrintFinished);
-
-    function createJumpBackButton() {
-        const jumpToScenarioButton = document.createElement('button');
-        jumpToScenarioButton.textContent = '->';
-        jumpToScenarioButton.className = 'jumpToScenarioButton';
-        return jumpToScenarioButton;
-    }
-
-    function assignJumpButtonOnlick() {
-        const scenariosUntilNow = Array.from(storyBlock.childNodes);
-        jumpToScenarioButton.onclick = () => { Backtrack(scenariosUntilNow, scenarioID, scenarioData); }
-    }
-
 }
 
-function createScenarioActionButtons(scenarioActions, scenarioBlock) {
-    clearActions();
+function LoadActionButtons(actions) {
 
-    if (!scenarioActions) {
+    //CREATE ACTION BUTTONS
+    if (!actions) {
         addContentTextField.placeholder = 'What do you want to do?';
         return;
     }
 
-    //CREATE ACTION BUTTONS
-    const actionBlock = document.createElement('div');
-    let actionButtonArray = [];
-
-    scenarioActions.forEach((actionElement, actionID) => {
-        createActionButton(actionBlock, actionButtonArray, actionElement, actionID);
+    actions.forEach((actionElement, actionID) => {
+        createActionButton(actionElement, actionID);
     });
 
     scrollDown();
-
-    return actionBlock;
 }
 
-function createActionButton(actionBlock, actionButtonArray, actionElement, actionID) {
+function createActionButton(actionElement, actionID) {
 
+    //create the element
     const actionButton = document.createElement('button');
-    actionBlock.appendChild(actionButton);
+    currentActionBlock.appendChild(actionButton);
     actionButton.className = 'actionButton';
-    actionButtonArray.push(actionButton);
 
     const scenarioCount = actionElement.scenarioCount || 0;
     actionButton.textContent = actionElement.action + ` (${scenarioCount})`;
 
+    //Assign onclick
     const scenarioIdForThisAction = currentScenarioID;
     const scenarioBlocksUpToThisAction = Array.from(storyBlock.childNodes);
 
     actionButton.onclick = (() => {
 
-        if (contentIsBeingAdded)
-            return;
+        if (contentIsBeingAdded) return;
 
-        TakeAction(actionElement, actionID);
-        actionButton.className = 'highlightedActionButton';
-
-        actionButtonArray.forEach(button => {
-            if (button === actionButton)
-                return;
-            button.className = 'fadedActionButton';
-        });
-
+        lastActionPressed = actionButton;
+        TakeAction(actionElement, actionID, actionButton);
+        currentActionBlock = actionButton.parentNode;
         TryBacktrack();
         function TryBacktrack() {
             const scenarioBlocksWhenClicking = Array.from(storyBlock.childNodes);
@@ -164,7 +160,7 @@ function createActionButton(actionBlock, actionButtonArray, actionElement, actio
 
             contentAddConfirmBlock.style.display = 'none';
             addingContentBlock.style.display = 'none';
-            addContentBlock.style.display = 'none';
+            //addContentBlock.style.display = 'none';
             addContentTextField.value = '';
 
             scenarioBlocksWhenClicking.forEach(childElement => {
@@ -182,18 +178,34 @@ function createActionButton(actionBlock, actionButtonArray, actionElement, actio
         }
     });
 
+    //create an action block if it doesnt exist
+
+
+    //return the button
+    return actionButton;
 }
 
-function TakeAction(actionElement, actionID) {
+function TakeAction(actionElement, actionID, actionButton) {
 
+    //add action to the array -- PROBLEMATIC TO KEEP TRACK OF _ FIND OTHER SOLUTION
     actionsTaken.push({
         scenarioID: currentScenarioID,
         actionID: actionID
     })
 
-    if (actionElement.scenarioID) playScenario(actionElement.scenarioID);
+    //print scenario if there is one.
+    if (actionElement.scenarioID) playScenario(actionElement.scenarioID, actionButton);
     else reachEndpointAction(actionID);
 
+    //set button highlighting
+    actionButton.className = 'highlightedActionButton';
+    actionButton.parentNode.childNodes.forEach(button => {
+
+        if (button === actionButton) return;
+        if (button.className === 'fadedActionButton') return;
+        button.className = 'fadedActionButton';
+
+    });
 }
 
 async function tryAddNewContent(type, actionIndex) {
@@ -215,7 +227,6 @@ async function tryAddNewContent(type, actionIndex) {
     const tryAddContentFunction = onEnterPress;
     onEnterPress = null;
     addContentBlock.style.display = 'none';
-    actionBlock.style.display = 'none';
 
     //show the confirm box
     const contentAddConfirmBlock = document.getElementById("contentAddConfirmBlock");
@@ -235,7 +246,6 @@ async function tryAddNewContent(type, actionIndex) {
     document.getElementById('editContentButton').onclick = () => {
         onEnterPress = tryAddContentFunction;
         addContentBlock.style.display = 'block';
-        actionBlock.style.display = 'block';
         contentAddConfirmBlock.style.display = 'none';
     }
 }
@@ -254,8 +264,6 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
 
         contentAddConfirmBlock.style.display = 'none';
         addContentTextField.value = '';
-        clearActions();
-
         addingContentBlock.style.display = 'block';
         addingContentBlock.style.backgroundColor = 'lightgrey';
         addingContentBlock.style.bordercolor = 'grey';
@@ -288,14 +296,13 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                     addingContentStatusText.textContent = 'Another player just added a scenario to this action! Keep playing to see what it was';
                     keepPlayButton.style.display = 'block';
                     keepPlayButton.onclick = () => {
-                        playScenario(response.newDocID);
+                        playScenario(response.newDocID, -1);
                     };
                     return;
                 }
 
                 updateContentCounters(actionsTaken);
                 confirmContentAddition('scenario', contentText, response.newDocID, 0);
-                clearActions();
                 contentIsBeingAdded = false;
 
             });
@@ -326,19 +333,19 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
         continueButton.textContent = 'Keep playing with this action';
         continueButton.onclick = () => {
             hideAddContentBlock();
-            print(`> ${contentText}`, false);
-            reachEndpointAction(newActionID)
-            actionsTaken.push({
-                scenarioID: currentScenarioID,
-                actionID: newActionID
-            })
+            const newActionElement = {
+                scenarioCount: 0,
+                action: contentText,
+            }
+            const actionButton = createActionButton(newActionElement, newActionID);
+            TakeAction(newActionElement, newActionID, actionButton);
         }
     }
     else if (type === 'scenario') {
         continueButton.textContent = 'Keep playing this scenario';
         continueButton.onclick = () => {
             hideAddContentBlock();
-            playScenario(newScenarioID);
+            playScenario(newScenarioID, lastActionPressed);
         }
     }
 
@@ -354,7 +361,6 @@ function confirmContentAddition(type, contentText, newScenarioID, newActionID) {
 }
 
 function reachEndpointAction(actionIndex) {
-    clearActions();
     activateAddContentBlock('What happens next?', 'Add Scenario', actionIndex);
     scrollDown();
 }
@@ -381,26 +387,34 @@ function activateAddContentBlock(instructionText, buttonText, actionIndex) {
         onEnterPress = null;
     }
 
+
     //start to monitor the scenario
     TryUnsubscribe();
-    startScenarioMonitoring(actionIndex, buttonText);
-
+    //startScenarioMonitoring(actionIndex, buttonText);
     scrollDown();
 }
 
+/*
 async function startScenarioMonitoring(actionIndex, contentType) {
     if (contentType != 'Add Scenario' && contentType != 'Add Action') {
         console.error('content type text set incorrectly. Cannot monitor. it was set to: ' + contentType);
         return;
     }
-
-    const monitorSucceeded = monitorScenario(currentScenarioID, updatedData => {
-        if (contentType === 'Add Scenario') onScenarioUpdate(updatedData);
-        else if (contentType === 'Add Action') onActionUpdate(updatedData);
-    })
-
+    
+    const monitorSucceeded = monitorScenario(currentScenarioID, updatedData => onUpdate)
+    
     if (!monitorSucceeded) {
         console.error('the monitoring was unable to start');
+    }
+    else{
+        console.log('monitor started');
+    }
+    
+
+    function onUpdate(updatedData){
+        console.log('an update received!!!');
+        if (contentType === 'Add Scenario') onScenarioUpdate(updatedData);
+        else if (contentType === 'Add Action') onActionUpdate(updatedData);
     }
 
     async function onScenarioUpdate(updatedData) {
@@ -408,7 +422,6 @@ async function startScenarioMonitoring(actionIndex, contentType) {
         const newScenarioID = updatedData.actions[actionIndex].scenarioID;
         if (!newScenarioID) return;
 
-        clearActions();
         TryUnsubscribe();
 
         addContentBlock.style.display = 'none';
@@ -428,45 +441,13 @@ async function startScenarioMonitoring(actionIndex, contentType) {
     }
 
     function onActionUpdate(updatedData) {
+        console.log('an action was updated!');
         addContentTextField.placeholder = '..or add your own action';
         createScenarioActionButtons(updatedData.actions, currentScenarioID);
     }
+    
 }
-
-function clearActions() {
-    //actionButtonBlock.textContent = '';
-    //actionBlock.style.display = 'none';
-}
-
-function print(text, letterByLetter) {
-
-    const scenarioTextBlock = document.createElement('div');
-    storyBlock.appendChild(scenarioTextBlock);
-
-    if (letterByLetter) {
-
-        let delayForNextLetter = 0;
-        let printedText = '';
-
-        Array.from(text).forEach(char => {
-            setTimeout(() => {
-                printedText += char;
-                scenarioTextBlock.textContent = printedText;
-            }, delayForNextLetter);
-            delayForNextLetter += timeBetweenLetters;
-        })
-
-    }
-    else {
-        scenarioTextBlock.textContent = text;
-    }
-
-    scenarioTextBlock.className = 'printedAction';
-
-    scrollDown();
-
-    return scenarioTextBlock;
-}
+*/
 
 function scrollDown() {
     window.scrollTo(0, document.body.scrollHeight);
