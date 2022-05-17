@@ -91,6 +91,10 @@
     margin-right: 7pt;
 }
 
+#charCounter{
+    margin-top: 3pt;
+}
+
 /*STORY*/
 .printedAction {
     margin-top: 15pt;
