@@ -48,7 +48,6 @@ document.addEventListener("keypress", event => {
 });
 addContentTextField.addEventListener('input', CountCharacters);
 const terminatePrint = new Event('terminatePrint');
-addEventListener('terminatePrint', () => {console.log('print terminated')});
 
 function CountCharacters() {
 
@@ -144,7 +143,6 @@ async function PlayScenario(scenarioID, actionButtonThatLeadToThisScenario) {
 }
 
 function LoadActionButtons(actions) {
-    console.log('loading action buttons');
 
     if (actions) {
         actions.forEach((actionElement, actionID) => {
@@ -459,11 +457,10 @@ function IncreasePickedActionNumbers(){
 
             div.childNodes.forEach(button => {
 
-                console.log('trying to update a number');
                 if (button.className !== 'actionButton highlightedButton') return;
-                const newNumber = button.textContent[-2] + 1;
+                const text = button.textContent;
+                const newNumber = parseInt(text[text.length-2]) + 1;
                 button.textContent = button.textContent.slice(0, -4) + ' (' + newNumber + ')';
-                console.log('updated the number');
     
             })
 
