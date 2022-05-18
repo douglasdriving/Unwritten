@@ -14,16 +14,20 @@
     border-color: grey;
     font-weight: normal;
 }
-.highlightedActionButton{
+.plusButton{
     margin-right: 5pt;
     margin-bottom: 5pt;
+    border-width: 1px;
+    background-color: lightgreen;
+    border-width: 1px;
+    font-weight: normal;
+}
+.highlightedButton{
     border-width: 2px;
     border-color: black;
     font-weight: bold;
 }
-.fadedActionButton{
-    margin-right: 5pt;
-    margin-bottom: 5pt;
+.fadedButton{
     border-width: 1px;
     border-color: grey;
     font-weight: normal;

@@ -35,20 +35,20 @@ let currentActionBlock;
 let lastActionPressed;
 let maxNumOfChars = maxCharsAction;
 
-//ASSIGN BUTTON FUNCTIONS
+//ASSIGN BUTTONS AND EVENTS
 beginButton.onclick = () => {
     lastActionPressed = beginButton;
     PlayScenario(startScenarioID, beginButton);
     beginButton.style.display = 'none';
 }
-
 document.addEventListener("keypress", event => {
     if (event.key != 'Enter') return;
     if (!onEnterPress) return;
     onEnterPress();
 });
-
 addContentTextField.addEventListener('input', CountCharacters);
+const terminatePrint = new Event('terminatePrint');
+addEventListener('terminatePrint', () => {console.log('print terminated')});
 
 function CountCharacters() {
 
@@ -56,7 +56,7 @@ function CountCharacters() {
     let counter = maxNumOfChars - numOfEnteredChars;
     charCounter.textContent = counter + " / " + maxNumOfChars;
 
-    if (numOfEnteredChars < 1){
+    if (numOfEnteredChars < 1) {
         charCounter.style.color = 'transparent';
         tryAddContentButton.style.opacity = 0.3;
     }
@@ -87,9 +87,14 @@ async function PlayScenario(scenarioID, actionButtonThatLeadToThisScenario) {
 
     ScrollDown();
 
-    const scenarioData = await getScenario(scenarioID);
-    loadText.remove();
+    //setup termination tracking
+    let printTerminated = false;
+    addEventListener('terminatePrint', () => {printTerminated=true});
 
+    //get the data
+    const scenarioData = await getScenario(scenarioID);
+    if (printTerminated) return;
+    loadText.remove();
     if (!scenarioData) {
         const statusMessage = document.createElement('div');
         statusMessage.textContent = 'Error: Could not find the next scenario. Please try again';
@@ -104,19 +109,13 @@ async function PlayScenario(scenarioID, actionButtonThatLeadToThisScenario) {
     const scenarioTextBlock = document.createElement('div');
     scenarioTextBlock.className = 'printedAction';
     storyBlock.appendChild(scenarioTextBlock);
-
     let delayForNextLetter = 0;
     let printedText = '';
-    let printTerminated = false;
 
     Array.from(scenarioData.text).forEach(char => {
         setTimeout(() => {
-            if (printTerminated) return;
-            if (actionButtonThatLeadToThisScenario !== lastActionPressed) {
-                scenarioTextBlock.remove();
-                printTerminated = true;
-                return;
-            }
+            if (!scenarioTextBlock) return;
+            if (printTerminated) scenarioTextBlock.remove();
             printedText += char;
             scenarioTextBlock.textContent = printedText;
         }, delayForNextLetter);
@@ -136,31 +135,50 @@ async function PlayScenario(scenarioID, actionButtonThatLeadToThisScenario) {
     storyBlock.appendChild(scenarioBlock);
     ScrollDown();
 
-    //delay the addition of action window and content add window. //PROBLEMATIC IF YOU CHOOSE DO SO SOMETHING MID_PRINT
+    //delay the addition of action window and content add window.
     const timeBeforePrintDone = Array.from(scenarioData.text).length * timeBetweenLetters;
     setTimeout(() => {
-
-        if (actionButtonThatLeadToThisScenario !== lastActionPressed) return;
-
+        if (printTerminated) return;
         LoadActionButtons(scenarioData.actions);
-        ActivateAddContentBlock('write a new action...', 'Add Action', 0);
-
     }, timeBeforePrintDone + delayAfterPrintFinished);
 }
 
 function LoadActionButtons(actions) {
+    console.log('loading action buttons');
 
-    //CREATE ACTION BUTTONS
-    if (!actions) {
-        addContentTextField.placeholder = 'What do you want to do?';
-        return;
+    if (actions) {
+        actions.forEach((actionElement, actionID) => {
+            CreateActionButton(actionElement, actionID);
+        });
     }
 
-    actions.forEach((actionElement, actionID) => {
-        CreateActionButton(actionElement, actionID);
-    });
-
+    CreatePlusButton();
     ScrollDown();
+
+    function CreatePlusButton() {
+        if (contentIsBeingAdded) return;
+
+        const plusButton = document.createElement('button');
+        plusButton.className = 'plusButton';
+        currentActionBlock.appendChild(plusButton);
+        plusButton.textContent = '+';
+
+        const scenarioIdForButton = currentScenarioID;
+        const priorScenarios = Array.from(storyBlock.childNodes)
+
+        plusButton.onclick = (() => {
+            dispatchEvent(terminatePrint);
+            if (plusButton.className != 'plusButton highlightedButton') {
+                ActivateAddContentBlock('write a new action...', 'Add Action', 0);
+                TryBacktrack(scenarioIdForButton, priorScenarios);
+                SetHighlight(plusButton, true);
+            }
+            else {
+                addContentBlock.style.display = 'none';
+                SetHighlight(plusButton, false);
+            }
+        });
+    }
 }
 
 function CreateActionButton(actionElement, actionID) {
@@ -179,42 +197,53 @@ function CreateActionButton(actionElement, actionID) {
 
     actionButton.onclick = (() => {
 
+        dispatchEvent(terminatePrint);
+
         if (contentIsBeingAdded) return;
 
-        lastActionPressed = actionButton;
-        TakeAction(actionElement, actionID, actionButton);
-        currentActionBlock = actionButton.parentNode;
-        TryBacktrack();
-        function TryBacktrack() {
-            const scenarioBlocksWhenClicking = Array.from(storyBlock.childNodes);
-            if (scenarioBlocksWhenClicking.length === scenarioBlocksUpToThisAction.length)
-                return;
-
-            contentAddConfirmBlock.style.display = 'none';
-            addingContentBlock.style.display = 'none';
-            //addContentBlock.style.display = 'none';
-            addContentTextField.value = '';
-
-            scenarioBlocksWhenClicking.forEach(childElement => {
-                if (!scenarioBlocksUpToThisAction.includes(childElement))
-                    childElement.remove();
-            });
-
-            currentScenarioID = scenarioIdForThisAction;
-
-            //remove taken actions from the list
-            actionsTaken.forEach((actionElement, i) => {
-                if (actionElement.scenarioID === scenarioIdForThisAction)
-                    actionsTaken.splice(i + 1);
-            });
+        if (actionButton.className === 'actionButton highlightedButton'){
+            SetHighlight(actionButton, false);
+            addContentBlock.style.display = 'none';
+            lastActionPressed = null;
         }
+        else{
+            lastActionPressed = actionButton;
+            TakeAction(actionElement, actionID, actionButton);
+            SetHighlight(actionButton, true);
+        }
+
+        currentActionBlock = actionButton.parentNode;
+        TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction);
+
     });
-
-    //create an action block if it doesnt exist
-
 
     //return the button
     return actionButton;
+}
+
+function TryBacktrack(scenarioID, priorScenarios) {
+
+    const scenarioBlocksWhenClicking = Array.from(storyBlock.childNodes);
+    if (scenarioBlocksWhenClicking.length === priorScenarios.length)
+        return;
+
+    contentAddConfirmBlock.style.display = 'none';
+    addingContentBlock.style.display = 'none';
+    addContentTextField.value = '';
+
+    scenarioBlocksWhenClicking.forEach(childElement => {
+        if (!priorScenarios.includes(childElement))
+            childElement.remove();
+    });
+
+    currentScenarioID = scenarioID;
+
+    //remove taken actions from the list
+    actionsTaken.forEach((actionElement, i) => {
+        if (actionElement.scenarioID === scenarioID)
+            actionsTaken.splice(i + 1);
+    });
+
 }
 
 function TakeAction(actionElement, actionID, actionButton) {
@@ -228,15 +257,36 @@ function TakeAction(actionElement, actionID, actionButton) {
     //print scenario if there is one.
     if (actionElement.scenarioID) PlayScenario(actionElement.scenarioID, actionButton);
     else ReachEndpointAction(actionID);
+}
 
-    //set button highlighting
-    actionButton.className = 'highlightedActionButton';
-    actionButton.parentNode.childNodes.forEach(button => {
+function SetHighlight(button, highlight) {
 
-        if (button === actionButton) return;
-        if (button.className === 'fadedActionButton') return;
-        button.className = 'fadedActionButton';
+    if (highlight) {
+        button.parentNode.childNodes.forEach(bottonInBlock => {
+            if (bottonInBlock.textContent === '+') bottonInBlock.className = 'plusButton';
+            else bottonInBlock.className = 'actionButton';
 
+            if (bottonInBlock === button) bottonInBlock.className += ' highlightedButton';
+            else bottonInBlock.className += ' fadedButton';
+        });
+
+    }
+    else {
+        if (button.textContent === '+') button.className = 'plusButton';
+        else button.className = 'actionButton';
+
+        button.parentNode.childNodes.forEach(bottonInBlock => {
+            if (bottonInBlock === button) return;
+            if (bottonInBlock.textContent === '+') bottonInBlock.className = 'plusButton';
+            else bottonInBlock.className = 'actionButton';
+        });
+    }
+
+}
+
+function ReshuffleActionButtons(block) {
+    block.childNodes.forEach(button => {
+        if (button.textContent === '+') block.append(button);
     });
 }
 
@@ -376,12 +426,15 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
                 action: contentText,
             }
             const actionButton = CreateActionButton(newActionElement, newActionID);
+            SetHighlight(actionButton, true);
+            ReshuffleActionButtons(actionButton.parentNode);
             TakeAction(newActionElement, newActionID, actionButton);
         }
     }
     else if (type === 'scenario') {
         continueButton.textContent = 'Keep playing this scenario';
         continueButton.onclick = () => {
+            IncreasePickedActionNumbers();
             hideAddContentBlock();
             PlayScenario(newScenarioID, lastActionPressed);
         }
@@ -398,6 +451,30 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
     ScrollDown();
 }
 
+function IncreasePickedActionNumbers(){
+
+    storyBlock.childNodes.forEach(scenarioBlock => {
+        
+        scenarioBlock.childNodes.forEach(div => {
+
+            div.childNodes.forEach(button => {
+
+                console.log('trying to update a number');
+                if (button.className !== 'actionButton highlightedButton') return;
+                const newNumber = button.textContent[-2] + 1;
+                button.textContent = button.textContent.slice(0, -4) + ' (' + newNumber + ')';
+                console.log('updated the number');
+    
+            })
+
+        })
+        
+
+
+    })
+
+}
+
 function ReachEndpointAction(actionIndex) {
     ActivateAddContentBlock('What happens next?', 'Add Scenario', actionIndex);
     ScrollDown();
@@ -406,6 +483,7 @@ function ReachEndpointAction(actionIndex) {
 function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
     //show the block
     addContentTextField.placeholder = instructionText;
+    addContentTextField.value = '';
     addContentBlock.style.display = 'block';
     tryAddContentButton.textContent = buttonText;
 
