@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
 import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+import { getAnalytics, logEvent  } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCuHFWH47mYRwBWEbPjRgkwJw55-ph7ft4",
@@ -12,9 +13,14 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const firestore = getFirestore();
-const scenarioCollectionID = 'testScenarios1';
+const analytics = getAnalytics(app);
+const firestore = getFirestore(app);
+
+logEvent(analytics, 'started_app');
+
+const scenarioCollectionID = 'scenarios2';
 const scenarioCollection = collection(firestore, scenarioCollectionID);
+
 let unsubscribe;
 
 export async function getScenario(scenarioID) {

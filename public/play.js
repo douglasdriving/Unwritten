@@ -1,8 +1,8 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters } from "/dbHandler.js?v=0.271";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters } from "/dbHandler.js?v=0.273";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
-const timeBetweenLetters = 40; //ms
+const timeBetweenLetters = 15; //ms
 const delayAfterPrintFinished = 500; //ms
 const maxCharsAction = 80;
 const maxCharsScenario = 300;
@@ -74,7 +74,7 @@ function CountCharacters() {
 
 }
 
-async function PlayScenario(scenarioID, actionButtonThatLeadToThisScenario) {
+async function PlayScenario(scenarioID) {
 
     TryUnsubscribe();
 
@@ -168,7 +168,7 @@ function LoadActionButtons(actions) {
             dispatchEvent(terminatePrint);
             if (plusButton.className != 'plusButton highlightedButton') {
                 ActivateAddContentBlock('write a new action...', 'Add Action', 0);
-                TryBacktrack(scenarioIdForButton, priorScenarios);
+                TryBacktrack(scenarioIdForButton, priorScenarios, plusButton.parentNode);
                 SetHighlight(plusButton, true);
             }
             else {
@@ -193,33 +193,42 @@ function CreateActionButton(actionElement, actionID) {
     const scenarioIdForThisAction = currentScenarioID;
     const scenarioBlocksUpToThisAction = Array.from(storyBlock.childNodes);
 
-    actionButton.onclick = (() => {
+    actionButton.onclick = (async () => {
 
         dispatchEvent(terminatePrint);
 
         if (contentIsBeingAdded) return;
 
         if (actionButton.className === 'actionButton highlightedButton'){
-            SetHighlight(actionButton, false);
+
+            TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
             addContentBlock.style.display = 'none';
             lastActionPressed = null;
+
+            //remove and create a new action block
+            const scenarioBlock = currentActionBlock.parentNode;
+            currentActionBlock.remove();
+            currentActionBlock = document.createElement('div');
+            scenarioBlock.append(currentActionBlock);
+            
+            //load in the actions again
+            const scenarioData = await getScenario(scenarioIdForThisAction);
+            LoadActionButtons(scenarioData.actions);
+
         }
         else{
             lastActionPressed = actionButton;
             TakeAction(actionElement, actionID, actionButton);
             SetHighlight(actionButton, true);
+            TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
         }
-
-        currentActionBlock = actionButton.parentNode;
-        TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction);
-
     });
 
     //return the button
     return actionButton;
 }
 
-function TryBacktrack(scenarioID, priorScenarios) {
+function TryBacktrack(scenarioID, priorScenarios, actionBlock) {
 
     const scenarioBlocksWhenClicking = Array.from(storyBlock.childNodes);
     if (scenarioBlocksWhenClicking.length === priorScenarios.length)
@@ -235,6 +244,7 @@ function TryBacktrack(scenarioID, priorScenarios) {
     });
 
     currentScenarioID = scenarioID;
+    currentActionBlock = actionBlock;
 
     //remove taken actions from the list
     actionsTaken.forEach((actionElement, i) => {
