@@ -1,3 +1,52 @@
-document.getElementById('startPageButton').onclick = () => {
-    window.location.href = 'play.html';
-};
+import { getStories, getScenarioCount } from "/dbHandler.js?v=0.01";
+
+const storyDiv = document.getElementById('stories');
+
+LoadStoryMeny();
+
+document.getElementById('createStoryButton').onclick = () => {
+    window.location.href = `/creator.html`;
+}
+
+async function LoadStoryMeny() {
+
+    const loadText = document.createElement('p');
+    storyDiv.append(loadText);
+    loadText.textContent = 'Loading unwritten stories...';
+
+    const stories = await getStories();
+    stories.forEach(story => {
+        AddStoryToMeny(story.title, story.description, story.collection);
+    });
+
+    loadText.remove();
+}
+
+async function AddStoryToMeny(title, description, collectionID) {
+
+    const count = await getScenarioCount(collectionID);
+
+    const menuItem = document.createElement('div');
+    menuItem.className = 'story';
+    storyDiv.append(menuItem);
+
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    menuItem.append(heading);
+
+    const descText = document.createElement('p');
+    descText.textContent = description;
+    menuItem.append(descText);
+
+    const scenarioCounter = document.createElement('p');
+    scenarioCounter.textContent = ('(' + count + ' scenarios)');
+    menuItem.append(scenarioCounter);
+
+    const startStoryButton = document.createElement('button');
+    startStoryButton.textContent = 'Play this story';
+    menuItem.append(startStoryButton);
+
+    startStoryButton.onclick = () => {
+        window.location.href = `/play.html?v=0.02&storyCollectionID=${collectionID}`;
+    }
+}

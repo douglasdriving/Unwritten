@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
-import { getAnalytics, logEvent  } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
+import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCuHFWH47mYRwBWEbPjRgkwJw55-ph7ft4",
@@ -14,30 +14,62 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-const firestore = getFirestore(app);
+const db = getFirestore(app);
 
 logEvent(analytics, 'started_app');
 
-const scenarioCollectionID = 'scenarios2';
-const scenarioCollection = collection(firestore, scenarioCollectionID);
-
+let storyCollectionID;
+let scenarioCollection;
 let unsubscribe;
 
+CheckForCollectionID();
+
+function CheckForCollectionID() {
+    var url_string = window.location.href; //window.location.href
+    var url = new URL(url_string);
+    var ID = url.searchParams.get("storyCollectionID");
+    if (ID) setStory(ID);
+}
+
+export function setStory(collectionID) {
+    storyCollectionID = collectionID;
+    scenarioCollection = collection(db, storyCollectionID);
+}
+
 export async function getScenario(scenarioID) {
-    const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`);
+    const docRef = await doc(db, `${storyCollectionID}/${scenarioID}`);
     const document = await getDoc(docRef);
     if (document.exists()) {
         const docData = document.data();
         return docData;
     }
     else {
+        console.error(`no doc data found for the given path ${storyCollectionID}/${scenarioID}`);
         return false;
     }
 }
 
+export async function getIntro() {
+
+    if (storyCollectionID === null) CheckForCollectionID();
+
+    const docRef = await doc(db, `${storyCollectionID}/intro`);
+    const document = await getDoc(docRef);
+
+    if (document.exists()) {
+        const introText = document.data().text;
+        return introText;
+    }
+    else {
+        console.error(`no intro doc data found for the current collectionID ${storyCollectionID}`);
+        return false;
+    }
+
+}
+
 export async function addAction(scenarioID, actionText) {
 
-    const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`)
+    const docRef = await doc(db, `${storyCollectionID}/${scenarioID}`)
     if (!docRef) {
         console.error('Attempted to add action, but a docref with the given scenario ID could not be found');
         return -1;
@@ -62,7 +94,7 @@ export async function addAction(scenarioID, actionText) {
 
 export async function addScenario(scenarioText, parentID, parentActionIndex) {
     //check to make sure parent is not already referencing a scenario
-    const parentDocRef = await doc(firestore, `${scenarioCollectionID}/${parentID}`);
+    const parentDocRef = await doc(db, `${storyCollectionID}/${parentID}`);
     const parentDoc = await getDoc(parentDocRef);
     const parentDocData = parentDoc.data();
 
@@ -106,7 +138,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
 
 export async function monitorScenario(scenarioID, onUpdateFunction) {
 
-    const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`);
+    const docRef = await doc(db, `${storyCollectionID}/${scenarioID}`);
     unsubscribe = await onSnapshot(docRef, document => {
         onUpdateFunction(document.data()); //adds the document as a param to the callback function passed in
     });
@@ -140,7 +172,7 @@ export async function updateContentCounters(actionArray) {
 
             const scenarioID = actionRef.scenarioID;
             const actionID = actionRef.actionID;
-            const docRef = await doc(firestore, `${scenarioCollectionID}/${scenarioID}`)
+            const docRef = await doc(db, `${storyCollectionID}/${scenarioID}`)
 
             const currentScenarioData = await getScenario(scenarioID);
             let actions = currentScenarioData.actions;
@@ -149,7 +181,7 @@ export async function updateContentCounters(actionArray) {
             else actions[actionID].scenarioCount = 1;
 
             await updateDoc(docRef, { actions: actions }) //gillar inte att man måste ersätta hela arrayen. Det vore smidigare om man bara kunde uppdatera en action.
-            
+
         });
 
         promiseArray.push(promise);
@@ -161,4 +193,51 @@ export async function updateContentCounters(actionArray) {
             console.log('all actions updated');
         });
 
+}
+
+export async function getStories() {
+    const querySnapshot = await getDocs(collection(db, "stories"));
+    let stories = [];
+    querySnapshot.forEach((doc) => {
+        stories.push(doc.data());
+    });
+    return stories;
+}
+
+export async function getScenarioCount(collectionID) {
+
+    const coll = collection(db, collectionID);
+    const querySnapshot = await getDocs(coll);
+    return querySnapshot.size - 1;
+
+}
+
+export async function createNewStory(title, description, introduction, initialscenario) {
+
+    //check to see if the collection already exist - if it does it means that the title already exist and you cant create it
+    const storyCollection = collection(db, title);
+    const querySnapshot = await getDocs(storyCollection);
+    if (querySnapshot.size > 0) {
+        console.error('could not add the new story, name already exists');
+        return -1;
+    }
+
+    //add a "start" doc to the collection containing the initial scenario
+    await setDoc(doc(db, title, "start"), {
+        text: initialscenario
+    });
+
+    //add a "intro" doc to the collaction containint the intro text
+    await setDoc(doc(db, title, "intro"), {
+        text: introduction
+    });
+
+    //add an information document to the "stories" collection containing the title, description, and ref to the newly added collection.
+    await setDoc(doc(db, 'stories', title), {
+        title: title,
+        description: description,
+        collection: title,
+    });
+
+    return 0;
 }

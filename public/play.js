@@ -1,4 +1,4 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters } from "/dbHandler.js?v=0.273";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters, getIntro } from "/dbHandler.js?v=0.274";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -24,6 +24,8 @@ keepPlayButton.style.display = 'none';
 addingContentBlock.style.display = 'none';
 addContentBlock.style.display = 'none';
 document.getElementById("contentAddConfirmBlock").style.display = 'none';
+SetIntroText();
+beginButton.style.display = 'none';
 
 //TRACKING VARIABLES
 let currentScenarioID;
@@ -48,6 +50,16 @@ document.addEventListener("keypress", event => {
 });
 addContentTextField.addEventListener('input', CountCharacters);
 const terminatePrint = new Event('terminatePrint');
+
+//create a function that gets intro text and sets it in the game window.
+
+async function SetIntroText(){
+    
+    const text = await getIntro();
+    document.getElementById('ingress').textContent = text;
+    beginButton.style.display = 'block';
+
+}
 
 function CountCharacters() {
 
@@ -88,7 +100,7 @@ async function PlayScenario(scenarioID) {
 
     //setup termination tracking
     let printTerminated = false;
-    addEventListener('terminatePrint', () => {printTerminated=true});
+    addEventListener('terminatePrint', () => { printTerminated = true });
 
     //get the data
     const scenarioData = await getScenario(scenarioID);
@@ -199,7 +211,7 @@ function CreateActionButton(actionElement, actionID) {
 
         if (contentIsBeingAdded) return;
 
-        if (actionButton.className === 'actionButton highlightedButton'){
+        if (actionButton.className === 'actionButton highlightedButton') {
 
             TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
             addContentBlock.style.display = 'none';
@@ -210,13 +222,13 @@ function CreateActionButton(actionElement, actionID) {
             currentActionBlock.remove();
             currentActionBlock = document.createElement('div');
             scenarioBlock.append(currentActionBlock);
-            
+
             //load in the actions again
             const scenarioData = await getScenario(scenarioIdForThisAction);
             LoadActionButtons(scenarioData.actions);
 
         }
-        else{
+        else {
             lastActionPressed = actionButton;
             TakeAction(actionElement, actionID, actionButton);
             SetHighlight(actionButton, true);
@@ -459,23 +471,23 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
     ScrollDown();
 }
 
-function IncreasePickedActionNumbers(){
+function IncreasePickedActionNumbers() {
 
     storyBlock.childNodes.forEach(scenarioBlock => {
-        
+
         scenarioBlock.childNodes.forEach(div => {
 
             div.childNodes.forEach(button => {
 
                 if (button.className !== 'actionButton highlightedButton') return;
                 const text = button.textContent;
-                const newNumber = parseInt(text[text.length-2]) + 1;
+                const newNumber = parseInt(text[text.length - 2]) + 1;
                 button.textContent = button.textContent.slice(0, -4) + ' (' + newNumber + ')';
-    
+
             })
 
         })
-        
+
 
 
     })
