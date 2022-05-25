@@ -1,3 +1,30 @@
+* {
+    font-family: 'Lato', sans-serif;
+    font-size: 15px;
+    line-height: 2.5ch;
+    background-color: #fcf8e7;
+    color: #382e2c;
+}
+
+body{
+    margin: 15px;
+}
+
+button {
+    background-color: #766a68;
+    color: #fcf8e7;
+    border-width: 3px;
+    border-color: #382e2c;
+}
+
+#ingress{
+    padding: 10px;
+    border-style: solid;
+    border-color: #382e2c;
+    border-width: 2px;
+    margin-bottom: 10px;
+}
+
 #addActions {
     padding: 5pt;
     border-color: black;
@@ -10,24 +37,23 @@
 .actionButton {
     margin-right: 5pt;
     margin-bottom: 5pt;
-    border-width: 1px;
-    border-color: grey;
     font-weight: normal;
 }
-.plusButton{
+
+.plusButton {
     margin-right: 5pt;
     margin-bottom: 5pt;
-    border-width: 1px;
-    background-color: lightgreen;
-    border-width: 1px;
+    background-color: #659065;
     font-weight: normal;
 }
-.highlightedButton{
+
+.highlightedButton {
     border-width: 2px;
     border-color: black;
     font-weight: bold;
 }
-.fadedButton{
+
+.fadedButton {
     border-width: 1px;
     border-color: grey;
     font-weight: normal;
@@ -36,12 +62,7 @@
 
 /* CONTENT - SUCCESSFULLY ADDED */
 #addingContent {
-    background-color: lightgray;
-    padding: 8pt;
-
-    border-style: solid;
-    border-width: 1.5pt;
-    border-color: gray;
+    font-style: italic;
 }
 
 #addContentStatus {
@@ -50,7 +71,6 @@
 
 /* CONTENT - ASK FOR CONFIRMATION */
 #contentAddConfirmBlock {
-    background-color: lightgrey;
     border-style: solid;
     border-width: 1.5pt;
     padding: 10pt;
@@ -59,31 +79,26 @@
 
 .contentToConfirm {
     font-style: italic;
-    border-style: dashed;
     border-width: 1.5pt;
-    border-color: grey;
-    background-color: rgb(207, 207, 168);
-    width: fit-content;
-    padding: 5pt;
+    padding: 10px;
 }
 
 /* ADDING NEW CONTENT */
-#addContentBlock {
+#addContentArea {
     border-style: solid;
-    border-color: grey;
     border-width: 1.5pt;
     width: 100%;
-    min-height: 30px;
+    min-height: 75px;
 }
 
 #addContentTextField {
     outline: none !important;
-    height: 70%;
     left: 0px;
-    width: 72%;
+    width: 68%;
     resize: none;
     border-style: none;
     margin: 3pt;
+    min-height: 60px;
 }
 
 #tryAddContentButton {
@@ -92,11 +107,12 @@
     position: absolute;
     right: 0px;
     margin-top: 4pt;
-    margin-right: 7pt;
+    margin-right: 14pt;
 }
 
-#charCounter{
-    margin-top: 3pt;
+#charCounter {
+    margin-top: 6pt;
+    background: transparent
 }
 
 /*STORY*/
@@ -110,7 +126,6 @@
     position: relative;
     margin-bottom: 15pt;
     margin-top: 15pt;
-    background-color: rgb(255, 255, 255);
     min-height: 30px;
 }
 
@@ -131,7 +146,7 @@
         min-height: 60px;
         min-width: 60px;
     }
-    
+
     .scenarioContainer {
         min-height: 60px;
     }

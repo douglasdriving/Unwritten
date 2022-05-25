@@ -6,13 +6,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unwritten Play</title>
-    <link rel="stylesheet" href="style.css?v=1.237">
+    <link rel="stylesheet" href="style.css?v=1.238">
+    <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet'>
 </head>
 
 <body>
 
     <div id="ingress">Loading intro...</div>
-    <hr>
 
     <button id="beginPlay">Begin your adventure</button>
 
@@ -20,10 +20,13 @@
     </div>
 
     <div id="addContentBlock">
-        <textarea id="addContentTextField" placeholder="write content..."></textarea>
-        <button id="tryAddContentButton">Add Action</button>
+        <div id="addContentArea">
+            <textarea id="addContentTextField" placeholder="write content..."></textarea>
+            <button id="tryAddContentButton">Add Action</button>
+        </div>
         <p id="charCounter">0/280</p>
     </div>
+
 
     <div id="addingContent">
         <p id="addContentStatus">Adding content to Unwritten...</p>
@@ -40,7 +43,7 @@
     <button id="keepPlayButton">Keep on Playing</button>
 
     <!-- <script type='module' src="dbHandler.js?v=0.1" async defer></script> -->
-    <script type="module" src="play.js?v=0.389" async defer></script>
+    <script type="module" src="play.js?v=0.3892" async defer></script>
 
 </body>
 

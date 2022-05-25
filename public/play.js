@@ -129,6 +129,7 @@ async function PlayScenario(scenarioID) {
             if (printTerminated) scenarioTextBlock.remove();
             printedText += char;
             scenarioTextBlock.textContent = printedText;
+            ScrollDown();
         }, delayForNextLetter);
         delayForNextLetter += timeBetweenLetters;
     })
@@ -430,9 +431,6 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
     addedContent.className = 'contentToConfirm';
     addingContentBlock.append(addedContent);
 
-    addingContentBlock.style.backgroundColor = 'rgb(181, 227, 181)';
-    addingContentBlock.style.bordercolor = 'rgb(118, 149, 118)';
-
     //show button that allows you to keep on playing
     const continueButton = document.createElement('button');
     addingContentBlock.appendChild(continueButton);
@@ -511,7 +509,6 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
         addContentTextField.placeholder = `Write a new scenario. Example: "${GetScenarioExample()}"`
         maxNumOfChars = maxCharsScenario;
         CountCharacters();
-        addContentBlock.style.height = '90pt';
         tryAddContentButton.onclick = () => { TryAddNewContent('scenario', actionIndex); }
         onEnterPress = () => { TryAddNewContent('scenario', actionIndex); };
     }
@@ -519,7 +516,6 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
         addContentTextField.placeholder = `Write a new action. Example: "${GetActionExample()}"`
         maxNumOfChars = maxCharsAction;
         CountCharacters();
-        addContentBlock.style.height = '30pt';
         tryAddContentButton.onclick = () => { TryAddNewContent('action', -1); }
         onEnterPress = () => { TryAddNewContent('action', -1); };
     }
@@ -528,13 +524,14 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
         onEnterPress = null;
     }
 
-    //start to monitor the scenario
+    addContentTextField.style.height = maxNumOfChars * 180 / window.innerWidth + 'px';
+
     TryUnsubscribe();
     //startScenarioMonitoring(actionIndex, buttonText);
     ScrollDown();
 }
 
-/*
+/* 
 async function startScenarioMonitoring(actionIndex, contentType) {
     if (contentType != 'Add Scenario' && contentType != 'Add Action') {
         console.error('content type text set incorrectly. Cannot monitor. it was set to: ' + contentType);

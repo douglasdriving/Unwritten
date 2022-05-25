@@ -1,5 +1,16 @@
-.story{
+.story {
   background-color: lightgray;
   padding: 8px;
   margin: 8px;
+}
+
+#createButton {
+  height: 40pt;
+}
+
+.createStoryInputField {
+  border-color: black;
+  width: 95%;
+  min-height: 15pt;
+  max-height: 100pt;
 }

@@ -1,20 +1,37 @@
-import { createNewStory } from "/dbHandler.js?v=0.01";
+import { createNewStory } from "/dbHandler.js?v=0.02";
 
 const creator = document.getElementById('creator');
 
-const maxCharTitle = 25;
-const maxCharDescription = 150;
-const maxCharIntroduction = 1000;
-const maxCharInitialScenario = 300;
+const fields = [
+  {
+    heading: 'Title',
+    description: 'The title of the story',
+    maxChar: 25
+  },
+  {
+    heading: 'Description',
+    description: 'A short description of the story. Will be displayed on the front page',
+    maxChar: 150
+  },
+  {
+    heading: 'Introduction',
+    description: 'An introduction to the universe in which the story takes place. Include information about the main character, the setting, the goal, etc.',
+    maxChar: 1000
+  },
+  {
+    heading: 'Initial Sceanario',
+    description: 'The first thing that happens in the story. Players will react to this initial scenario by picking an action',
+    maxChar: 300
+  },
+]
 
-const titleField = CreateInputArea('Title', 'The title of the story', maxCharTitle);
-const descriptionField = CreateInputArea('Description', 'A short description of the story. Will be displayed on the front page', maxCharDescription);
-const introductionField = CreateInputArea('Introduction', 'An introduction to the universe in which the story takes place. Include information about the main character, the setting, the goal, etc.', maxCharIntroduction);
-const initialScenarioField = CreateInputArea('Initial scenario', 'The first thing that happens in the story. Players will react to this initial scenario by picking an action', maxCharInitialScenario);
+fields.forEach(field => {
+  field.inputField = CreateInputArea(field.heading, field.description, field.maxChar);
+})
 
 document.getElementById('createButton').onclick = CreateStory;
 
-function CreateInputArea(headingText, descriptionText, maxChars, fieldRef) {
+function CreateInputArea(headingText, descriptionText, maxChars) {
 
   const area = document.createElement('div');
   const heading = document.createElement('h3');
@@ -34,9 +51,13 @@ function CreateInputArea(headingText, descriptionText, maxChars, fieldRef) {
 
   charCounter.style.color = 'transparent';
 
+  inputField.className = 'createStoryInputField';
+  inputField.style.height = maxChars/3 + 'pt';
+
   inputField.addEventListener('input',
     function CountChars() {
 
+      inputField.style.borderColor = 'black';
       let numOfEnteredChars = inputField.value.length;
       let counter = maxChars - numOfEnteredChars;
       charCounter.textContent = counter + " / " + maxChars;
@@ -52,6 +73,7 @@ function CreateInputArea(headingText, descriptionText, maxChars, fieldRef) {
       }
       else {
         charCounter.style.color = 'red';
+        inputField.style.borderColor = 'red';
       }
     }
   );
@@ -63,20 +85,13 @@ async function CreateStory() {
 
   let allReady = true;
 
-  const title = titleField.value;
-  const description = descriptionField.value;
-  const introduction = introductionField.value;
-  const initialScenario = initialScenarioField.value
-
-  if (title.length > maxCharTitle) allReady = false;
-  if (description.length > maxCharDescription) allReady = false;
-  if (initialScenario.length > maxCharInitialScenario) allReady = false;
-  if (introduction.length > maxCharIntroduction) allReady = false;
-
-  if (title.length <= 0) allReady = false;
-  if (description.length <= 0) allReady = false;
-  if (initialScenario.length <= 0) allReady = false;
-  if (introduction.length <= 0) allReady = false;
+  fields.forEach(field => {
+    const charCount = field.inputField.value.length;
+    if((charCount > field.maxChar) || (charCount <= 0)){
+      allReady = false;
+      field.inputField.style.borderColor = 'red';
+    }
+  })
 
   if (!allReady) {
     const errorMessage = document.createElement('p');
@@ -87,35 +102,51 @@ async function CreateStory() {
     return;
   }
 
-  creator.style.display = 'none';
+  TryUpload();
 
-  const statusText = document.createElement('p');
-  statusText.textContent = "Please wait while your story is being added to Unwritten...";
-  document.body.append(statusText);
+  async function TryUpload() {
 
-  const storyCreationStatus = await createNewStory(titleField.value, descriptionField.value, introductionField.value, initialScenarioField.value);
-  console.log('story creation status:');
-  console.log(storyCreationStatus);
+    creator.style.display = 'none';
 
-  const continueButton = document.createElement('button');
-  document.body.append(continueButton);
+    const statusText = document.createElement('p');
+    statusText.textContent = "Please wait while your story is being added to Unwritten...";
+    document.body.append(statusText);
 
-  if (storyCreationStatus === -1){
-    statusText.textContent = "A story with that name already exists.";
-    statusText.style.color = 'red';
-    continueButton.textContent = 'Go back to edit story';
-    continueButton.onclick = () => {
-      creator.style.display = 'block';
-      continueButton.remove();
-      statusText.remove();
+    const storyCreationStatus = await createNewStory(fields[0].inputField.value, fields[1].inputField.value, fields[2].inputField.value, fields[3].inputField.value);
+
+    const continueButton = document.createElement('button');
+    document.body.append(continueButton);
+
+    if (storyCreationStatus === -1) {
+      statusText.textContent = "A story with that name already exists.";
+      statusText.style.color = 'red';
+      continueButton.textContent = 'Go back to edit story';
+      continueButton.onclick = () => {
+        creator.style.display = 'block';
+        continueButton.remove();
+        statusText.remove();
+      }
+      return;
     }
-    return;
-  }
 
-  statusText.textContent = "Your story was successfully added to Unwritten!";
-  continueButton.textContent = 'Enter story';
-  continueButton.onclick = () => {
-    window.location.href = `/play.html?v=0.01&storyCollectionID=${titleField.value}`;
+    if (storyCreationStatus === -2) {
+      statusText.textContent = "There was an error in uploading your story. Please try again.";
+      statusText.style.color = 'red';
+      continueButton.textContent = 'Try uploading again';
+      continueButton.onclick = () => {
+        continueButton.remove();
+        statusText.remove();
+        TryUpload();
+      }
+      return;
+    }
+
+    statusText.textContent = "Your story was successfully added to Unwritten!";
+    continueButton.textContent = 'Enter story';
+    continueButton.onclick = () => {
+      window.location.href = `/play.html?v=0.01&storyCollectionID=${fields[0].inputField.value}`;
+    }
+
   }
 
 }

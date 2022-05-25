@@ -214,7 +214,6 @@ export async function getScenarioCount(collectionID) {
 
 export async function createNewStory(title, description, introduction, initialscenario) {
 
-    //check to see if the collection already exist - if it does it means that the title already exist and you cant create it
     const storyCollection = collection(db, title);
     const querySnapshot = await getDocs(storyCollection);
     if (querySnapshot.size > 0) {
@@ -222,22 +221,24 @@ export async function createNewStory(title, description, introduction, initialsc
         return -1;
     }
 
-    //add a "start" doc to the collection containing the initial scenario
-    await setDoc(doc(db, title, "start"), {
-        text: initialscenario
-    });
-
-    //add a "intro" doc to the collaction containint the intro text
-    await setDoc(doc(db, title, "intro"), {
-        text: introduction
-    });
-
-    //add an information document to the "stories" collection containing the title, description, and ref to the newly added collection.
-    await setDoc(doc(db, 'stories', title), {
-        title: title,
-        description: description,
-        collection: title,
-    });
+    await Promise.all([
+        setDoc(doc(db, title, "start"), {
+            text: initialscenario
+        }),
+        setDoc(doc(db, title, "intro"), {
+            text: introduction
+        }),
+        setDoc(doc(db, 'stories', title), {
+            title: title,
+            description: description,
+            collection: title,
+        })
+    ])
+        .catch(err => {
+            console.error('story could not be created, db gave an error:');
+            console.error(err);
+            return -2;
+        })
 
     return 0;
 }
