@@ -5,9 +5,24 @@
   color: #382e2c;
 }
 
+.inverted{
+  background-color: #766a68;
+  color: #fcf8e7;
+  padding: 10px;
+}
+
+.bordered{
+  border-style: solid;
+  border-width: 3px;
+  border-color: #382e2c;
+  padding: 10px;
+}
+
 body {
-  margin: 15px;
   background-color: #fcf8e7;
+  max-width: 600px;
+  margin: auto;
+  padding: 30px;
 }
 
 button {
@@ -15,6 +30,8 @@ button {
   color: #fcf8e7;
   border-width: 3px;
   border-color: #382e2c;
+  font-weight: bold;
+  min-height: 30px;
 }
 
 h1 {
@@ -25,4 +42,12 @@ h1 {
 h2 {
   font-size: x-large;
   font-weight: bold;
+}
+
+h3{
+  font-weight: bold;
+}
+
+textarea{
+  background-color: transparent;
 }

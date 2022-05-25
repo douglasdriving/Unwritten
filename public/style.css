@@ -4,6 +4,7 @@
     border-color: #382e2c;
     border-width: 2px;
     margin-bottom: 10px;
+    font-weight: bold;
 }
 
 #addActions {
@@ -29,8 +30,8 @@
 }
 
 .highlightedButton {
-    border-width: 2px;
-    border-color: black;
+    border-width: 5px;
+    border-color: #382e2c;
     font-weight: bold;
 }
 

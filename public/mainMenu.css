@@ -7,7 +7,13 @@
 }
 
 .storyItemText{
-  color: fcf8e7;
+  color: #fcf8e7;
+}
+
+.startStoryButton{
+  background-color: #fcf8e7;
+  color: #382e2c;
+  font-weight: bold;
 }
 
 #createButton {
@@ -15,8 +21,19 @@
 }
 
 .createStoryInputField {
-  border-color: black;
+  border-color: #766a68;
+  border-width: 3px;
   width: 95%;
   min-height: 15pt;
   max-height: 100pt;
+}
+
+.charCounter{
+  margin-top: 5px;
+  margin-bottom: 0px;
+  background-color: transparent;
+}
+
+#form{
+  margin-bottom: 10px;
 }

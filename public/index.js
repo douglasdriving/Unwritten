@@ -47,6 +47,7 @@ async function AddStoryToMeny(title, description, collectionID) {
 
     const startStoryButton = document.createElement('button');
     startStoryButton.textContent = 'Play this story';
+    startStoryButton.className = 'startStoryButton';
     menuItem.append(startStoryButton);
 
     startStoryButton.onclick = () => {

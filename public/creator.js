@@ -49,28 +49,30 @@ function CreateInputArea(headingText, descriptionText, maxChars) {
   area.append(inputField);
   area.append(charCounter);
 
-  charCounter.style.color = 'transparent';
-
+  charCounter.className = 'charCounter';
   inputField.className = 'createStoryInputField';
   inputField.style.height = maxChars/3 + 'pt';
+  const defaultFieldBorderColor = inputField.style.borderBlockColor;
 
   inputField.addEventListener('input',
     function CountChars() {
 
-      inputField.style.borderColor = 'black';
       let numOfEnteredChars = inputField.value.length;
       let counter = maxChars - numOfEnteredChars;
       charCounter.textContent = counter + " / " + maxChars;
 
+      inputField.style.borderColor = defaultFieldBorderColor;
+
       if (numOfEnteredChars < 1) {
-        charCounter.style.color = 'transparent';
+        charCounter.style.color = 'red';
+        inputField.style.borderColor = 'red';
       }
       else if (counter > 10) {
-        charCounter.style.color = 'black';
+        charCounter.style.color = '#382e2c';
       }
       else if (counter > 0) {
         charCounter.style.color = 'darkorange';
-      }
+      } 
       else {
         charCounter.style.color = 'red';
         inputField.style.borderColor = 'red';
