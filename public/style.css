@@ -1,22 +1,3 @@
-* {
-    font-family: 'Lato', sans-serif;
-    font-size: 15px;
-    line-height: 2.5ch;
-    background-color: #fcf8e7;
-    color: #382e2c;
-}
-
-body{
-    margin: 15px;
-}
-
-button {
-    background-color: #766a68;
-    color: #fcf8e7;
-    border-width: 3px;
-    border-color: #382e2c;
-}
-
 #ingress{
     padding: 10px;
     border-style: solid;
@@ -63,8 +44,9 @@ button {
 /* CONTENT - SUCCESSFULLY ADDED */
 #addingContent {
     font-style: italic;
+    border-style: solid;
+    padding: 10px;
 }
-
 #addContentStatus {
     margin: 0;
 }

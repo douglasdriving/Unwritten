@@ -374,8 +374,6 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
         contentAddConfirmBlock.style.display = 'none';
         addContentTextField.value = '';
         addingContentBlock.style.display = 'block';
-        addingContentBlock.style.backgroundColor = 'lightgrey';
-        addingContentBlock.style.bordercolor = 'grey';
         addingContentStatusText.textContent = 'Adding your content to Unwritten...';
 
     }

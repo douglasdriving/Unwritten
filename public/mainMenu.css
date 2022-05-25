@@ -1,7 +1,13 @@
 .story {
-  background-color: lightgray;
-  padding: 8px;
-  margin: 8px;
+  border-style: solid;
+  padding: 10px;
+  padding-top: 0px;
+  margin-bottom: 10px;
+  background: #766a68;
+}
+
+.storyItemText{
+  color: fcf8e7;
 }
 
 #createButton {

@@ -1,0 +1,28 @@
+* {
+  font-family: 'Lato', sans-serif;
+  font-size: 15px;
+  line-height: 2.5ch;
+  color: #382e2c;
+}
+
+body {
+  margin: 15px;
+  background-color: #fcf8e7;
+}
+
+button {
+  background-color: #766a68;
+  color: #fcf8e7;
+  border-width: 3px;
+  border-color: #382e2c;
+}
+
+h1 {
+  font-size: xx-large;
+  font-weight: bold;
+}
+
+h2 {
+  font-size: x-large;
+  font-weight: bold;
+}

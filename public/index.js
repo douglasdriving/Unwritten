@@ -32,13 +32,16 @@ async function AddStoryToMeny(title, description, collectionID) {
 
     const heading = document.createElement('h3');
     heading.textContent = title;
+    heading.className = 'storyItemText';
     menuItem.append(heading);
 
     const descText = document.createElement('p');
+    descText.className = 'storyItemText';
     descText.textContent = description;
     menuItem.append(descText);
 
     const scenarioCounter = document.createElement('p');
+    scenarioCounter.className = 'storyItemText';
     scenarioCounter.textContent = ('(' + count + ' scenarios)');
     menuItem.append(scenarioCounter);
 
