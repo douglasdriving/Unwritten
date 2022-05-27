@@ -1,4 +1,4 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, updateContentCounters, getIntro } from "/dbHandler.js?v=0.274";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, getIntro } from "/dbHandler.js?v=0.274";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -194,13 +194,12 @@ function LoadActionButtons(actions) {
 
 function CreateActionButton(actionElement, actionID) {
 
-    //create the element
     const actionButton = document.createElement('button');
     currentActionBlock.appendChild(actionButton);
     actionButton.className = 'actionButton';
 
-    const scenarioCount = actionElement.scenarioCount || 0;
-    actionButton.textContent = actionElement.action + ` (${scenarioCount})`;
+    //const scenarioCount = actionElement.scenarioCount || 0;
+    actionButton.textContent = actionElement.action; // + ` (${scenarioCount})`;
 
     //Assign onclick
     const scenarioIdForThisAction = currentScenarioID;
@@ -408,7 +407,7 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                     return;
                 }
 
-                updateContentCounters(actionsTaken);
+                //updateContentCounters(actionsTaken);
                 ConfirmContentAddition('scenario', contentText, response.newDocID, 0);
                 contentIsBeingAdded = false;
 
@@ -522,7 +521,7 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
         onEnterPress = null;
     }
 
-    addContentTextField.style.height = maxNumOfChars * 180 / window.innerWidth + 'px';
+    addContentTextField.style.height = maxNumOfChars * 250 / window.innerWidth + 'px';
 
     TryUnsubscribe();
     //startScenarioMonitoring(actionIndex, buttonText);

@@ -76,21 +76,17 @@
 
 #addContentTextField {
     outline: none !important;
-    left: 0px;
-    width: 68%;
+    width: 65%;
     resize: none;
     border-style: none;
-    margin: 3pt;
+    margin: 5pt;
     min-height: 60px;
 }
 
 #tryAddContentButton {
-    height: 18pt;
     width: 25%;
-    position: absolute;
-    right: 0px;
-    margin-top: 4pt;
-    margin-right: 14pt;
+    float: right;
+    margin: 5pt;
 }
 
 #charCounter {
