@@ -32,8 +32,23 @@ function CheckForCollectionID() {
 }
 
 export function setStory(collectionID) {
+
     storyCollectionID = collectionID;
     scenarioCollection = collection(db, storyCollectionID);
+
+}
+
+export async function getStoryData(collectionID){
+
+    const querySnapshot = await getDocs(collection(db, collectionID));
+
+    let storyData = [];
+    querySnapshot.forEach((doc) => {
+        storyData.push(doc.data());
+    });
+
+    return storyData;
+
 }
 
 export async function getScenario(scenarioID) {

@@ -1,4 +1,5 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, getIntro } from "/dbHandler.js?v=0.274";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, getIntro } from "/dbHandler.js?v=0.275";
+import { SetupData } from "/storyData.js?v=0.01";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -50,6 +51,7 @@ document.addEventListener("keypress", event => {
 });
 addContentTextField.addEventListener('input', CountCharacters);
 const terminatePrint = new Event('terminatePrint');
+SetupData();
 
 //create a function that gets intro text and sets it in the game window.
 
@@ -449,7 +451,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
     else if (type === 'scenario') {
         continueButton.textContent = 'Keep playing this scenario';
         continueButton.onclick = () => {
-            IncreasePickedActionNumbers();
+            //IncreasePickedActionNumbers();
             hideAddContentBlock();
             PlayScenario(newScenarioID, lastActionPressed);
         }
@@ -464,29 +466,6 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
     }
 
     ScrollDown();
-}
-
-function IncreasePickedActionNumbers() {
-
-    storyBlock.childNodes.forEach(scenarioBlock => {
-
-        scenarioBlock.childNodes.forEach(div => {
-
-            div.childNodes.forEach(button => {
-
-                if (button.className !== 'actionButton highlightedButton') return;
-                const text = button.textContent;
-                const newNumber = parseInt(text[text.length - 2]) + 1;
-                button.textContent = button.textContent.slice(0, -4) + ' (' + newNumber + ')';
-
-            })
-
-        })
-
-
-
-    })
-
 }
 
 function ReachEndpointAction(actionIndex) {
@@ -524,64 +503,8 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
     addContentTextField.style.height = maxNumOfChars * 250 / window.innerWidth + 'px';
 
     TryUnsubscribe();
-    //startScenarioMonitoring(actionIndex, buttonText);
     ScrollDown();
 }
-
-/* 
-async function startScenarioMonitoring(actionIndex, contentType) {
-    if (contentType != 'Add Scenario' && contentType != 'Add Action') {
-        console.error('content type text set incorrectly. Cannot monitor. it was set to: ' + contentType);
-        return;
-    }
-    
-    const monitorSucceeded = monitorScenario(currentScenarioID, updatedData => onUpdate)
-    
-    if (!monitorSucceeded) {
-        console.error('the monitoring was unable to start');
-    }
-    else{
-        console.log('monitor started');
-    }
-    
-
-    function onUpdate(updatedData){
-        console.log('an update received!!!');
-        if (contentType === 'Add Scenario') onScenarioUpdate(updatedData);
-        else if (contentType === 'Add Action') onActionUpdate(updatedData);
-    }
-
-    async function onScenarioUpdate(updatedData) {
-
-        const newScenarioID = updatedData.actions[actionIndex].scenarioID;
-        if (!newScenarioID) return;
-
-        TryUnsubscribe();
-
-        addContentBlock.style.display = 'none';
-        addingContentBlock.style.display = 'block';
-        addingContentStatusText.textContent = '!Someone else just added a scenario here!';
-
-        //add a button to keep playing
-        const button = document.createElement('button');
-        button.textContent = 'Show scenario and keep playing';
-        addingContentBlock.appendChild(button);
-        button.onclick = () => {
-            playScenario(newScenarioID);
-            button.remove();
-            addingContentBlock.style.display = 'none';
-        }
-
-    }
-
-    function onActionUpdate(updatedData) {
-        console.log('an action was updated!');
-        addContentTextField.placeholder = '..or add your own action';
-        createScenarioActionButtons(updatedData.actions, currentScenarioID);
-    }
-    
-}
-*/
 
 function ScrollDown() {
     window.scrollTo(0, document.body.scrollHeight);
