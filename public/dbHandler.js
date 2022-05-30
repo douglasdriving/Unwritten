@@ -38,17 +38,53 @@ export function setStory(collectionID) {
 
 }
 
-export async function getStoryData(collectionID){
+export async function getStoryData(collectionID) {
 
     const querySnapshot = await getDocs(collection(db, collectionID));
 
-    let storyData = [];
-    querySnapshot.forEach((doc) => {
-        storyData.push(doc.data());
-    });
+    let storyData = {};
+
+    //first find the data that has the id "intro"
+    querySnapshot.forEach(doc => {
+
+        const data = doc.data();
+
+        if (doc.id === 'intro') storyData.intro = data.text;
+        else if (doc.id === 'start') storyData.start = data;
+
+    })
+
+    storyData.start.actions.forEach(a => {
+
+        const scenario = FindDoc(a.scenarioID);
+        console.log('got back the following: ');
+        console.log(scenario);
+
+
+    })
+
+    console.log('got story data:');
+    console.log(storyData);
 
     return storyData;
 
+    function FindDoc(id) {
+        console.log('checking for doc with id ' + id);
+        querySnapshot.forEach(doc => {
+
+            if (doc.id === id) {
+                console.log('this doc has ID ' + doc.id);
+                console.log('which is the same as ' + id);
+                console.log('so I return data: ');
+                console.log(doc.data());
+                const scenario = doc.data();
+                return scenario;
+            }
+            else {
+                //console.log('which is not the same as ' + id);
+            }
+        })
+    }
 }
 
 export async function getScenario(scenarioID) {

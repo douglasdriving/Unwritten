@@ -4,6 +4,7 @@
 //after it has been loaded, a client representation of the data is created here.
 
 import { setStory, getStoryData } from "/dbHandler.js?v=0.275";
+let story;
 
 export async function SetupData(){
 
@@ -11,8 +12,7 @@ export async function SetupData(){
 
   const storyCollectionId = CheckForCollectionID();
   setStory(storyCollectionId);
-  const rawStoryData = await getStoryData(storyCollectionId); //this will be async though
-  const story = CreateStoryStructure(rawStoryData);
+  story = await getStoryData(storyCollectionId); //this will be async though
 
   console.log('data has been set up');
 
@@ -31,12 +31,5 @@ function CheckForCollectionID() {
   else {
     console.error('no collection id could be found. cannot load any story')
   }
-
-}
-
-function CreateStoryStructure(rawStoryData){
-
-  console.log(rawStoryData);
-  //creates a nested JSON object that includes and structures the data from the raw array
 
 }
