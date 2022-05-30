@@ -4,17 +4,16 @@
 //after it has been loaded, a client representation of the data is created here.
 
 import { setStory, getStoryData } from "/dbHandler.js?v=0.275";
-let story;
+let storyData;
+let currentScenario;
 
-export async function SetupData(){
-
-  console.log('setting up the data');
+export async function SetupData() {
 
   const storyCollectionId = CheckForCollectionID();
   setStory(storyCollectionId);
-  story = await getStoryData(storyCollectionId); //this will be async though
-
-  console.log('data has been set up');
+  storyData = await getStoryData(storyCollectionId); //this will be async though
+  console.log('data was set up: ');
+  console.log(storyData);
 
 }
 
@@ -31,5 +30,28 @@ function CheckForCollectionID() {
   else {
     console.error('no collection id could be found. cannot load any story')
   }
+
+}
+
+export function getIntro() {
+  return storyData.intro;
+}
+
+export function GetNextScenario(actionID) {
+
+  if (!currentScenario) {
+    currentScenario = storyData.start;
+  }
+  else{
+    currentScenario = currentScenario.actions[actionID].scenario;
+  }
+  
+  return currentScenario;
+
+}
+
+export function GetCurrentActionOptions() {
+
+  return currentScenario.actions;
 
 }

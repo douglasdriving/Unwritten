@@ -43,47 +43,38 @@ export async function getStoryData(collectionID) {
     const querySnapshot = await getDocs(collection(db, collectionID));
 
     let storyData = {};
+    let iterations = 0;
 
-    //first find the data that has the id "intro"
     querySnapshot.forEach(doc => {
-
         const data = doc.data();
-
         if (doc.id === 'intro') storyData.intro = data.text;
         else if (doc.id === 'start') storyData.start = data;
-
     })
 
-    storyData.start.actions.forEach(a => {
-
-        const scenario = FindDoc(a.scenarioID);
-        console.log('got back the following: ');
-        console.log(scenario);
-
-
-    })
-
-    console.log('got story data:');
-    console.log(storyData);
+    AttachScenariosBelow(storyData.start);
+    console.log('number of iterations: ' + iterations);
 
     return storyData;
 
-    function FindDoc(id) {
-        console.log('checking for doc with id ' + id);
-        querySnapshot.forEach(doc => {
-
-            if (doc.id === id) {
-                console.log('this doc has ID ' + doc.id);
-                console.log('which is the same as ' + id);
-                console.log('so I return data: ');
-                console.log(doc.data());
-                const scenario = doc.data();
-                return scenario;
-            }
-            else {
-                //console.log('which is not the same as ' + id);
+    function AttachScenariosBelow(scenario) {
+        if (!scenario.actions) return;
+        scenario.actions.forEach(a => {
+            if (!a.scenarioID) return;
+            const scenario = FindDoc(a.scenarioID);
+            if (scenario) {
+                a.scenario = scenario;
+                AttachScenariosBelow(scenario);
             }
         })
+    }
+
+    function FindDoc(id) {
+        let scenario;
+        querySnapshot.forEach(doc => {
+            iterations++;
+            if (doc.id === id) scenario = doc.data();
+        })
+        return scenario;
     }
 }
 

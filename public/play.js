@@ -1,5 +1,5 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe, getIntro } from "/dbHandler.js?v=0.275";
-import { SetupData } from "/storyData.js?v=0.01";
+import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe } from "/dbHandler.js?v=0.275";
+import { getIntro, SetupData, GetNextScenario, GetCurrentActionOptions } from "/storyData.js?v=0.02";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -51,13 +51,13 @@ document.addEventListener("keypress", event => {
 });
 addContentTextField.addEventListener('input', CountCharacters);
 const terminatePrint = new Event('terminatePrint');
-SetupData();
 
 //create a function that gets intro text and sets it in the game window.
 
 async function SetIntroText(){
     
-    const text = await getIntro();
+    await SetupData();
+    const text = getIntro();
     document.getElementById('ingress').textContent = text;
     beginButton.style.display = 'block';
 
@@ -105,7 +105,7 @@ async function PlayScenario(scenarioID) {
     addEventListener('terminatePrint', () => { printTerminated = true });
 
     //get the data
-    const scenarioData = await getScenario(scenarioID);
+    const scenarioData = GetNextScenario();
     if (printTerminated) return;
     loadText.remove();
     if (!scenarioData) {
@@ -226,8 +226,9 @@ function CreateActionButton(actionElement, actionID) {
             scenarioBlock.append(currentActionBlock);
 
             //load in the actions again
-            const scenarioData = await getScenario(scenarioIdForThisAction);
-            LoadActionButtons(scenarioData.actions);
+            //const scenarioData = await getScenario(scenarioIdForThisAction);
+            const currentActions = GetCurrentActionOptions();
+            LoadActionButtons(currentActions);
 
         }
         else {
