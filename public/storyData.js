@@ -1,12 +1,10 @@
-//loads with the play page
-//handles all the story data on the client side
-//data is loaded from the dbHandler
-//after it has been loaded, a client representation of the data is created here.
+import { setStory, getStoryData, addAction, addScenario } from "/dbHandler.js?v=0.276";
 
-import { setStory, getStoryData } from "/dbHandler.js?v=0.276";
 let storyData;
 let currentScenario;
+let lastScenarioAdded;
 
+//SET DATA
 export async function SetupData() {
 
   const storyCollectionId = CheckForCollectionID();
@@ -14,9 +12,76 @@ export async function SetupData() {
   storyData = await getStoryData(storyCollectionId);
   console.log('data was set up: ');
   console.log(storyData);
+}
+export function SetScenario(id) {
+  currentScenario = FindScenario(id);
+  console.log('current scenario was set: ');
+  console.log(currentScenario);
+}
+export function MoveToNextScenario(actionID) {
+
+  let nextScenario;
+
+  if (!currentScenario) nextScenario = storyData.start;
+  else nextScenario = currentScenario.actions[actionID].scenario;
+
+  if (!nextScenario) {
+    return false;
+  }
+  else {
+    currentScenario = nextScenario;
+    return currentScenario;
+  }
 
 }
 
+//GET DATA 
+export function getIntro() {
+  return storyData.intro;
+}
+export function GetCurrentScenarioID() {
+  return currentScenario.id;
+}
+export function GetLastScenarioAdded() {
+  return lastScenarioAdded;
+}
+
+//ADD CONTENT
+export async function CreateAction(text) {
+
+  //adding an action to the current scenario in the database
+  const newActionID = await addAction(currentScenario.id, text)
+
+  //also - add to the local data
+  if (newActionID != -1) {
+    if (!currentScenario.actions) currentScenario.actions = [];
+    currentScenario.actions.push({
+      action: text
+    })
+  }
+
+  return newActionID;
+
+}
+export async function CreateScenario(text, actionID) {
+
+  console.log(currentScenario);
+
+  const response = await addScenario(text, currentScenario.id, actionID)
+
+  if (response.status === 0) {
+    //successfully added the scenario to the db, add it locally as well
+    const newScenario = response.newDocData;
+    newScenario.id = response.newDocID;
+    currentScenario.actions[actionID].scenario = newScenario;
+    lastScenarioAdded = newScenario;
+  }
+
+  return response;
+
+}
+
+//HELPER FUNCTIONS
 function CheckForCollectionID() {
 
   var url_string = window.location.href;
@@ -32,29 +97,6 @@ function CheckForCollectionID() {
   }
 
 }
-
-export function getIntro() {
-  return storyData.intro;
-}
-
-export function GetNextScenario(actionID) {
-
-  if (!currentScenario) currentScenario = storyData.start;
-  else currentScenario = currentScenario.actions[actionID].scenario;
-  return currentScenario;
-
-}
-
-export function GetCurrentActionOptions() {
-
-  return currentScenario.actions;
-
-}
-
-export function SetScenario(id) {
-  currentScenario = FindScenario(id);
-}
-
 function FindScenario(id) {
 
   if (id === 'start') return storyData.start;
@@ -74,9 +116,10 @@ function FindScenario(id) {
       const scenaroBelow = searchChildScenarios(action.scenario);
       if (scenaroBelow) return scenaroBelow;
       //if there is no scenario below that returns true (i.e. has the right id), the loop will just keep going
-      
+
     }
 
   }
 
 }
+

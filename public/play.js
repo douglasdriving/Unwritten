@@ -1,5 +1,4 @@
-import { addAction, addScenario } from "/dbHandler.js?v=0.275";
-import { getIntro, SetupData, GetNextScenario, GetCurrentActionOptions, SetScenario } from "/storyData.js?v=0.03";
+import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded } from "/storyData.js?v=0.03";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -41,7 +40,7 @@ let maxNumOfChars = maxCharsAction;
 //ASSIGN BUTTONS AND EVENTS
 beginButton.onclick = () => {
     lastAButtonPressed = beginButton;
-    PlayScenario(GetNextScenario(), startScenarioID);
+    PlayScenario(MoveToNextScenario(), startScenarioID);
     beginButton.style.display = 'none';
 }
 document.addEventListener("keypress", event => {
@@ -91,10 +90,10 @@ function CountCharacters() {
 
 }
 
-async function PlayScenario(scenarioData, scenarioID) {
+async function PlayScenario(scenarioData) {
 
     const scenario = scenarioData.text;
-    currentScenarioID = scenarioID;
+    currentScenarioID = scenarioData.id;
 
     //TryUnsubscribe();
 
@@ -171,7 +170,7 @@ function LoadActionButtons(actions) {
             dispatchEvent(terminatePrint);
             if (plusButton.className != 'plusButton highlightedButton') {
                 ActivateAddContentBlock('write a new action...', 'Add Action', 0);
-                TryBacktrack(scenarioIdForButton, priorScenarios, plusButton.parentNode);
+                TryBacktrack(scenarioIdForButton, plusButton.parentNode);
                 SetHighlight(plusButton, true);
             }
             else {
@@ -182,61 +181,31 @@ function LoadActionButtons(actions) {
     }
 }
 
-function CreateActionButton(actionElement, actionID) {
+function CreateActionButton(actionObject, actionID) {
 
+    //CREATE THE BUTTON ELEMENT
     const actionButton = document.createElement('button');
     currentActionBlock.appendChild(actionButton);
     actionButton.className = 'actionButton';
+    actionButton.textContent = actionObject.action;
 
-    //const scenarioCount = actionElement.scenarioCount || 0;
-    actionButton.textContent = actionElement.action; // + ` (${scenarioCount})`;
-
-    //Assign onclick
+    //ASSIGN THE ONCLICK FUNCTION
     const scenarioIdForThisAction = currentScenarioID;
-    const scenarioBlocksUpToThisAction = Array.from(scenariosContainer.childNodes);
-    const scenarioBlock = currentActionBlock.parentNode;
-
     actionButton.onclick = (async () => {
-
-        dispatchEvent(terminatePrint);
-
-        if (contentIsBeingAdded) return;
-
-        if (actionButton.className === 'actionButton highlightedButton') {
-
-            TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
-            addContentBlock.style.display = 'none';
-            lastAButtonPressed = null;
-
-            Array.from(actionButton.parentNode.childNodes).forEach(button => {
-
-                const firstWord = button.className.split(' ')[0];
-                if (firstWord === 'actionButton') button.className = 'actionButton';
-                else if (firstWord === 'plusButton') button.className = 'plusButton';
-
-            })
-
-            return;
-        }
-
-        TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
-        lastAButtonPressed = actionButton;
-        TakeAction(actionElement, actionID, actionButton);
-        SetHighlight(actionButton, true);
-        
+        TakeAction(actionObject, actionID, scenarioIdForThisAction, actionButton);
     });
 
-    //return the button
     return actionButton;
+
 }
 
-function TryBacktrack(scenarioID, priorScenarios, actionBlock) {
+function TryBacktrack(scenarioID, actionBlock) {
 
     //simply delete all blocks that are beneath the one that was pressed?
     const scenarioContainer = actionBlock.parentNode;
     const allContainers = Array.from(scenarioContainer.parentNode.childNodes);
     const scenarioContainerId = allContainers.indexOf(scenarioContainer);
-    for (let i=scenarioContainerId+1; i<allContainers.length; i++){
+    for (let i = scenarioContainerId + 1; i < allContainers.length; i++) {
         console.log('deleting ' + allContainers[i]);
         allContainers[i].remove();
     }
@@ -272,23 +241,34 @@ function TryBacktrack(scenarioID, priorScenarios, actionBlock) {
 
 }
 
-function TakeAction(actionElement, actionID) {
+function TakeAction(actionObject, actionID, scenarioID, buttonPressed) { //improvement: all of these params could be containted within the same obj.
 
-    //add action to the array -- PROBLEMATIC TO KEEP TRACK OF _ FIND OTHER SOLUTION
-    /*
-    actionsTaken.push({
-        scenarioID: currentScenarioID,
-        actionID: actionID
-    })
-    */
+    dispatchEvent(terminatePrint);
+    if (contentIsBeingAdded) return;
+    TryBacktrack(scenarioID, buttonPressed.parentNode);
 
-    //print scenario if there is one.
+    if (buttonPressed.className === 'actionButton highlightedButton') {
 
-    //
+        addContentBlock.style.display = 'none';
+        lastAButtonPressed = null;
 
-    const nextScenario = GetNextScenario(actionID);
-    if (nextScenario) PlayScenario(nextScenario, actionElement.scenarioID);
-    else ReachEndpointAction(actionID);
+        Array.from(buttonPressed.parentNode.childNodes).forEach(button => {
+            const firstWord = button.className.split(' ')[0];
+            if (firstWord === 'actionButton') button.className = 'actionButton';
+            else if (firstWord === 'plusButton') button.className = 'plusButton';
+        })
+
+    }
+    else {
+
+        lastAButtonPressed = buttonPressed; //not sure what this does now. Investigate
+        const nextScenario = MoveToNextScenario(actionID);
+        if (nextScenario) PlayScenario(nextScenario);
+        else ReachEndpointAction(actionID);
+        SetHighlight(buttonPressed, true);
+
+    }
+
 }
 
 function SetHighlight(button, highlight) {
@@ -390,7 +370,7 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
     }
 
     async function AddAction() {
-        addAction(currentScenarioID, contentText)
+        CreateAction(contentText)
             .then(newActionID => {
                 if (newActionID === -1) {
                     addingContentStatusText.textContent = 'ERROR - your action could not be added.';
@@ -402,7 +382,7 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
     }
 
     async function AddScenario() {
-        addScenario(contentText, currentScenarioID, actionIndex)
+        CreateScenario(contentText, actionIndex)
             .then(response => {
 
                 if (response.status === -1) {
@@ -412,10 +392,6 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
 
                 if (response.status === -2) {
                     addingContentStatusText.textContent = 'Another player just added a scenario to this action! Keep playing to see what it was';
-                    keepPlayButton.style.display = 'block';
-                    keepPlayButton.onclick = () => {
-                        PlayScenario(response.newDocID, -1);
-                    };
                     return;
                 }
 
@@ -448,22 +424,21 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
         continueButton.textContent = 'Keep playing with this action';
         continueButton.onclick = () => {
             hideAddContentBlock();
-            const newActionElement = {
+            const newActionObj = {
                 scenarioCount: 0,
                 action: contentText,
             }
-            const actionButton = CreateActionButton(newActionElement, newActionID);
+            const actionButton = CreateActionButton(newActionObj, newActionID);
             SetHighlight(actionButton, true);
             ReshuffleActionButtons(actionButton.parentNode);
-            TakeAction(newActionElement, newActionID, actionButton);
+            TakeAction(newActionObj, newActionID, GetCurrentScenarioID(), actionButton); 
         }
     }
     else if (type === 'scenario') {
         continueButton.textContent = 'Keep playing this scenario';
         continueButton.onclick = () => {
-            //IncreasePickedActionNumbers();
             hideAddContentBlock();
-            PlayScenario(newScenarioID, lastAButtonPressed);
+            PlayScenario(GetLastScenarioAdded());
         }
     }
 

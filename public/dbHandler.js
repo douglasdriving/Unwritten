@@ -176,7 +176,8 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     //return a "success" response
     const response = {
         status: 0,
-        newDocID: newDocID
+        newDocID: newDocID,
+        newDocData: newDocData
     }
     return (response);
 }
