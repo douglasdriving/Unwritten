@@ -39,13 +39,8 @@ export function getIntro() {
 
 export function GetNextScenario(actionID) {
 
-  if (!currentScenario) {
-    currentScenario = storyData.start;
-  }
-  else{
-    currentScenario = currentScenario.actions[actionID].scenario;
-  }
-  
+  if (!currentScenario) currentScenario = storyData.start;
+  else currentScenario = currentScenario.actions[actionID].scenario;
   return currentScenario;
 
 }

@@ -1,5 +1,5 @@
-import { getScenario, addAction, addScenario, monitorScenario, tryUnsubscribe as TryUnsubscribe } from "/dbHandler.js?v=0.275";
-import { getIntro, SetupData, GetNextScenario, GetCurrentActionOptions } from "/storyData.js?v=0.02";
+import { getScenario, addAction, addScenario } from "/dbHandler.js?v=0.275";
+import { getIntro, SetupData, GetNextScenario, GetCurrentActionOptions } from "/storyData.js?v=0.03";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -32,16 +32,16 @@ beginButton.style.display = 'none';
 let currentScenarioID;
 let startScenarioID = 'start';
 let onEnterPress;
-let actionsTaken = [];
+//let actionsTaken = [];
 let contentIsBeingAdded = false;
 let currentActionBlock;
-let lastActionPressed;
+let lastAButtonPressed;
 let maxNumOfChars = maxCharsAction;
 
 //ASSIGN BUTTONS AND EVENTS
 beginButton.onclick = () => {
-    lastActionPressed = beginButton;
-    PlayScenario(startScenarioID, beginButton);
+    lastAButtonPressed = beginButton;
+    PlayScenario(GetNextScenario(), startScenarioID);
     beginButton.style.display = 'none';
 }
 document.addEventListener("keypress", event => {
@@ -54,8 +54,11 @@ const terminatePrint = new Event('terminatePrint');
 
 //create a function that gets intro text and sets it in the game window.
 
-async function SetIntroText(){
-    
+const scenariosContainer = document.createElement('div');
+storyBlock.append(scenariosContainer);
+
+async function SetIntroText() {
+
     await SetupData();
     const text = getIntro();
     document.getElementById('ingress').textContent = text;
@@ -88,15 +91,14 @@ function CountCharacters() {
 
 }
 
-async function PlayScenario(scenarioID) {
+async function PlayScenario(scenarioData, scenarioID) {
 
-    TryUnsubscribe();
+    const scenario = scenarioData.text;
+    currentScenarioID = scenarioID;
+
+    //TryUnsubscribe();
 
     addContentBlock.style.display = 'none';
-
-    const loadText = document.createElement('div');
-    loadText.textContent = 'Scenario loading...'
-    storyBlock.appendChild(loadText);
 
     ScrollDown();
 
@@ -104,28 +106,13 @@ async function PlayScenario(scenarioID) {
     let printTerminated = false;
     addEventListener('terminatePrint', () => { printTerminated = true });
 
-    //get the data
-    const scenarioData = GetNextScenario();
-    if (printTerminated) return;
-    loadText.remove();
-    if (!scenarioData) {
-        const statusMessage = document.createElement('div');
-        statusMessage.textContent = 'Error: Could not find the next scenario. Please try again';
-        statusMessage.style.color = "red";
-        storyBlock.append(statusMessage);
-        return;
-    }
-
-    currentScenarioID = scenarioID;
-
     //start the print!
     const scenarioTextBlock = document.createElement('div');
-    scenarioTextBlock.className = 'printedAction';
-    storyBlock.appendChild(scenarioTextBlock);
+    scenarioTextBlock.className = 'scenarioText';
     let delayForNextLetter = 0;
     let printedText = '';
 
-    Array.from(scenarioData.text).forEach(char => {
+    Array.from(scenario).forEach(char => {
         setTimeout(() => {
             if (!scenarioTextBlock) return;
             if (printTerminated) scenarioTextBlock.remove();
@@ -139,22 +126,23 @@ async function PlayScenario(scenarioID) {
     //Create the container
     const scenarioBlock = document.createElement('div');
     scenarioBlock.className = 'scenarioContainer';
-    scenarioTextBlock.className = 'scenarioText';
     scenarioBlock.appendChild(scenarioTextBlock);
+    scenariosContainer.appendChild(scenarioBlock);
+
     const actionBlock = document.createElement('div');
     currentActionBlock = actionBlock;
     scenarioBlock.appendChild(actionBlock);
 
-    //put it together
-    storyBlock.appendChild(scenarioBlock);
     ScrollDown();
 
     //delay the addition of action window and content add window.
-    const timeBeforePrintDone = Array.from(scenarioData.text).length * timeBetweenLetters;
+    const timeBeforePrintDone = Array.from(scenario).length * timeBetweenLetters;
     setTimeout(() => {
         if (printTerminated) return;
         LoadActionButtons(scenarioData.actions);
     }, timeBeforePrintDone + delayAfterPrintFinished);
+
+
 }
 
 function LoadActionButtons(actions) {
@@ -177,7 +165,7 @@ function LoadActionButtons(actions) {
         plusButton.textContent = '+';
 
         const scenarioIdForButton = currentScenarioID;
-        const priorScenarios = Array.from(storyBlock.childNodes)
+        const priorScenarios = Array.from(scenariosContainer.childNodes)
 
         plusButton.onclick = (() => {
             dispatchEvent(terminatePrint);
@@ -205,7 +193,7 @@ function CreateActionButton(actionElement, actionID) {
 
     //Assign onclick
     const scenarioIdForThisAction = currentScenarioID;
-    const scenarioBlocksUpToThisAction = Array.from(storyBlock.childNodes);
+    const scenarioBlocksUpToThisAction = Array.from(scenariosContainer.childNodes);
 
     actionButton.onclick = (async () => {
 
@@ -217,7 +205,7 @@ function CreateActionButton(actionElement, actionID) {
 
             TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
             addContentBlock.style.display = 'none';
-            lastActionPressed = null;
+            lastAButtonPressed = null;
 
             //remove and create a new action block
             const scenarioBlock = currentActionBlock.parentNode;
@@ -230,13 +218,14 @@ function CreateActionButton(actionElement, actionID) {
             const currentActions = GetCurrentActionOptions();
             LoadActionButtons(currentActions);
 
+            return;
         }
-        else {
-            lastActionPressed = actionButton;
-            TakeAction(actionElement, actionID, actionButton);
-            SetHighlight(actionButton, true);
-            TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
-        }
+
+        TryBacktrack(scenarioIdForThisAction, scenarioBlocksUpToThisAction, actionButton.parentNode);
+        lastAButtonPressed = actionButton;
+        TakeAction(actionElement, actionID, actionButton);
+        SetHighlight(actionButton, true);
+        
     });
 
     //return the button
@@ -245,9 +234,23 @@ function CreateActionButton(actionElement, actionID) {
 
 function TryBacktrack(scenarioID, priorScenarios, actionBlock) {
 
-    const scenarioBlocksWhenClicking = Array.from(storyBlock.childNodes);
-    if (scenarioBlocksWhenClicking.length === priorScenarios.length)
-        return;
+    //simply delete all blocks that are beneath the one that was pressed?
+    const scenarioContainer = actionBlock.parentNode;
+    const allContainers = Array.from(scenarioContainer.parentNode.childNodes);
+    const scenarioContainerId = allContainers.indexOf(scenarioContainer);
+    for (let i=scenarioContainerId+1; i<allContainers.length; i++){
+        console.log('deleting ' + allContainers[i]);
+        allContainers[i].remove();
+    }
+
+    //then set the right "current scenario" in storyData
+    
+
+    /*
+    const scenarioBlocksWhenClicking = Array.from(scenariosContainer.childNodes);
+    if (scenarioBlocksWhenClicking.length === priorScenarios.length) return;
+
+    console.log('backtracking');
 
     contentAddConfirmBlock.style.display = 'none';
     addingContentBlock.style.display = 'none';
@@ -260,25 +263,34 @@ function TryBacktrack(scenarioID, priorScenarios, actionBlock) {
 
     currentScenarioID = scenarioID;
     currentActionBlock = actionBlock;
+    */
 
     //remove taken actions from the list
+    /*
     actionsTaken.forEach((actionElement, i) => {
         if (actionElement.scenarioID === scenarioID)
             actionsTaken.splice(i + 1);
     });
+    */
 
 }
 
-function TakeAction(actionElement, actionID, actionButton) {
+function TakeAction(actionElement, actionID) {
 
     //add action to the array -- PROBLEMATIC TO KEEP TRACK OF _ FIND OTHER SOLUTION
+    /*
     actionsTaken.push({
         scenarioID: currentScenarioID,
         actionID: actionID
     })
+    */
 
     //print scenario if there is one.
-    if (actionElement.scenarioID) PlayScenario(actionElement.scenarioID, actionButton);
+
+    //
+
+    const nextScenario = GetNextScenario(actionID);
+    if (nextScenario) PlayScenario(nextScenario, actionElement.scenarioID);
     else ReachEndpointAction(actionID);
 }
 
@@ -364,7 +376,7 @@ async function TryAddNewContent(type, actionIndex) {
 function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
 
     ShowContentAddLoadText();
-    TryUnsubscribe();
+    //TryUnsubscribe();
 
     if (type === 'action') AddAction();
     else if (type === 'scenario') AddScenario();
@@ -454,7 +466,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
         continueButton.onclick = () => {
             //IncreasePickedActionNumbers();
             hideAddContentBlock();
-            PlayScenario(newScenarioID, lastActionPressed);
+            PlayScenario(newScenarioID, lastAButtonPressed);
         }
     }
 
@@ -503,7 +515,7 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
 
     addContentTextField.style.height = maxNumOfChars * 250 / window.innerWidth + 'px';
 
-    TryUnsubscribe();
+    //TryUnsubscribe();
     ScrollDown();
 }
 
