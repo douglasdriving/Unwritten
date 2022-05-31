@@ -3,7 +3,7 @@
 //data is loaded from the dbHandler
 //after it has been loaded, a client representation of the data is created here.
 
-import { setStory, getStoryData } from "/dbHandler.js?v=0.275";
+import { setStory, getStoryData } from "/dbHandler.js?v=0.276";
 let storyData;
 let currentScenario;
 
@@ -11,7 +11,7 @@ export async function SetupData() {
 
   const storyCollectionId = CheckForCollectionID();
   setStory(storyCollectionId);
-  storyData = await getStoryData(storyCollectionId); //this will be async though
+  storyData = await getStoryData(storyCollectionId);
   console.log('data was set up: ');
   console.log(storyData);
 
@@ -48,5 +48,35 @@ export function GetNextScenario(actionID) {
 export function GetCurrentActionOptions() {
 
   return currentScenario.actions;
+
+}
+
+export function SetScenario(id) {
+  currentScenario = FindScenario(id);
+}
+
+function FindScenario(id) {
+
+  if (id === 'start') return storyData.start;
+  else return searchChildScenarios(storyData.start);
+
+  function searchChildScenarios(scenario) {
+
+    if (!scenario) return false;
+    if (!scenario.actions) return false;
+
+    const actions = scenario.actions;
+
+    for (let i = 0; i < actions.length; i++) {
+
+      const action = actions[i];
+      if (action.scenarioID === id) return action.scenario;
+      const scenaroBelow = searchChildScenarios(action.scenario);
+      if (scenaroBelow) return scenaroBelow;
+      //if there is no scenario below that returns true (i.e. has the right id), the loop will just keep going
+      
+    }
+
+  }
 
 }

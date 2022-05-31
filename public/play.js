@@ -1,5 +1,5 @@
-import { getScenario, addAction, addScenario } from "/dbHandler.js?v=0.275";
-import { getIntro, SetupData, GetNextScenario, GetCurrentActionOptions } from "/storyData.js?v=0.03";
+import { addAction, addScenario } from "/dbHandler.js?v=0.275";
+import { getIntro, SetupData, GetNextScenario, GetCurrentActionOptions, SetScenario } from "/storyData.js?v=0.03";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -194,6 +194,7 @@ function CreateActionButton(actionElement, actionID) {
     //Assign onclick
     const scenarioIdForThisAction = currentScenarioID;
     const scenarioBlocksUpToThisAction = Array.from(scenariosContainer.childNodes);
+    const scenarioBlock = currentActionBlock.parentNode;
 
     actionButton.onclick = (async () => {
 
@@ -207,16 +208,13 @@ function CreateActionButton(actionElement, actionID) {
             addContentBlock.style.display = 'none';
             lastAButtonPressed = null;
 
-            //remove and create a new action block
-            const scenarioBlock = currentActionBlock.parentNode;
-            currentActionBlock.remove();
-            currentActionBlock = document.createElement('div');
-            scenarioBlock.append(currentActionBlock);
+            Array.from(actionButton.parentNode.childNodes).forEach(button => {
 
-            //load in the actions again
-            //const scenarioData = await getScenario(scenarioIdForThisAction);
-            const currentActions = GetCurrentActionOptions();
-            LoadActionButtons(currentActions);
+                const firstWord = button.className.split(' ')[0];
+                if (firstWord === 'actionButton') button.className = 'actionButton';
+                else if (firstWord === 'plusButton') button.className = 'plusButton';
+
+            })
 
             return;
         }
@@ -244,8 +242,7 @@ function TryBacktrack(scenarioID, priorScenarios, actionBlock) {
     }
 
     //then set the right "current scenario" in storyData
-    
-
+    SetScenario(scenarioID);
     /*
     const scenarioBlocksWhenClicking = Array.from(scenariosContainer.childNodes);
     if (scenarioBlocksWhenClicking.length === priorScenarios.length) return;

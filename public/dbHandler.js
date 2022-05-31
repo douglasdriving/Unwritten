@@ -51,6 +51,8 @@ export async function getStoryData(collectionID) {
         else if (doc.id === 'start') storyData.start = data;
     })
 
+    storyData.start.id = 'start';
+
     AttachScenariosBelow(storyData.start);
     console.log('number of iterations: ' + iterations);
 
@@ -60,15 +62,16 @@ export async function getStoryData(collectionID) {
         if (!scenario.actions) return;
         scenario.actions.forEach(a => {
             if (!a.scenarioID) return;
-            const scenario = FindDoc(a.scenarioID);
+            const scenario = FindDocData(a.scenarioID);
             if (scenario) {
                 a.scenario = scenario;
+                a.scenario.id = a.scenarioID
                 AttachScenariosBelow(scenario);
             }
         })
     }
 
-    function FindDoc(id) {
+    function FindDocData(id) {
         let scenario;
         querySnapshot.forEach(doc => {
             iterations++;
