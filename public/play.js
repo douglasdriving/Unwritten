@@ -34,12 +34,10 @@ let onEnterPress;
 //let actionsTaken = [];
 let contentIsBeingAdded = false;
 let currentActionBlock;
-let lastAButtonPressed;
 let maxNumOfChars = maxCharsAction;
 
 //ASSIGN BUTTONS AND EVENTS
 beginButton.onclick = () => {
-    lastAButtonPressed = beginButton;
     PlayScenario(MoveToNextScenario(), startScenarioID);
     beginButton.style.display = 'none';
 }
@@ -50,8 +48,6 @@ document.addEventListener("keypress", event => {
 });
 addContentTextField.addEventListener('input', CountCharacters);
 const terminatePrint = new Event('terminatePrint');
-
-//create a function that gets intro text and sets it in the game window.
 
 const scenariosContainer = document.createElement('div');
 storyBlock.append(scenariosContainer);
@@ -192,7 +188,7 @@ function CreateActionButton(actionObject, actionID) {
     //ASSIGN THE ONCLICK FUNCTION
     const scenarioIdForThisAction = currentScenarioID;
     actionButton.onclick = (async () => {
-        TakeAction(actionObject, actionID, scenarioIdForThisAction, actionButton);
+        TakeAction(actionID, scenarioIdForThisAction, actionButton);
     });
 
     return actionButton;
@@ -201,47 +197,18 @@ function CreateActionButton(actionObject, actionID) {
 
 function TryBacktrack(scenarioID, actionBlock) {
 
-    //simply delete all blocks that are beneath the one that was pressed?
     const scenarioContainer = actionBlock.parentNode;
     const allContainers = Array.from(scenarioContainer.parentNode.childNodes);
     const scenarioContainerId = allContainers.indexOf(scenarioContainer);
+    
     for (let i = scenarioContainerId + 1; i < allContainers.length; i++) {
-        console.log('deleting ' + allContainers[i]);
         allContainers[i].remove();
     }
 
-    //then set the right "current scenario" in storyData
     SetScenario(scenarioID);
-    /*
-    const scenarioBlocksWhenClicking = Array.from(scenariosContainer.childNodes);
-    if (scenarioBlocksWhenClicking.length === priorScenarios.length) return;
-
-    console.log('backtracking');
-
-    contentAddConfirmBlock.style.display = 'none';
-    addingContentBlock.style.display = 'none';
-    addContentTextField.value = '';
-
-    scenarioBlocksWhenClicking.forEach(childElement => {
-        if (!priorScenarios.includes(childElement))
-            childElement.remove();
-    });
-
-    currentScenarioID = scenarioID;
-    currentActionBlock = actionBlock;
-    */
-
-    //remove taken actions from the list
-    /*
-    actionsTaken.forEach((actionElement, i) => {
-        if (actionElement.scenarioID === scenarioID)
-            actionsTaken.splice(i + 1);
-    });
-    */
-
 }
 
-function TakeAction(actionObject, actionID, scenarioID, buttonPressed) { //improvement: all of these params could be containted within the same obj.
+function TakeAction(actionID, scenarioID, buttonPressed) { //improvement: all of these params could be containted within the same obj.
 
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
@@ -250,7 +217,6 @@ function TakeAction(actionObject, actionID, scenarioID, buttonPressed) { //impro
     if (buttonPressed.className === 'actionButton highlightedButton') {
 
         addContentBlock.style.display = 'none';
-        lastAButtonPressed = null;
 
         Array.from(buttonPressed.parentNode.childNodes).forEach(button => {
             const firstWord = button.className.split(' ')[0];
@@ -261,7 +227,6 @@ function TakeAction(actionObject, actionID, scenarioID, buttonPressed) { //impro
     }
     else {
 
-        lastAButtonPressed = buttonPressed; //not sure what this does now. Investigate
         const nextScenario = MoveToNextScenario(actionID);
         if (nextScenario) PlayScenario(nextScenario);
         else ReachEndpointAction(actionID);
@@ -431,7 +396,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
             const actionButton = CreateActionButton(newActionObj, newActionID);
             SetHighlight(actionButton, true);
             ReshuffleActionButtons(actionButton.parentNode);
-            TakeAction(newActionObj, newActionID, GetCurrentScenarioID(), actionButton); 
+            TakeAction(newActionID, GetCurrentScenarioID(), actionButton); 
         }
     }
     else if (type === 'scenario') {

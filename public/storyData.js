@@ -15,8 +15,6 @@ export async function SetupData() {
 }
 export function SetScenario(id) {
   currentScenario = FindScenario(id);
-  console.log('current scenario was set: ');
-  console.log(currentScenario);
 }
 export function MoveToNextScenario(actionID) {
 
@@ -64,8 +62,6 @@ export async function CreateAction(text) {
 
 }
 export async function CreateScenario(text, actionID) {
-
-  console.log(currentScenario);
 
   const response = await addScenario(text, currentScenario.id, actionID)
 

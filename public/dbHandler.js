@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js";
-import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc, query } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
 
 const firebaseConfig = {
@@ -59,6 +59,9 @@ export async function getStoryData(collectionID) {
     return storyData;
 
     function AttachScenariosBelow(scenario) {
+
+        monitorScenario(scenario.id);
+
         if (!scenario.actions) return;
         scenario.actions.forEach(a => {
             if (!a.scenarioID) return;
@@ -69,6 +72,7 @@ export async function getStoryData(collectionID) {
                 AttachScenariosBelow(scenario);
             }
         })
+
     }
 
     function FindDocData(id) {
@@ -177,19 +181,32 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     const response = {
         status: 0,
         newDocID: newDocID,
-        newDocData: newDocData
+        newDocData: ne
     }
     return (response);
 }
 
-export async function monitorScenario(scenarioID, onUpdateFunction) {
+export async function monitorScenario(scenarioID, updateFunction) {
+
+    let assigned = false;
 
     const docRef = await doc(db, `${storyCollectionID}/${scenarioID}`);
-    unsubscribe = await onSnapshot(docRef, document => {
-        onUpdateFunction(document.data()); //adds the document as a param to the callback function passed in
-    });
+    unsubscribe = await onSnapshot(docRef, doc => {Update(doc)});
     if (unsubscribe) return true;
     else return false;
+
+    function Update(newDoc){
+
+        if (!assigned){
+            assigned = true;
+            console.log('doc assigned');
+            return;
+        }
+
+        console.log('a monitored scenario was updated! new data is: ');
+        console.log(newDoc.data());
+
+    }
 
 }
 
