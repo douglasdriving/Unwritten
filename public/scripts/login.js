@@ -1,4 +1,4 @@
-import { Login } from "/scripts/authHandler.js?v=0.02";
+import { Login, AttachToSignIn } from "/scripts/authHandler.js?v=0.02";
 
 const emailField = document.getElementById('emailField');
 const passwordField = document.getElementById('passwordField');
@@ -7,6 +7,10 @@ const loginErrorText = document.getElementById('loginErrorText');
 
 const pwError = document.getElementById('passwordError');
 const usernameError = document.getElementById('usernameError');
+
+AttachToSignIn(user => {
+  if (user) window.location.href = '/pages/hub.html?v=0.01';
+})
 
 Show(loginErrorText, '', false);
 
@@ -17,11 +21,8 @@ loginButton.onclick = async () => {
 
   const loginSuccess = await Login(email, pw);
   
-  if (loginSuccess){
-    window.location.href = '/pages/hub.html?v=0.01';
-  }
-  else{
-    Show(loginErrorText, 'Wrong username or password!', true);
+  if (!loginSuccess){
+    Show(loginErrorText, 'Wrong email or password!', true);
   }
 
   //Validate Input

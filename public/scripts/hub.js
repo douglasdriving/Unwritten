@@ -1,13 +1,20 @@
 import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.01";
-import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
+import { AttachToSignIn, Logout } from '/scripts/authHandler.js?v=0.01';
 
 const storyDiv = document.getElementById('stories');
 
 LoadStoryMeny();
+
 AttachToSignIn(user => {
-    console.log('user signed in');
-    console.log(user.email);
+    if (user) document.getElementById('loggedInText').textContent = 'Logged in as: ' + user.email;
+    else window.location.href = '/pages/login.html?v=0.01';
 })
+
+document.getElementById('signOutButton').onclick = () => {
+
+    Logout();
+
+}
 
 document.getElementById('createStoryButton').onclick = () => {
     window.location.href = `/pages/creator.html?v=0.01`;

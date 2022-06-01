@@ -11,9 +11,9 @@ export async function SetupData() {
   setStory(storyCollectionId);
   storyData = await getStoryData(storyCollectionId);
   MonitorAllScenarios();
-  console.log('data was set up: ');
-  console.log(storyData);
+
 }
+
 export function SetScenario(id) {
   currentScenario = FindScenario(id);
 }

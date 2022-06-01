@@ -12,28 +12,28 @@
   <link rel="stylesheet" href="/styles/baseLineStyle.css?v=0.01">
   <link rel="stylesheet" href="/styles/mainMenu.css?v=0.01">
 
+  <script type="module" src="/scripts/createAccount.js?v=0.01" async defer></script>
+
 </head>
 
 <body>
 
+  <button onclick="window.location.href='/pages/login.html?v=0.01'">Back to Login</button>
+
   <h2>New Account</h2>
 
   <div>
-    <p>Username</p>
-    <input type="text" pattern="[a-zA-Z0-9]*">
-    <p>Password</p>
-    <input type="text" pattern="[a-zA-Z0-9]*">
+    <p>Email</p>
+    <input id="emailField" type="text">
+    <p id="emailField">Password</p>
+    <input id="passwordField" type="text">
   </div>
 
   <div>
-    <button>Create Account</button>
+    <button id="createAccountButton">Create Account</button>
+    <p id="errorText" class="warning">There was an error creating your account</p>
+    <p>Please write down your email and password somewhere. If you loose it, you can contact me at douglasdriving@gmail.com</p>
   </div>
-
-  <div>
-    <hr>
-    <a onclick="window.location.href='/pages/login.html?v=0.01'">Back to login page</a>
-  </div>
-
 
 </body>
 
