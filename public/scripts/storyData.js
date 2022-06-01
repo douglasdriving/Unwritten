@@ -1,4 +1,4 @@
-import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario } from "/dbHandler.js?v=0.276";
+import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario } from "/scripts/dbHandler.js?v=0.277";
 
 let storyData;
 let currentScenario;

@@ -14,7 +14,7 @@ const actionExamples = [
   'Ask for the bill',
   'Run away',
   'Prepare your sword for combat'
-] 
+]
 
 const scenarioExamples = [
   'As you look out into the field, you notice something moving far out in the distance. You cant tell exactly what it is, but you assume it must be an animal.',
@@ -24,18 +24,18 @@ const scenarioExamples = [
   'As you turn around the corner, a big church appears in front of you. Its a magnificent piece of architechture, and you are quite suprised that you havent seen it before considering its size.',
   'The book contains a bunch of symbols and scribbles that you cant read or make any sense of. It confuses you - you cant make any sense of what the book is about',
   'As you try to sneak through the room, your right shoulder bumps into a large vase. Time seems you stop as you see it fall and hit the ground with a huge cracking noise.',
-] 
+]
 
-export function GetScenarioExample(){
+export function GetScenarioExample() {
   return RandomArrayItem(scenarioExamples);
 }
 
-export function GetActionExample(){
+export function GetActionExample() {
   return RandomArrayItem(actionExamples);
 }
 
-function RandomArrayItem(array){
+function RandomArrayItem(array) {
   const numberOfItems = array.length;
-  const randomNumber = Math.floor(Math.random()*numberOfItems)
+  const randomNumber = Math.floor(Math.random() * numberOfItems)
   return array[randomNumber];
 }

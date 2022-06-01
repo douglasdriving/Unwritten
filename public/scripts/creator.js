@@ -1,4 +1,4 @@
-import { createNewStory } from "/dbHandler.js?v=0.02";
+import { createNewStory } from "/scripts/dbHandler.js?v=0.02";
 
 const creator = document.getElementById('creator');
 
@@ -146,7 +146,7 @@ async function CreateStory() {
     statusText.textContent = "Your story was successfully added to Unwritten!";
     continueButton.textContent = 'Enter story';
     continueButton.onclick = () => {
-      window.location.href = `/play.html?v=0.01&storyCollectionID=${fields[0].inputField.value}`;
+      window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${fields[0].inputField.value}`;
     }
 
   }

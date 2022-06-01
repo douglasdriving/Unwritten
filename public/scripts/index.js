@@ -1,11 +1,11 @@
-import { getStories, getScenarioCount } from "/dbHandler.js?v=0.01";
+import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.02";
 
 const storyDiv = document.getElementById('stories');
 
 LoadStoryMeny();
 
 document.getElementById('createStoryButton').onclick = () => {
-    window.location.href = `/creator.html`;
+    window.location.href = `/pages/creator.html?v=0.01`;
 }
 
 async function LoadStoryMeny() {
@@ -51,6 +51,6 @@ async function AddStoryToMeny(title, description, collectionID) {
     menuItem.append(startStoryButton);
 
     startStoryButton.onclick = () => {
-        window.location.href = `/play.html?v=0.02&storyCollectionID=${collectionID}`;
+        window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${collectionID}`;
     }
 }
