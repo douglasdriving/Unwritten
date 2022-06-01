@@ -1,4 +1,4 @@
-import { createNewStory } from "/scripts/dbHandler.js?v=0.02";
+import { createNewStory } from "/scripts/dbHandler.js?v=0.01";
 
 const creator = document.getElementById('creator');
 

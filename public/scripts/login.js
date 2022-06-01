@@ -1,31 +1,54 @@
-const userNameField = document.getElementById('userNameField');
+import { Login } from "/scripts/authHandler.js?v=0.02";
+
+const emailField = document.getElementById('emailField');
 const passwordField = document.getElementById('passwordField');
 const loginButton = document.getElementById('loginButton');
+const loginErrorText = document.getElementById('loginErrorText');
 
-loginButton.onclick = () => {
+const pwError = document.getElementById('passwordError');
+const usernameError = document.getElementById('usernameError');
 
-  const username = userNameField.value;
-  const password = passwordField.value;
+Show(loginErrorText, '', false);
+
+loginButton.onclick = async () => {
+
+  const email = emailField.value;
+  const pw = passwordField.value;
+
+  const loginSuccess = await Login(email, pw);
+  
+  if (loginSuccess){
+    window.location.href = '/pages/stories.html?v=0.01';
+  }
+  else{
+    Show(loginErrorText, 'Wrong username or password!', true);
+  }
 
   //Validate Input
-  if (!onlyLettersAndNumbers(username)){
-    console.error('username can only include numbers and letters'); //show msg in window instead
-    return;
+  /*
+  let loginFailed = false;
+
+  if (!onlyLettersAndNumbers(email)){
+    Show(usernameError, 'username can only include numbers and letters', true);
+    loginFailed = true;
   }
-  if (!lengthIsBetween(username, 6, 20)){
-    console.error('username must contain 6-20 characters');
-    return;
+  if (!lengthIsBetween(email, 6, 20)){
+    Show(usernameError, 'username must contain 6-20 characters', true);
+    loginFailed = true;
   }
   if (!onlyLettersAndNumbers(password)){
-    console.error('password can only include numbers and letters');
-    return;
+    Show(pwError, 'password can only include numbers and letters', true);
+    loginFailed = true;
   }
   if (!lengthIsBetween(password, 8, 20)){
-    console.error('password must contain 8-20 characters');
-    return;
+    Show(pwError, 'password must contain 8-20 characters', true);
+    loginFailed = true;
   }
 
-  //
+  if (loginFailed) return;
+
+  Show(usernameError, '', false);
+  Show(pwError, '', false);
 
   console.log('logged in successfully! :)');
 
@@ -38,5 +61,12 @@ loginButton.onclick = () => {
     if (str.length > max) return false;
     return true;
   }
+  */
 
+}
+
+function Show(element, text, show) {
+  element.textContent = text;
+  if (show) element.style.display = 'block';
+  else element.style.display = 'none';
 }

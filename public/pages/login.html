@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/styles/baseLineStyle.css?v=0.01">
   <link rel="stylesheet" href="/styles/mainMenu.css?v=0.01">
 
-  <script src="/scripts/login.js?v=0.01" async defer></script>
+  <script type="module" src="/scripts/login.js?v=0.02" async defer></script>
 
 </head>
 
@@ -21,19 +21,20 @@
   <h2>Login to Unwritten</h2>
 
   <div>
-    
-    <p>Username</p>
-    <input type="text" pattern="[a-zA-Z0-9]*" id="userNameField">
-    <p i="usernameError" class="warning"></p>
+
+    <p>Email</p>
+    <input type="text" id="emailField">
+    <p id="usernameError" class="warning"></p>
 
     <p>Password</p>
-    <input type="text" pattern="[a-zA-Z0-9]*" id="passwordField">
-    <p i="passwordError" class="warning"></p>
+    <input type="text" id="passwordField">
+    <p id="passwordError" class="warning"></p>
 
   </div>
 
   <div>
     <button id="loginButton">Login</button>
+    <p id="loginErrorText" class="warning">Wrong username or password!</p>
   </div>
 
   <div>

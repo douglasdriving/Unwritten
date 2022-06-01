@@ -1,4 +1,4 @@
-import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.02";
+import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.01";
 
 const storyDiv = document.getElementById('stories');
 
