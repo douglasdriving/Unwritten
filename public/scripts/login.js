@@ -18,7 +18,7 @@ loginButton.onclick = async () => {
   const loginSuccess = await Login(email, pw);
   
   if (loginSuccess){
-    window.location.href = '/pages/stories.html?v=0.01';
+    window.location.href = '/pages/hub.html?v=0.01';
   }
   else{
     Show(loginErrorText, 'Wrong username or password!', true);

@@ -1,8 +1,13 @@
 import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.01";
+import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
 
 const storyDiv = document.getElementById('stories');
 
 LoadStoryMeny();
+AttachToSignIn(user => {
+    console.log('user signed in');
+    console.log(user.email);
+})
 
 document.getElementById('createStoryButton').onclick = () => {
     window.location.href = `/pages/creator.html?v=0.01`;
