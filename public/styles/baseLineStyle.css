@@ -5,17 +5,25 @@
   color: #382e2c;
 }
 
-.inverted{
+.inverted {
   background-color: #766a68;
   color: #fcf8e7;
   padding: 10px;
 }
 
-.bordered{
+.bordered {
   border-style: solid;
   border-width: 3px;
   border-color: #382e2c;
   padding: 10px;
+}
+
+.faded {
+  opacity: 0.4;
+}
+
+.warning{
+  color:red;
 }
 
 body {
@@ -44,10 +52,31 @@ h2 {
   font-weight: bold;
 }
 
-h3{
+h3 {
   font-weight: bold;
 }
 
-textarea{
+textarea {
   background-color: transparent;
+}
+
+div {
+  margin: 10px 0px;
+}
+
+input {
+  width: 100%;
+}
+
+p {
+  margin-bottom: 5px;
+}
+
+a:hover {
+  color: blue;
+  cursor: pointer;
+}
+
+button:hover{
+  cursor:pointer;
 }

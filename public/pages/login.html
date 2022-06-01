@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet'>
+  <link rel="stylesheet" href="/styles/baseLineStyle.css?v=0.01">
+  <link rel="stylesheet" href="/styles/mainMenu.css?v=0.01">
+
+  <script src="/scripts/login.js?v=0.01" async defer></script>
+
+</head>
+
+<body>
+
+  <h2>Login to Unwritten</h2>
+
+  <div>
+    
+    <p>Username</p>
+    <input type="text" pattern="[a-zA-Z0-9]*" id="userNameField">
+    <p i="usernameError" class="warning"></p>
+
+    <p>Password</p>
+    <input type="text" pattern="[a-zA-Z0-9]*" id="passwordField">
+    <p i="passwordError" class="warning"></p>
+
+  </div>
+
+  <div>
+    <button id="loginButton">Login</button>
+  </div>
+
+  <div>
+    <hr>
+    <a onclick="window.location.href='/pages/createAccount.html?v=0.01'">Dont have an account yet? Click here to create one!</a>
+  </div>
+
+</body>
+
+</html>
