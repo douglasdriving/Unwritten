@@ -1,4 +1,4 @@
-import { setStory, getStoryData, addAction, addScenario } from "/dbHandler.js?v=0.276";
+import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario } from "/dbHandler.js?v=0.276";
 
 let storyData;
 let currentScenario;
@@ -10,6 +10,7 @@ export async function SetupData() {
   const storyCollectionId = CheckForCollectionID();
   setStory(storyCollectionId);
   storyData = await getStoryData(storyCollectionId);
+  MonitorAllScenarios();
   console.log('data was set up: ');
   console.log(storyData);
 }
@@ -118,4 +119,62 @@ function FindScenario(id) {
   }
 
 }
+function MonitorAllScenarios() {
 
+  Monitor(storyData.start);
+
+  function Monitor(scenario) {
+
+    if (!scenario) return;
+
+    //start monitr of this scenario using dbhandler, and give it a function
+    monitorScenario(scenario.id, newData => { ScenarioUpdated(newData); });
+    let fired = false;
+
+    if (!scenario.actions) return;
+
+    scenario.actions.forEach(action => {
+      Monitor(action.scenario);
+    })
+
+    async function ScenarioUpdated(newData) {
+
+      if (!fired) {
+        fired = true;
+        return;
+      }
+
+      scenario.text = newData.text;
+
+      for (let i = 0; i < newData.actions.length; i++) {
+
+        const updatedAction = newData.actions[i];
+
+        if (!scenario.actions){
+          scenario.actions = [updatedAction];
+        }
+
+        if (scenario.actions.length < (i-1)){
+          scenario.actions.push(updatedAction);
+          return;
+        }
+
+        let clientSideAction = scenario.actions[i];
+        clientSideAction.action = updatedAction.action; //updates text
+        const newScenarioID = updatedAction.scenarioID
+
+        if (!newScenarioID) return;
+        if (clientSideAction.scenarioID === newScenarioID) return;
+
+        const newScenarioData = await getScenario(newScenarioID);
+        clientSideAction.scenarioID = newScenarioID;
+        clientSideAction.scenario = newScenarioData;
+        clientSideAction.scenario.id = newScenarioID;
+
+      }
+
+    }
+
+  }
+
+}

@@ -60,8 +60,6 @@ export async function getStoryData(collectionID) {
 
     function AttachScenariosBelow(scenario) {
 
-        monitorScenario(scenario.id);
-
         if (!scenario.actions) return;
         scenario.actions.forEach(a => {
             if (!a.scenarioID) return;
@@ -181,32 +179,16 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     const response = {
         status: 0,
         newDocID: newDocID,
-        newDocData: ne
+        newDocData: newDocData
     }
     return (response);
 }
 
 export async function monitorScenario(scenarioID, updateFunction) {
 
-    let assigned = false;
-
     const docRef = await doc(db, `${storyCollectionID}/${scenarioID}`);
-    unsubscribe = await onSnapshot(docRef, doc => {Update(doc)});
-    if (unsubscribe) return true;
-    else return false;
 
-    function Update(newDoc){
-
-        if (!assigned){
-            assigned = true;
-            console.log('doc assigned');
-            return;
-        }
-
-        console.log('a monitored scenario was updated! new data is: ');
-        console.log(newDoc.data());
-
-    }
+    await onSnapshot(docRef, doc => {updateFunction(doc.data())});
 
 }
 
