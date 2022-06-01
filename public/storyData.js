@@ -72,6 +72,7 @@ export async function CreateScenario(text, actionID) {
     newScenario.id = response.newDocID;
     currentScenario.actions[actionID].scenario = newScenario;
     lastScenarioAdded = newScenario;
+    currentScenario = newScenario;
   }
 
   return response;
@@ -144,17 +145,20 @@ function MonitorAllScenarios() {
         return;
       }
 
-      scenario.text = newData.text;
+      console.log('scenario updated');
 
+      scenario.text = newData.text;
+      
+      if (!newData.actions) return;
       for (let i = 0; i < newData.actions.length; i++) {
 
         const updatedAction = newData.actions[i];
 
-        if (!scenario.actions){
+        if (!scenario.actions) {
           scenario.actions = [updatedAction];
         }
 
-        if (scenario.actions.length < (i-1)){
+        if (scenario.actions.length < (i - 1)) {
           scenario.actions.push(updatedAction);
           return;
         }

@@ -1,4 +1,4 @@
-import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded } from "/storyData.js?v=0.03";
+import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded } from "/storyData.js?v=0.04";
 import { GetScenarioExample, GetActionExample } from "/examples.js?v=0.01";
 
 //BALANCING
@@ -198,11 +198,15 @@ function CreateActionButton(actionObject, actionID) {
 function TryBacktrack(scenarioID, actionBlock) {
 
     const scenarioContainer = actionBlock.parentNode;
-    const allContainers = Array.from(scenarioContainer.parentNode.childNodes);
-    const scenarioContainerId = allContainers.indexOf(scenarioContainer);
-    
-    for (let i = scenarioContainerId + 1; i < allContainers.length; i++) {
-        allContainers[i].remove();
+    if (!scenarioContainer.parentNode.childNodes){
+        console.log('no child nodes for the parent of the scenario container');
+        return;
+    }
+    const allScenarioContainers = Array.from(scenarioContainer.parentNode.childNodes);
+    const scenarioContainerId = allScenarioContainers.indexOf(scenarioContainer);
+
+    for (let i = scenarioContainerId + 1; i < allScenarioContainers.length; i++) {
+        allScenarioContainers[i].remove();
     }
 
     SetScenario(scenarioID);
@@ -317,32 +321,47 @@ async function TryAddNewContent(type, actionIndex) {
 
 function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
 
-    ShowContentAddLoadText();
-    //TryUnsubscribe();
-
+    ShowContentAddLoadText(true);
+    contentIsBeingAdded = true;
     if (type === 'action') AddAction();
     else if (type === 'scenario') AddScenario();
 
-    contentIsBeingAdded = true;
+    function ShowContentAddLoadText(show) {
 
-    function ShowContentAddLoadText() {
-
-        contentAddConfirmBlock.style.display = 'none';
-        addContentTextField.value = '';
-        addingContentBlock.style.display = 'block';
-        addingContentStatusText.textContent = 'Adding your content to Unwritten...';
+        if (show) {
+            contentAddConfirmBlock.style.display = 'none';
+            addContentTextField.value = '';
+            addingContentBlock.style.display = 'block';
+            addingContentStatusText.textContent = 'Adding your content to Unwritten...';
+        }
+        else {
+            addingContentBlock.style.display = 'none';
+        }
 
     }
 
     async function AddAction() {
         CreateAction(contentText)
             .then(newActionID => {
+
                 if (newActionID === -1) {
                     addingContentStatusText.textContent = 'ERROR - your action could not be added.';
                     return;
                 }
-                ConfirmContentAddition('action', contentText, null, newActionID);
+                //ConfirmContentAddition('action', contentText, null, newActionID);
+
                 contentIsBeingAdded = false;
+                //hideAddContentBlock();
+                const newActionObj = {
+                    scenarioCount: 0,
+                    action: contentText,
+                }
+                const actionButton = CreateActionButton(newActionObj, newActionID);
+                SetHighlight(actionButton, true);
+                ReshuffleActionButtons(actionButton.parentNode);
+                TakeAction(newActionID, GetCurrentScenarioID(), actionButton);
+                ShowContentAddLoadText(false);
+
             });
     }
 
@@ -360,9 +379,11 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                     return;
                 }
 
-                //updateContentCounters(actionsTaken);
-                ConfirmContentAddition('scenario', contentText, response.newDocID, 0);
+                //ConfirmContentAddition('scenario', contentText, response.newDocID, 0);
                 contentIsBeingAdded = false;
+                //hideAddContentBlock();
+                PlayScenario(GetLastScenarioAdded());
+                ShowContentAddLoadText(false);
 
             });
     }
@@ -396,7 +417,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
             const actionButton = CreateActionButton(newActionObj, newActionID);
             SetHighlight(actionButton, true);
             ReshuffleActionButtons(actionButton.parentNode);
-            TakeAction(newActionID, GetCurrentScenarioID(), actionButton); 
+            TakeAction(newActionID, GetCurrentScenarioID(), actionButton);
         }
     }
     else if (type === 'scenario') {
