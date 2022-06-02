@@ -30,6 +30,14 @@
   color: #fcf8e7;
 }
 
+.noMargin{
+  margin: 0px;
+}
+
+.bold{
+  font-weight: bold;
+}
+
 body {
   background-color: #fcf8e7;
   max-width: 600px;
