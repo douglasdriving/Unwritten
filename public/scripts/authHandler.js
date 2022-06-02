@@ -65,6 +65,5 @@ export async function CreateAccount(email, pw) {
 }
 
 export function GetCurrentPlayerId(){
-  console.log('the current player ID is ' + currentPlayerId);
   return currentPlayerId;
 }

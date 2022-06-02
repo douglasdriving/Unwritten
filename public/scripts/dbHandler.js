@@ -35,7 +35,6 @@ export function setStory(collectionID) {
         storyList.forEach(storyDoc => {
             if (storyDoc.collection === collectionID) {
                 currentStoryTitle = storyDoc.title;
-                console.log('story title was set to ' + currentStoryTitle);
                 return;
             }
         })
@@ -66,7 +65,7 @@ export async function addAction(scenarioID, actionText) {
     actionIndex = actions.length - 1;
 
     await updateDoc(docRef, { actions: actions })
-    await AddPlayerContribution('Action', actionText);
+    await AddPlayerContribution('Action', actionText, scenarioID, actionIndex);
 
     return actionIndex;
 
@@ -109,7 +108,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     updateDoc(parentDocRef, { actions: parentActionList });
 
     //Update player data
-    await AddPlayerContribution('Scenario', scenarioText);
+    await AddPlayerContribution('Scenario', scenarioText, newDocID);
 
     //return a "success" response
     const response = {
@@ -191,15 +190,20 @@ export async function createNewStory(title, description, introduction, initialsc
 
     return 0;
 }
-async function AddPlayerContribution(type, text) {
+async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
 
-    //add the new contribution as a document
+    //create doc data
     const newDocData = {
         text: text,
         story: currentStoryTitle,
         type: type,
-        time: new Date()
+        time: new Date(),
+        storyCollectionID: storyCollectionID,
+        scenarioDocID: scenarioDocId
     }
+    if (actionId) newDocData.actionId = actionId;
+
+    //add to player contributions collection
     const coll = collection(db, '/players/' + GetCurrentPlayerId() + '/contributions');
     const docData = await addDoc(coll, newDocData)
     const newDocID = docData.id;
@@ -209,8 +213,6 @@ async function AddPlayerContribution(type, text) {
         console.error('data could not be added to the player profile');
         return ({ status: -1 });
     }
-
-    console.log('player doc was updated successfully. player id is ' + GetCurrentPlayerId() );
 
     //else return a "success" response
     const response = {
@@ -323,6 +325,18 @@ export async function getScenarioCount(collectionID) {
     const coll = collection(db, collectionID);
     const querySnapshot = await getDocs(coll);
     return querySnapshot.size - 1;
+
+}
+export async function GetPlayerContributions(playerID){
+
+    const querySnapshot = await getDocs(collection(db, "players/" + playerID + "/contributions"));
+
+    let contributions = [];
+    querySnapshot.forEach((doc) => {
+        contributions.push(doc.data());
+    });
+    
+    return contributions;
 
 }
 

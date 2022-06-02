@@ -144,9 +144,7 @@ function MonitorAllScenarios() {
         fired = true;
         return;
       }
-
-      console.log('scenario updated');
-
+      
       scenario.text = newData.text;
       
       if (!newData.actions) return;

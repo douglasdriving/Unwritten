@@ -1,13 +1,19 @@
-import { } from "/scripts/dbHandler.js?v=0.01"; //import functions for getting player branches
+import { GetPlayerContributions } from "/scripts/dbHandler.js?v=0.01"; //import functions for getting player branches
 import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
 
 const listDiv = document.getElementById('contributions');
 
 AttachToSignIn(user => {
-  if (user) document.getElementById('profileName').textContent = 'Profile for ' + user.email;
+
+  if (user) {
+    document.getElementById('profileName').textContent = 'Profile for ' + user.email;
+    ListAllContributions(user.uid);
+  }
+
 })
 
 //TESTCODE
+/*
 const dummyContributions = [];
 dummyContributions.push({
   text: 'Chug the tea',
@@ -27,13 +33,13 @@ dummyContributions.push({
   type: 'Action',
   time: new Date("1995-12-17T03:24:00")
 })
-
-ListAllContributions();
+*/
 
 //FUNCTIONS
-function ListAllContributions() {
+async function ListAllContributions(playerID) {
 
-  const contributionsData = dummyContributions; //get this data from the dbHandler
+  //Get the data
+  const contributionsData = await GetPlayerContributions(playerID);
 
   //sort contributions according to time.
   contributionsData.sort(function (a, b) {
@@ -41,10 +47,11 @@ function ListAllContributions() {
     if (a.time > b.time) return -1;
     return 0;
   });
-  
+
   //list the contributions
   contributionsData.forEach(c => {
-    ListSingleContribution(c.text, c.story, c.type, c.time);
+    var date = new Date(c.time.seconds * 1000);
+    ListSingleContribution(c.text, c.story, c.type, date);
   })
 
 }
