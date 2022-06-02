@@ -60,19 +60,22 @@ async function SetPlayingField() {
 
     //RUN SEQUENCE
     if (!sequence) return;
-    console.log(sequence);
     beginButton.remove();
+    console.log(sequence);
     
     for (let i = 0; i < sequence.length; i++) {
 
         if (i % 2 === 0){ //this is no necessarily true. it will vary depending on if it ends with an action or a scenario (or will it? should always start with a scenario lol)
             //its a scenario
+            if (i === sequence.length - 1){
+                //no need to print again
+                return;
+            }
             PlayScenario(sequence[i], true);    
         }
         else{
             //its an action
-            console.log(currentActionBlock.childNodes[sequence[i]])
-            TakeAction(sequence[i], sequence[i-1].id, currentActionBlock.childNodes[sequence[i]])
+            TakeAction(sequence[i], sequence[i-1].id, currentActionBlock.childNodes[sequence[i]], true);
         }
 
     }
@@ -211,7 +214,7 @@ function CreateActionButton(actionObject, actionID) {
     //ASSIGN THE ONCLICK FUNCTION
     const scenarioIdForThisAction = currentScenarioID;
     actionButton.onclick = (async () => {
-        TakeAction(actionID, scenarioIdForThisAction, actionButton);
+        TakeAction(actionID, scenarioIdForThisAction, actionButton, false);
     });
 
     return actionButton;
@@ -235,7 +238,7 @@ function TryBacktrack(scenarioID, actionBlock) {
     SetScenario(scenarioID);
 }
 
-function TakeAction(actionID, scenarioID, buttonPressed) { //improvement: all of these params could be containted within the same obj.
+function TakeAction(actionID, scenarioID, buttonPressed, instant) { //improvement: all of these params could be containted within the same obj.
 
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
@@ -255,7 +258,7 @@ function TakeAction(actionID, scenarioID, buttonPressed) { //improvement: all of
     else {
 
         const nextScenario = MoveToNextScenario(actionID);
-        if (nextScenario) PlayScenario(nextScenario, false);
+        if (nextScenario) PlayScenario(nextScenario, instant);
         else ReachEndpointAction(actionID);
         SetHighlight(buttonPressed, true);
 
@@ -382,7 +385,7 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                 const actionButton = CreateActionButton(newActionObj, newActionID);
                 SetHighlight(actionButton, true);
                 ReshuffleActionButtons(actionButton.parentNode);
-                TakeAction(newActionID, GetCurrentScenarioID(), actionButton);
+                TakeAction(newActionID, GetCurrentScenarioID(), actionButton, false);
                 ShowContentAddLoadText(false);
 
             });
@@ -440,7 +443,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
             const actionButton = CreateActionButton(newActionObj, newActionID);
             SetHighlight(actionButton, true);
             ReshuffleActionButtons(actionButton.parentNode);
-            TakeAction(newActionID, GetCurrentScenarioID(), actionButton);
+            TakeAction(newActionID, GetCurrentScenarioID(), actionButton, false);
         }
     }
     else if (type === 'scenario') {

@@ -23,26 +23,13 @@ export async function SetupData() {
     sequence.push(actionID);
   }
 
-  const scenario = FindScenario(scenarioID);
-  AddSequence(scenario);
-
+  AddActionSequence(FindScenario(scenarioID));
   sequence.reverse();
-
   return sequence;
 
-  function AddSequence(scenario) {
-
-    sequence.push(scenario);
-    if (scenario.parentActionIndex) sequence.push(scenario.parentActionIndex);
-
-    if (scenario.parent) {
-      if (scenario.parent.parent) {
-        if (scenario.parent.parent.parent) {
-          AddSequence(scenario.parent.parent.parent);
-        }
-      }
-    }
-
+  function AddActionSequence(scenario) {
+    if (scenario.parentActionIndex != undefined) sequence.push(scenario.parentActionIndex);
+    if (scenario.parentScenarioID) AddActionSequence(FindScenario(scenario.parentScenarioID));
   }
 
 }

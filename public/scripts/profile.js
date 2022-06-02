@@ -27,9 +27,6 @@ async function ListAllContributions(playerID) {
 
   //list the contributions
   contributionsData.forEach(c => {
-
-    console.log(c);
-
     var date = new Date(c.time.seconds * 1000);
     const contributionDiv = ListSingleContribution(c.text, c.story, c.type, date);
 
