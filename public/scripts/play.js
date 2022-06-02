@@ -38,7 +38,7 @@ let maxNumOfChars = maxCharsAction;
 
 //ASSIGN BUTTONS AND EVENTS
 beginButton.onclick = () => {
-    PlayScenario(MoveToNextScenario(), startScenarioID);
+    PlayScenario(MoveToNextScenario(), false);
     beginButton.style.display = 'none';
 }
 document.addEventListener("keypress", event => {
@@ -54,11 +54,14 @@ storyBlock.append(scenariosContainer);
 
 async function SetIntroText() {
 
-    await SetupData();
+    const sequence = await SetupData();
     const text = getIntro();
     document.getElementById('ingress').textContent = text;
     beginButton.style.display = 'block';
 
+    if(!sequence) return;
+
+    //run the sequence. Requires playing the scenario without scrolling text.
 }
 
 function CountCharacters() {
@@ -86,15 +89,11 @@ function CountCharacters() {
 
 }
 
-async function PlayScenario(scenarioData) {
+async function PlayScenario(scenarioData, instant) {
 
     const scenario = scenarioData.text;
     currentScenarioID = scenarioData.id;
-
-    //TryUnsubscribe();
-
     addContentBlock.style.display = 'none';
-
     ScrollDown();
 
     //setup termination tracking
@@ -104,19 +103,26 @@ async function PlayScenario(scenarioData) {
     //start the print!
     const scenarioTextBlock = document.createElement('div');
     scenarioTextBlock.className = 'scenarioText';
-    let delayForNextLetter = 0;
-    let printedText = '';
 
-    Array.from(scenario).forEach(char => {
-        setTimeout(() => {
-            if (!scenarioTextBlock) return;
-            if (printTerminated) scenarioTextBlock.remove();
-            printedText += char;
-            scenarioTextBlock.textContent = printedText;
-            ScrollDown();
-        }, delayForNextLetter);
-        delayForNextLetter += timeBetweenLetters;
-    })
+    if (instant){
+        scenarioTextBlock.textContent = scenario;
+        ScrollDown();
+    }
+    else{
+        let delayForNextLetter = 0;
+        let printedText = '';
+    
+        Array.from(scenario).forEach(char => {
+            setTimeout(() => {
+                if (!scenarioTextBlock) return;
+                if (printTerminated) scenarioTextBlock.remove();
+                printedText += char;
+                scenarioTextBlock.textContent = printedText;
+                ScrollDown();
+            }, delayForNextLetter);
+            delayForNextLetter += timeBetweenLetters;
+        })
+    }
 
     //Create the container
     const scenarioBlock = document.createElement('div');
@@ -130,14 +136,17 @@ async function PlayScenario(scenarioData) {
 
     ScrollDown();
 
-    //delay the addition of action window and content add window.
-    const timeBeforePrintDone = Array.from(scenario).length * timeBetweenLetters;
-    setTimeout(() => {
-        if (printTerminated) return;
+    //create the action butons
+    if (instant){
         LoadActionButtons(scenarioData.actions);
-    }, timeBeforePrintDone + delayAfterPrintFinished);
-
-
+    }
+    else{
+        const timeBeforePrintDone = Array.from(scenario).length * timeBetweenLetters;
+        setTimeout(() => {
+            if (printTerminated) return;
+            LoadActionButtons(scenarioData.actions);
+        }, timeBeforePrintDone + delayAfterPrintFinished);
+    }
 }
 
 function LoadActionButtons(actions) {
@@ -232,7 +241,7 @@ function TakeAction(actionID, scenarioID, buttonPressed) { //improvement: all of
     else {
 
         const nextScenario = MoveToNextScenario(actionID);
-        if (nextScenario) PlayScenario(nextScenario);
+        if (nextScenario) PlayScenario(nextScenario, false);
         else ReachEndpointAction(actionID);
         SetHighlight(buttonPressed, true);
 
@@ -382,7 +391,7 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                 //ConfirmContentAddition('scenario', contentText, response.newDocID, 0);
                 contentIsBeingAdded = false;
                 //hideAddContentBlock();
-                PlayScenario(GetLastScenarioAdded());
+                PlayScenario(GetLastScenarioAdded(), false);
                 ShowContentAddLoadText(false);
 
             });
@@ -424,7 +433,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
         continueButton.textContent = 'Keep playing this scenario';
         continueButton.onclick = () => {
             hideAddContentBlock();
-            PlayScenario(GetLastScenarioAdded());
+            PlayScenario(GetLastScenarioAdded(), false);
         }
     }
 
