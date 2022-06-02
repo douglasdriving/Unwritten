@@ -11,19 +11,19 @@ const app = StartFirebase();
 const auth = getAuth(app);
 let currentPlayerId;
 
-AttachToSignIn(user => { 
-  if (user){
+AttachToSignIn(user => {
+  if (user) {
     currentPlayerId = user.uid;
   }
-  else{
-    currentPlayerId = none;
-    window.location.href = '/pages/login.html?v=0.01';
+  else {
+    currentPlayerId = '';
+    if (window.location.pathname.split("/").pop() != 'login.html') window.location.href = '/pages/login.html?v=0.01';
   }
 })
 
 export function AttachToSignIn(func) {
 
-  onAuthStateChanged(auth, user => {func(user) })
+  onAuthStateChanged(auth, user => { func(user) })
 
 }
 
@@ -64,6 +64,6 @@ export async function CreateAccount(email, pw) {
 
 }
 
-export function GetCurrentPlayerId(){
+export function GetCurrentPlayerId() {
   return currentPlayerId;
 }
