@@ -162,7 +162,10 @@ export async function updateContentCounters(actionArray) {
 }
 export async function createNewStory(title, description, introduction, initialscenario) {
 
-    const storyCollection = collection(db, title);
+    const collId = title;
+    collId.replace(/\s+/g, '');
+
+    const storyCollection = collection(db, collId);
     const querySnapshot = await getDocs(storyCollection);
     if (querySnapshot.size > 0) {
         console.error('could not add the new story, name already exists');
@@ -170,13 +173,13 @@ export async function createNewStory(title, description, introduction, initialsc
     }
 
     await Promise.all([
-        setDoc(doc(db, title, "start"), {
+        setDoc(doc(db, collId, "start"), {
             text: initialscenario
         }),
-        setDoc(doc(db, title, "intro"), {
+        setDoc(doc(db, collId, "intro"), {
             text: introduction
         }),
-        setDoc(doc(db, 'stories', title), {
+        setDoc(doc(db, 'stories', collId), {
             title: title,
             description: description,
             collection: title,
@@ -335,8 +338,7 @@ export async function GetPlayerContributions(playerID){
     querySnapshot.forEach((doc) => {
         contributions.push(doc.data());
     });
-    
+
     return contributions;
 
 }
-

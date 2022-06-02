@@ -1,39 +1,16 @@
 import { GetPlayerContributions } from "/scripts/dbHandler.js?v=0.01"; //import functions for getting player branches
 import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
 
+//VARIABLES
 const listDiv = document.getElementById('contributions');
 
+//RUN AT START
 AttachToSignIn(user => {
-
   if (user) {
     document.getElementById('profileName').textContent = 'Profile for ' + user.email;
     ListAllContributions(user.uid);
   }
-
 })
-
-//TESTCODE
-/*
-const dummyContributions = [];
-dummyContributions.push({
-  text: 'Chug the tea',
-  story: 'Moving to Berlin',
-  type: 'Action',
-  time: new Date("2022-03-17T14:24:00")
-})
-dummyContributions.push({
-  text: 'The road fades into the darkness. You dont know where it leads. You can hear footsteps approaching from behind, and the man yelling "Where the fuck are you, you bastard!?"',
-  story: 'The Mysteries of Yellowseed',
-  type: 'Scenario',
-  time: new Date("2022-12-17T03:24:00")
-})
-dummyContributions.push({
-  text: 'Bake a birthday cake',
-  story: 'Example Story',
-  type: 'Action',
-  time: new Date("1995-12-17T03:24:00")
-})
-*/
 
 //FUNCTIONS
 async function ListAllContributions(playerID) {
@@ -55,7 +32,6 @@ async function ListAllContributions(playerID) {
   })
 
 }
-
 function ListSingleContribution(text, story, type, time) {
 
   const contributionDiv = document.createElement('div');
