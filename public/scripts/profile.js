@@ -13,19 +13,19 @@ dummyContributions.push({
   text: 'Chug the tea',
   story: 'Moving to Berlin',
   type: 'Action',
-  time: new Date()
+  time: new Date("2022-03-17T14:24:00")
 })
 dummyContributions.push({
   text: 'The road fades into the darkness. You dont know where it leads. You can hear footsteps approaching from behind, and the man yelling "Where the fuck are you, you bastard!?"',
   story: 'The Mysteries of Yellowseed',
   type: 'Scenario',
-  time: new Date()
+  time: new Date("2022-12-17T03:24:00")
 })
 dummyContributions.push({
   text: 'Bake a birthday cake',
   story: 'Example Story',
   type: 'Action',
-  time: new Date()
+  time: new Date("1995-12-17T03:24:00")
 })
 
 ListAllContributions();
@@ -37,11 +37,11 @@ function ListAllContributions() {
 
   //sort contributions according to time.
   contributionsData.sort(function (a, b) {
-    if (a.time > b.time) return 1;
-    if (a.time < b.time) return -1;
+    if (a.time < b.time) return 1;
+    if (a.time > b.time) return -1;
     return 0;
   });
-
+  
   //list the contributions
   contributionsData.forEach(c => {
     ListSingleContribution(c.text, c.story, c.type, c.time);

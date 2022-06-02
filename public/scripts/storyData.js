@@ -1,4 +1,4 @@
-import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario } from "/scripts/dbHandler.js?v=0.01";
+import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario } from "/scripts/dbHandler.js?v=0.02";
 
 let storyData;
 let currentScenario;
@@ -87,7 +87,7 @@ function CheckForCollectionID() {
   var ID = url.searchParams.get("storyCollectionID");
 
   if (ID) {
-    setStory(ID); //not sure if needed. Might delete later.
+    //setStory(ID); //not sure if needed. Might delete later.
     return ID;
   }
   else {

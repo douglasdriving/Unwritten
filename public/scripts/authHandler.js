@@ -9,10 +9,16 @@ import {
 
 const app = StartFirebase();
 const auth = getAuth(app);
+let currentPlayerId;
 
 AttachToSignIn(user => { 
-  if (user) return;
-  else window.location.href = '/pages/login.html?v=0.01';
+  if (user){
+    currentPlayerId = user.uid;
+  }
+  else{
+    currentPlayerId = none;
+    window.location.href = '/pages/login.html?v=0.01';
+  }
 })
 
 export function AttachToSignIn(func) {
@@ -56,4 +62,9 @@ export async function CreateAccount(email, pw) {
       return false;
     });
 
+}
+
+export function GetCurrentPlayerId(){
+  console.log('the current player ID is ' + currentPlayerId);
+  return currentPlayerId;
 }
