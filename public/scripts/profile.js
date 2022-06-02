@@ -67,5 +67,9 @@ function ListSingleContribution(text, story, type, time) {
 }
 
 function OpenStoryAtLocation(storyID, scenarioID, actionID){
-  window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${storyID}&scenarioID=${scenarioID}&actionID=${actionID}`;
+  
+  let url = `/pages/play.html?v=0.02&storyCollectionID=${storyID}&scenarioID=${scenarioID}`
+  if (actionID) url += `&actionID=${actionID}`;
+  window.location.href = url;
+
 }

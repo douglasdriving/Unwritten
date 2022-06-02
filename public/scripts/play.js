@@ -60,24 +60,12 @@ async function SetPlayingField() {
 
     //RUN SEQUENCE
     if (!sequence) return;
-    beginButton.remove();
-    console.log(sequence);
-    
+
+    PlayScenario(MoveToNextScenario(), true);
+    beginButton.remove()
+
     for (let i = 0; i < sequence.length; i++) {
-
-        if (i % 2 === 0){ //this is no necessarily true. it will vary depending on if it ends with an action or a scenario (or will it? should always start with a scenario lol)
-            //its a scenario
-            if (i === sequence.length - 1){
-                //no need to print again
-                return;
-            }
-            PlayScenario(sequence[i], true);    
-        }
-        else{
-            //its an action
-            TakeAction(sequence[i], sequence[i-1].id, currentActionBlock.childNodes[sequence[i]], true);
-        }
-
+        TakeAction(sequence[i], currentActionBlock.childNodes[sequence[i]], true);
     }
 }
 
@@ -214,7 +202,7 @@ function CreateActionButton(actionObject, actionID) {
     //ASSIGN THE ONCLICK FUNCTION
     const scenarioIdForThisAction = currentScenarioID;
     actionButton.onclick = (async () => {
-        TakeAction(actionID, scenarioIdForThisAction, actionButton, false);
+        TakeAction(actionID, actionButton, false, scenarioIdForThisAction);
     });
 
     return actionButton;
@@ -238,11 +226,11 @@ function TryBacktrack(scenarioID, actionBlock) {
     SetScenario(scenarioID);
 }
 
-function TakeAction(actionID, scenarioID, buttonPressed, instant) { //improvement: all of these params could be containted within the same obj.
+function TakeAction(actionID, buttonPressed, instant, scenarioID) { //improvement: all of these params could be containted within the same obj.
 
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
-    TryBacktrack(scenarioID, buttonPressed.parentNode);
+    if(scenarioID) TryBacktrack(scenarioID, buttonPressed.parentNode);
 
     if (buttonPressed.className === 'actionButton highlightedButton') {
 
@@ -385,7 +373,7 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                 const actionButton = CreateActionButton(newActionObj, newActionID);
                 SetHighlight(actionButton, true);
                 ReshuffleActionButtons(actionButton.parentNode);
-                TakeAction(newActionID, GetCurrentScenarioID(), actionButton, false);
+                TakeAction(newActionID, actionButton, false, GetCurrentScenarioID());
                 ShowContentAddLoadText(false);
 
             });
@@ -443,7 +431,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
             const actionButton = CreateActionButton(newActionObj, newActionID);
             SetHighlight(actionButton, true);
             ReshuffleActionButtons(actionButton.parentNode);
-            TakeAction(newActionID, GetCurrentScenarioID(), actionButton, false);
+            TakeAction(newActionID, actionButton, false, GetCurrentScenarioID());
         }
     }
     else if (type === 'scenario') {

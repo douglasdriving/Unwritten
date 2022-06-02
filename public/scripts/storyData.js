@@ -109,7 +109,6 @@ function CheckForURLParam(param) {
     return str;
   }
   else {
-    console.log(`no ${param} could be found`)
     return false;
   }
 
