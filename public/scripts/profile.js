@@ -27,11 +27,21 @@ async function ListAllContributions(playerID) {
 
   //list the contributions
   contributionsData.forEach(c => {
+
+    console.log(c);
+
     var date = new Date(c.time.seconds * 1000);
-    ListSingleContribution(c.text, c.story, c.type, date);
+    const contributionDiv = ListSingleContribution(c.text, c.story, c.type, date);
+
+    contributionDiv.onclick = () => {
+      if (c.actionId) OpenStoryAtLocation(c.storyCollectionID, c.scenarioDocID, c.actionId);
+      else OpenStoryAtLocation(c.storyCollectionID, c.scenarioDocID);
+    }
+
   })
 
 }
+
 function ListSingleContribution(text, story, type, time) {
 
   const contributionDiv = document.createElement('div');
@@ -47,6 +57,8 @@ function ListSingleContribution(text, story, type, time) {
   AddRow(story);
   AddRow(time.toLocaleString().slice(0, -3));
 
+  return contributionDiv;
+
   function AddRow(str) {
     const element = document.createElement('p');
     element.className = 'white noMargin';
@@ -55,4 +67,8 @@ function ListSingleContribution(text, story, type, time) {
     return element;
   }
 
+}
+
+function OpenStoryAtLocation(storyID, scenarioID, actionID){
+  window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${storyID}&scenarioID=${scenarioID}&actionID=${actionID}`;
 }

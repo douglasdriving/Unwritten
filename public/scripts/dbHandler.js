@@ -204,7 +204,14 @@ async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
         storyCollectionID: storyCollectionID,
         scenarioDocID: scenarioDocId
     }
-    if (actionId) newDocData.actionId = actionId;
+    if (actionId){
+        newDocData.actionId = actionId;
+        console.log('made a contribution with an action index');
+        console.log(newDocData);
+    }
+    else{
+        console.log('added player contribution without action id')
+    }
 
     //add to player contributions collection
     const coll = collection(db, '/players/' + GetCurrentPlayerId() + '/contributions');

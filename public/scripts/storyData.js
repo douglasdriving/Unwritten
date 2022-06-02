@@ -7,13 +7,25 @@ let lastScenarioAdded;
 //SET DATA
 export async function SetupData() {
 
-  const storyCollectionId = CheckForCollectionID();
+  const storyCollectionId = CheckForURLParam("storyCollectionID")
   setStory(storyCollectionId);
   storyData = await getStoryData(storyCollectionId);
   MonitorAllScenarios();
 
-}
+  //if there are params in the url telling us where to start, we should return a sequence of clicks to the play function to execute automatically.
+  const scenarioID = CheckForURLParam('scenarioID');
+  if(!scenarioID) return;
 
+  //create a sequence of clicks that takes user down to the scenario
+  const startSequence = []; 
+  //gotta use the data here to move upwards. maybe just build it in reverse and then flip it?
+
+  const actionID = CheckForURLParam('actionID');
+  if(!actionID);
+
+  //add the final action id as the last part of the sequence
+
+}
 export function SetScenario(id) {
   currentScenario = FindScenario(id);
 }
@@ -80,21 +92,22 @@ export async function CreateScenario(text, actionID) {
 }
 
 //HELPER FUNCTIONS
-function CheckForCollectionID() {
+function CheckForURLParam(param){
 
   var url_string = window.location.href;
   var url = new URL(url_string);
-  var ID = url.searchParams.get("storyCollectionID");
+  var str = url.searchParams.get(param);
 
-  if (ID) {
-    //setStory(ID); //not sure if needed. Might delete later.
-    return ID;
+  if (str) {
+    return str;
   }
   else {
-    console.error('no collection id could be found. cannot load any story')
+    console.log(`no ${param} could be found`)
+    return false;
   }
 
 }
+
 function FindScenario(id) {
 
   if (id === 'start') return storyData.start;
