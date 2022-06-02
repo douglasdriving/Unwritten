@@ -19,22 +19,20 @@ const contentAddConfirmBlock = document.getElementById('contentAddConfirmBlock')
 const keepPlayButton = document.getElementById('keepPlayButton');
 const charCounter = document.getElementById('charCounter');
 
-//SET WHAT TO SHOW AT START
+//TRACKING VARIABLES
+let currentScenarioID;
+let onEnterPress;
+let contentIsBeingAdded = false;
+let currentActionBlock;
+let maxNumOfChars = maxCharsAction;
+
+//RUN AT START
 keepPlayButton.style.display = 'none';
 addingContentBlock.style.display = 'none';
 addContentBlock.style.display = 'none';
 document.getElementById("contentAddConfirmBlock").style.display = 'none';
-SetIntroText();
+SetPlayingField();
 beginButton.style.display = 'none';
-
-//TRACKING VARIABLES
-let currentScenarioID;
-let startScenarioID = 'start';
-let onEnterPress;
-//let actionsTaken = [];
-let contentIsBeingAdded = false;
-let currentActionBlock;
-let maxNumOfChars = maxCharsAction;
 
 //ASSIGN BUTTONS AND EVENTS
 beginButton.onclick = () => {
@@ -52,16 +50,32 @@ const terminatePrint = new Event('terminatePrint');
 const scenariosContainer = document.createElement('div');
 storyBlock.append(scenariosContainer);
 
-async function SetIntroText() {
+//FUNCTIONS
+async function SetPlayingField() {
 
     const sequence = await SetupData();
     const text = getIntro();
     document.getElementById('ingress').textContent = text;
     beginButton.style.display = 'block';
 
-    if(!sequence) return;
+    //RUN SEQUENCE
+    if (!sequence) return;
+    console.log(sequence);
+    beginButton.remove();
+    
+    for (let i = 0; i < sequence.length; i++) {
 
-    //run the sequence. Requires playing the scenario without scrolling text.
+        if (i % 2 === 0){ //this is no necessarily true. it will vary depending on if it ends with an action or a scenario (or will it? should always start with a scenario lol)
+            //its a scenario
+            PlayScenario(sequence[i], true);    
+        }
+        else{
+            //its an action
+            console.log(currentActionBlock.childNodes[sequence[i]])
+            TakeAction(sequence[i], sequence[i-1].id, currentActionBlock.childNodes[sequence[i]])
+        }
+
+    }
 }
 
 function CountCharacters() {
@@ -89,7 +103,7 @@ function CountCharacters() {
 
 }
 
-async function PlayScenario(scenarioData, instant) {
+function PlayScenario(scenarioData, instant) {
 
     const scenario = scenarioData.text;
     currentScenarioID = scenarioData.id;
@@ -104,14 +118,14 @@ async function PlayScenario(scenarioData, instant) {
     const scenarioTextBlock = document.createElement('div');
     scenarioTextBlock.className = 'scenarioText';
 
-    if (instant){
+    if (instant) {
         scenarioTextBlock.textContent = scenario;
         ScrollDown();
     }
-    else{
+    else {
         let delayForNextLetter = 0;
         let printedText = '';
-    
+
         Array.from(scenario).forEach(char => {
             setTimeout(() => {
                 if (!scenarioTextBlock) return;
@@ -137,10 +151,10 @@ async function PlayScenario(scenarioData, instant) {
     ScrollDown();
 
     //create the action butons
-    if (instant){
+    if (instant) {
         LoadActionButtons(scenarioData.actions);
     }
-    else{
+    else {
         const timeBeforePrintDone = Array.from(scenario).length * timeBetweenLetters;
         setTimeout(() => {
             if (printTerminated) return;
@@ -207,7 +221,7 @@ function CreateActionButton(actionObject, actionID) {
 function TryBacktrack(scenarioID, actionBlock) {
 
     const scenarioContainer = actionBlock.parentNode;
-    if (!scenarioContainer.parentNode.childNodes){
+    if (!scenarioContainer.parentNode.childNodes) {
         console.log('no child nodes for the parent of the scenario container');
         return;
     }

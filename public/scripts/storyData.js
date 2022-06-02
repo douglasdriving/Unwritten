@@ -19,7 +19,9 @@ export async function SetupData() {
   if (!scenarioID) return;
 
   const sequence = [];
-  if (actionID) sequence.push(actionID);
+  if (actionID && actionID != 'undefined'){
+    sequence.push(actionID);
+  }
 
   const scenario = FindScenario(scenarioID);
   AddSequence(scenario);
@@ -125,7 +127,6 @@ function CheckForURLParam(param) {
   }
 
 }
-
 function FindScenario(id) {
 
   if (id === 'start') return storyData.start;
