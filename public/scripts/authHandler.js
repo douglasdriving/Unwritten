@@ -10,29 +10,14 @@ import {
 const app = StartFirebase();
 const auth = getAuth(app);
 
+AttachToSignIn(user => { 
+  if (user) return;
+  else window.location.href = '/pages/login.html?v=0.01';
+})
+
 export function AttachToSignIn(func) {
 
-  onAuthStateChanged(auth, user => { func(user) })
-
-  /*
-  onAuthStateChanged(auth, (user) => {
-
-    if (user) {
-  
-      const uid = user.uid;
-      console.log('signed in');
-      console.log(user.email)
-      elem.dispatchEvent(userLoggedIn);
-  
-    }
-    else {
-  
-      console.log('no user is signed in');
-  
-    }
-  
-  });
-  */
+  onAuthStateChanged(auth, user => {func(user) })
 
 }
 

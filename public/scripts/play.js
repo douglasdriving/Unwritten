@@ -1,6 +1,5 @@
 import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded } from "/scripts/storyData.js?v=0.06";
 import { GetScenarioExample, GetActionExample } from "/scripts/examples.js?v=0.02";
-import { AttachToSignIn } from "/scripts/authHandler.js?v=0.02";
 
 //BALANCING
 const timeBetweenLetters = 15; //ms
@@ -52,10 +51,6 @@ const terminatePrint = new Event('terminatePrint');
 
 const scenariosContainer = document.createElement('div');
 storyBlock.append(scenariosContainer);
-
-AttachToSignIn(user => {
-    if (!user) window.location.href = '/pages/login.html?v=0.01';
-}) 
 
 async function SetIntroText() {
 

@@ -7,7 +7,6 @@ LoadStoryMeny();
 
 AttachToSignIn(user => {
     if (user) document.getElementById('loggedInText').textContent = 'Logged in as: ' + user.email;
-    else window.location.href = '/pages/login.html?v=0.01';
 })
 
 document.getElementById('signOutButton').onclick = () => {

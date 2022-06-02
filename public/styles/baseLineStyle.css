@@ -26,6 +26,10 @@
   color:red;
 }
 
+.white{
+  color: #fcf8e7;
+}
+
 body {
   background-color: #fcf8e7;
   max-width: 600px;
@@ -79,4 +83,17 @@ a:hover {
 
 button:hover{
   cursor:pointer;
+}
+
+table{
+  width: 100%;
+}
+
+th{
+  text-align: left;
+}
+
+td{
+  border: solid 1px black;
+  margin-right: 10px;
 }
