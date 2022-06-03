@@ -292,11 +292,7 @@ export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId
 
 }
 export async function RemoveNotification(playerId, notificationId){
-
     const response = await deleteDoc(doc(db, `players/${playerId}/notifications`, notificationId));
-    console.log('tried deleting a notification doc. Response was:');
-    console.log(response);
-
 }
 
 //MONITOR
@@ -421,7 +417,7 @@ export async function GetPlayerNotifications(playerId) {
     let notifications = [];
     querySnapshot.forEach((doc) => {
         const notification = doc.data();
-        notifications.id = doc.id;
+        notification.id = doc.id;
         notifications.push(notification);
     });
 

@@ -3,6 +3,7 @@ import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
 
 //VARIABLES
 const listDiv = document.getElementById('updatesContainer');
+const contentDiv = document.getElementById('content');
 
 //RUN AT START
 AttachToSignIn(user => {
@@ -33,9 +34,16 @@ async function ListAllUpdates(playerId) {
 
     const updateDiv = ListSingleUpdate(date, entry.storyTitle, type, entry.text);
     updateDiv.onclick = async () => {
+      
+      Array.from(contentDiv.childNodes).forEach(e => {
+        e.remove();
+      });
+      contentDiv.textContent = 'Loading story...'
+
       await RemoveNotification(playerId, entry.id);
       if (type === 'action') OpenStoryAtLocation(entry.storyId, entry.scenarioId, entry.actionId);
       else OpenStoryAtLocation(entry.storyId, entry.scenarioId);
+      
     }
 
   })
