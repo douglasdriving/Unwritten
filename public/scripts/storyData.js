@@ -1,13 +1,14 @@
-import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario } from "/scripts/dbHandler.js?v=0.02";
+import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer } from "/scripts/dbHandler.js?v=0.02";
 
 let storyData;
 let currentScenario;
 let lastScenarioAdded;
+let storyId;
 
 //SET DATA
 export async function SetupData() {
 
-  const storyCollectionId = CheckForURLParam("storyCollectionID")
+  storyCollectionId = CheckForURLParam("storyCollectionID")
   setStory(storyCollectionId);
   storyData = await getStoryData(storyCollectionId);
   MonitorAllScenarios();
@@ -19,7 +20,7 @@ export async function SetupData() {
   if (!scenarioID) return;
 
   const sequence = [];
-  if (actionID && actionID != 'undefined'){
+  if (actionID && actionID != 'undefined') {
     sequence.push(actionID);
   }
 
@@ -36,7 +37,7 @@ export async function SetupData() {
 export function SetScenario(id) {
 
   if (currentScenario.id === id) return;
-  
+
   currentScenario = FindScenario(id);
 
   // console.log('setting scenario with id ' + id);
@@ -49,7 +50,9 @@ export function MoveToNextScenario(actionID) {
   let nextScenario;
 
   if (!currentScenario) nextScenario = storyData.start;
-  else nextScenario = currentScenario.actions[actionID].scenario;
+  else if (currentScenario.actions && currentScenario.actions[actionID] && currentScenario.actions[actionID].scenario) {
+    nextScenario = currentScenario.actions[actionID].scenario;
+  }
 
   if (!nextScenario) {
     return false;
@@ -80,24 +83,24 @@ export function GetLastScenarioAdded() {
 //ADD CONTENT
 export async function CreateAction(text) {
 
-  if (!currentScenario){
+  if (!currentScenario) {
     console.error('could not find the current scenario, and therefore not create a new action. Current scenario var is set to: ');
     console.log(currentScenario);
     return;
   }
 
   //adding an action to the current scenario in the database
-  const newActionID = await addAction(currentScenario.id, text);
-  
+  const newAction = await addAction(currentScenario.id, text);
+
   //also - add to the local data
-  if (newActionID != -1) {
+  if (newAction.id != -1) {
     if (!currentScenario.actions) currentScenario.actions = [];
-    currentScenario.actions.push({
-      action: text
-    })
+    currentScenario.actions.push(newAction);
   }
 
-  return newActionID;
+  NotifyAllPlayersOnBranch();
+
+  return newAction;
 
 }
 export async function CreateScenario(text, actionID) {
@@ -119,12 +122,36 @@ export async function CreateScenario(text, actionID) {
     // console.log(currentScenario);
 
   }
-  else{
+  else {
     console.error('there was an error in adding the new scenario! The response looks like this:');
     console.log(response);
   }
 
+  NotifyAllPlayersOnBranch();
+
   return response;
+
+}
+function NotifyAllPlayersOnBranch() {
+  
+  const playersNotified = [];
+  NotifyUpwards(currentScenario);
+
+  function NotifyUpwards(scenario) {
+
+    if (scenario.player && !playersNotified.includes(scenario.player)){
+      NotifyPlayer(scenario.player, storyId, scenario.id)
+      playersNotified.push(scenario.player);
+    }
+
+    if (scenario.parent && scenario.parent.parent && scenario.parent.parent.parent) {
+      const scenarioAbove = scenario.parent.parent.parent;
+      const actionAbove = scenarioAbove.actions[scenario.parentActionIndex];
+      if (actionAbove.player && !playersNotified.includes[actionAbove.player]) NotifyPlayer(actionAbove.player, storyId, scenarioAbove.id)
+      NotifyUpwards(scenarioAbove);
+    }
+
+  }
 
 }
 

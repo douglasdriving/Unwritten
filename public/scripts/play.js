@@ -356,9 +356,9 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
 
     async function AddAction() {
         CreateAction(contentText)
-            .then(newActionID => {
+            .then(newAction => {
 
-                if (newActionID === -1) {
+                if (newAction.id === -1) {
                     addingContentStatusText.textContent = 'ERROR - your action could not be added.';
                     return;
                 }
@@ -370,10 +370,10 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                     scenarioCount: 0,
                     action: contentText,
                 }
-                const actionButton = CreateActionButton(newActionObj, newActionID);
+                const actionButton = CreateActionButton(newActionObj, newAction.id);
                 SetHighlight(actionButton, true);
                 ReshuffleActionButtons(actionButton.parentNode);
-                TakeAction(newActionID, actionButton, false, GetCurrentScenarioID());
+                TakeAction(newAction.id, actionButton, false, GetCurrentScenarioID());
                 ShowContentAddLoadText(false);
 
             });
