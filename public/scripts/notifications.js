@@ -1,4 +1,4 @@
-import { GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.01"; //import functions for getting player branches
+import { GetPlayerNotifications, RemoveNotification } from "/scripts/dbHandler.js?v=0.01"; //import functions for getting player branches
 import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
 
 //VARIABLES
@@ -12,10 +12,10 @@ AttachToSignIn(user => {
 })
 
 //FUNCTIONS
-async function ListAllUpdates(playerID) {
+async function ListAllUpdates(playerId) {
 
   //Get the data
-  const updatesData = await GetPlayerNotifications(playerID);
+  const updatesData = await GetPlayerNotifications(playerId);
 
   //sort notifications according to time.
   updatesData.sort(function (a, b) {
@@ -27,49 +27,46 @@ async function ListAllUpdates(playerID) {
   //list the updates
   updatesData.forEach(entry => {
     var date = new Date(entry.time.seconds * 1000);
-    
-    const type = 'scenario';
-    if (typeof entry.actionId !== undefined) type='action';
 
-    const updateDiv = ListSingleUpdate(date, entry.storyTitle, type, entry.text); 
-    updateDiv.onclick = () => {
-      if (type==='action') OpenStoryAtLocation(entry.storyId, entry.scenarioId, entry.actionId);
+    let type = 'scenario';
+    if (typeof entry.actionId !== undefined) type = 'action';
+
+    const updateDiv = ListSingleUpdate(date, entry.storyTitle, type, entry.text);
+    updateDiv.onclick = async () => {
+      await RemoveNotification(playerId, entry.id);
+      if (type === 'action') OpenStoryAtLocation(entry.storyId, entry.scenarioId, entry.actionId);
       else OpenStoryAtLocation(entry.storyId, entry.scenarioId);
     }
 
   })
 
 }
-//fix from here
-function ListSingleUpdate(text, story, type, time) {
 
-  const contributionDiv = document.createElement('div');
-  contributionDiv.className = "inverted bordered";
-  listDiv.append(contributionDiv);
+function ListSingleUpdate(time, storyTitle, type, text) {
 
-  const textElement = AddRow('"' + text + '"');
-  textElement.className = 'white bold noMargin';
+  const updateDiv = document.createElement('div');
+  updateDiv.className = "inverted bordered";
+  listDiv.append(updateDiv);
 
-  contributionDiv.append(document.createElement('hr'));
-
-  AddRow(type);
-  AddRow(story);
   AddRow(time.toLocaleString().slice(0, -3));
+  AddRow(storyTitle);
+  AddRow('Update added to your ' + type + ':');
+  AddRow('"' + text + '"');
 
-  return contributionDiv;
+  return updateDiv;
 
   function AddRow(str) {
     const element = document.createElement('p');
     element.className = 'white noMargin';
     element.textContent = str;
-    contributionDiv.append(element);
+    updateDiv.append(element);
     return element;
   }
 
 }
 
-function OpenStoryAtLocation(storyID, scenarioID, actionID){
-  
+function OpenStoryAtLocation(storyID, scenarioID, actionID) {
+
   let url = `/pages/play.html?v=0.02&storyCollectionID=${storyID}&scenarioID=${scenarioID}`
   if (actionID) url += `&actionID=${actionID}`;
   window.location.href = url;

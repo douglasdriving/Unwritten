@@ -1,6 +1,6 @@
 //IMPORT FIREBASE METHODS
 import { StartFirebase } from "/scripts/firebaseConfig.js?v=0.01";
-import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc, query } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
+import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc, query, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
 import { GetCurrentPlayerId } from '/scripts/authHandler.js?v=0.01';
 
@@ -291,6 +291,13 @@ export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId
     return (response);
 
 }
+export async function RemoveNotification(playerId, notificationId){
+
+    const response = await deleteDoc(doc(db, `players/${playerId}/notifications`, notificationId));
+    console.log('tried deleting a notification doc. Response was:');
+    console.log(response);
+
+}
 
 //MONITOR
 export async function monitorScenario(scenarioID, updateFunction) {
@@ -413,7 +420,9 @@ export async function GetPlayerNotifications(playerId) {
 
     let notifications = [];
     querySnapshot.forEach((doc) => {
-        notifications.push(doc.data());
+        const notification = doc.data();
+        notifications.id = doc.id;
+        notifications.push(notification);
     });
 
     return notifications;
