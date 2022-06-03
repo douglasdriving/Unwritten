@@ -1,12 +1,16 @@
-import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.01";
+import { getStories, getScenarioCount, GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.01";
 import { AttachToSignIn, Logout } from '/scripts/authHandler.js?v=0.01';
 
 const storyDiv = document.getElementById('stories');
+const updatesButton = document.getElementById('updatesButton');
 
 LoadStoryMeny();
 
 AttachToSignIn(user => {
-    if (user) document.getElementById('loggedInText').textContent = 'Logged in as: ' + user.email;
+    if (user){
+        document.getElementById('loggedInText').textContent = 'Logged in as: ' + user.email;
+        CheckForUpdates(user.uid);
+    } 
 })
 
 document.getElementById('signOutButton').onclick = () => {
@@ -64,4 +68,18 @@ async function AddStoryToMeny(title, description, collectionID) {
     startStoryButton.onclick = () => {
         window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${collectionID}`;
     }
+}
+
+async function CheckForUpdates(playerId){
+
+    const notifications = await GetPlayerNotifications(playerId);
+    if (notifications.length > 0){
+        updatesButton.textContent = 'Updates (' + notifications.length + ')';
+        updatesButton.style.backgroundColor = 'green';
+    }
+    else{
+        console.log('no updates');  
+        console.log(notifications);
+    }
+
 }
