@@ -142,24 +142,24 @@ function NotifyAllPlayersOnBranch() {
 
     const playerToNotify = scenario.player;
     if (playerToNotify) {
-      Notify(playerToNotify, scenario.id);
+      Notify(playerToNotify, scenario.text, scenario.id);
     }
 
     if (scenario.parentScenarioID) {
       const scenarioAbove = FindScenario(scenario.parentScenarioID);
       const actionAbove = scenarioAbove.actions[scenario.parentActionIndex];
-      if (actionAbove.player) Notify(actionAbove.player, scenarioAbove.id, scenario.parentActionIndex);
+      if (actionAbove.player) Notify(actionAbove.player, actionAbove.action, scenarioAbove.id, scenario.parentActionIndex);
       NotifyUpwards(scenarioAbove);
     }
 
   }
 
-  function Notify(playerToNotify, scenarioId, actionId) {
+  function Notify(playerToNotify, text, scenarioId, actionId) {
 
     if (playersNotified.includes(playerToNotify)) return;
     if (playerToNotify === GetCurrentPlayerId()) return;
 
-    NotifyPlayer(playerToNotify, currentStoryId, scenarioId, actionId);
+    NotifyPlayer(playerToNotify, currentStoryId, text, scenarioId, actionId);
     playersNotified.push(playerToNotify);
     
   }

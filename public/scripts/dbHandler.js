@@ -240,7 +240,7 @@ async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
     return (response);
 
 }
-export async function NotifyPlayer(playerId, storyId, scenarioId, actionId) {
+export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId) {
 
     //make sure player is not already notified
     const notificationExist = false;
@@ -264,7 +264,9 @@ export async function NotifyPlayer(playerId, storyId, scenarioId, actionId) {
     const newNotificationData = {
         storyId: storyId,
         time: new Date(),
-        scenarioId: scenarioId
+        scenarioId: scenarioId,
+        text: text,
+        storyTitle: currentStoryTitle
     }
     if (typeof actionId !== 'undefined') newNotificationData.actionId = actionId;
 
