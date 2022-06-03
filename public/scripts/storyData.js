@@ -140,24 +140,31 @@ function NotifyAllPlayersOnBranch() {
 
   function NotifyUpwards(scenario) {
 
-    if (scenario.player && !playersNotified.includes(scenario.player)) {
-      Notify(scenario.player, scenario.id);
+    const playerToNotify = scenario.player;
+    if (playerToNotify && !playersNotified.includes(playerToNotify)) {
+      Notify(playerToNotify, scenario.id);
     }
 
-    if (scenario.parent && scenario.parent.parent && scenario.parent.parent.parent) {
-      const scenarioAbove = scenario.parent.parent.parent;
+    if (scenario.parentScenarioID) {
+      const scenarioAbove = FindScenario(scenario.parentScenarioID);
       const actionAbove = scenarioAbove.actions[scenario.parentActionIndex];
       if (actionAbove.player && !playersNotified.includes[actionAbove.player]) Notify(actionAbove.player, scenarioAbove.id, scenario.parentActionIndex);
       NotifyUpwards(scenarioAbove);
+    }
+    else{
+      console.log('did not find scenario above');
     }
 
   }
 
   function Notify(playerToNotify, scenarioId, actionId) {
 
+    console.log('trying to notify');
+
     if (playerToNotify === GetCurrentPlayerId()) return;
     NotifyPlayer(playerToNotify, currentStoryId, scenarioId, actionId);
     playersNotified.push(playerToNotify);
+    console.log('notifying player ' + playerToNotify + ' on scenario ' + scenarioId + ' with action ' + actionId);
 
   }
 

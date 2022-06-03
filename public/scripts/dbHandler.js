@@ -266,6 +266,7 @@ export async function NotifyPlayer(playerId, storyId, scenarioId, actionId) {
         time: new Date(),
         scenarioId: scenarioId
     }
+    if (typeof actionId !== 'undefined') newNotificationData.actionId = actionId;
 
     //add to player notifications collection
     const coll = collection(db, '/players/' + playerId + '/notifications');
