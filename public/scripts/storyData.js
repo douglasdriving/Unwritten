@@ -34,7 +34,15 @@ export async function SetupData() {
 
 }
 export function SetScenario(id) {
+
+  if (currentScenario.id === id) return;
+  
   currentScenario = FindScenario(id);
+
+  // console.log('setting scenario with id ' + id);
+  // console.log('current scenario was set to ');
+  // console.log(currentScenario);
+
 }
 export function MoveToNextScenario(actionID) {
 
@@ -48,6 +56,11 @@ export function MoveToNextScenario(actionID) {
   }
   else {
     currentScenario = nextScenario;
+
+    //console.log('moving to next scenario using action id ' + actionID);
+    //console.log('current scenario was set to ');
+    //console.log(currentScenario);
+
     return currentScenario;
   }
 
@@ -67,9 +80,15 @@ export function GetLastScenarioAdded() {
 //ADD CONTENT
 export async function CreateAction(text) {
 
-  //adding an action to the current scenario in the database
-  const newActionID = await addAction(currentScenario.id, text)
+  if (!currentScenario){
+    console.error('could not find the current scenario, and therefore not create a new action. Current scenario var is set to: ');
+    console.log(currentScenario);
+    return;
+  }
 
+  //adding an action to the current scenario in the database
+  const newActionID = await addAction(currentScenario.id, text);
+  
   //also - add to the local data
   if (newActionID != -1) {
     if (!currentScenario.actions) currentScenario.actions = [];
@@ -86,12 +105,23 @@ export async function CreateScenario(text, actionID) {
   const response = await addScenario(text, currentScenario.id, actionID)
 
   if (response.status === 0) {
-    //successfully added the scenario to the db, add it locally as well
+
+    // console.log('successfully added a new scenario. The response looks like this:');
+    // console.log(response);
+
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
     currentScenario.actions[actionID].scenario = newScenario;
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
+
+    // console.log('current scenario was set to: ');
+    // console.log(currentScenario);
+
+  }
+  else{
+    console.error('there was an error in adding the new scenario! The response looks like this:');
+    console.log(response);
   }
 
   return response;
