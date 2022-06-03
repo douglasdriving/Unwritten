@@ -1,16 +1,17 @@
 import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer } from "/scripts/dbHandler.js?v=0.02";
+import { GetCurrentPlayerId } from '/scripts/authHandler.js?v=0.01';
 
 let storyData;
 let currentScenario;
 let lastScenarioAdded;
-let storyId;
+let currentStoryId;
 
 //SET DATA
 export async function SetupData() {
 
-  storyCollectionId = CheckForURLParam("storyCollectionID")
-  setStory(storyCollectionId);
-  storyData = await getStoryData(storyCollectionId);
+  currentStoryId = CheckForURLParam("storyCollectionID")
+  setStory(currentStoryId);
+  storyData = await getStoryData(currentStoryId);
   MonitorAllScenarios();
 
   //SET UP A SEQUENCE OF ACTIONS TO TAKE
@@ -133,23 +134,30 @@ export async function CreateScenario(text, actionID) {
 
 }
 function NotifyAllPlayersOnBranch() {
-  
+
   const playersNotified = [];
   NotifyUpwards(currentScenario);
 
   function NotifyUpwards(scenario) {
 
-    if (scenario.player && !playersNotified.includes(scenario.player)){
-      NotifyPlayer(scenario.player, storyId, scenario.id)
-      playersNotified.push(scenario.player);
+    if (scenario.player && !playersNotified.includes(scenario.player)) {
+      Notify(scenario.player, scenario.id);
     }
 
     if (scenario.parent && scenario.parent.parent && scenario.parent.parent.parent) {
       const scenarioAbove = scenario.parent.parent.parent;
       const actionAbove = scenarioAbove.actions[scenario.parentActionIndex];
-      if (actionAbove.player && !playersNotified.includes[actionAbove.player]) NotifyPlayer(actionAbove.player, storyId, scenarioAbove.id)
+      if (actionAbove.player && !playersNotified.includes[actionAbove.player]) Notify(actionAbove.player, scenarioAbove.id, scenario.parentActionIndex);
       NotifyUpwards(scenarioAbove);
     }
+
+  }
+
+  function Notify(playerToNotify, scenarioId, actionId) {
+
+    if (playerToNotify === GetCurrentPlayerId()) return;
+    NotifyPlayer(playerToNotify, currentStoryId, scenarioId, actionId);
+    playersNotified.push(playerToNotify);
 
   }
 

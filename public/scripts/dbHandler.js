@@ -210,7 +210,7 @@ async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
         scenarioDocID: scenarioDocId,
     }
 
-    if ( typeof actionId !== 'undefined' && query ){
+    if (typeof actionId !== 'undefined' && query) {
         newDocData.actionId = actionId;
         // console.log('made a contribution with an action index');
         // console.log(newDocData);
@@ -240,13 +240,28 @@ async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
     return (response);
 
 }
-export async function NotifyPlayer(playerId, storyId, scenarioId){
+export async function NotifyPlayer(playerId, storyId, scenarioId, actionId) {
 
-    //first, check to make sure that the player has not ALREADY been notified about the branch update before. We dont want several notifications on the same branch
-    GetPlayerNotifications() //use to check
+    //make sure player is not already notified
+    const notificationExist = false;
+    const existingNotifications = await GetPlayerNotifications();
+    if (existingNotifications) existingNotifications.forEach(notification => {
+
+        if (notification.storyId !== storyId) return;
+        if (notification.scenarioId !== scenarioId) return;
+
+        if (typeof actionId !== 'undefined') {
+            if (notification.actionId === actionId) notificationExist = true;
+        }
+        else{
+            notificationExist = true;
+        }
+         
+    })
+    if (notificationExist) return;
 
     //create doc data
-    const newDocData = {
+    const newNotificationData = {
         storyId: storyId,
         time: new Date(),
         scenarioId: scenarioId
@@ -254,7 +269,7 @@ export async function NotifyPlayer(playerId, storyId, scenarioId){
 
     //add to player notifications collection
     const coll = collection(db, '/players/' + playerId + '/notifications');
-    const docData = await addDoc(coll, newDocData)
+    const docData = await addDoc(coll, newNotificationData)
     const newDocID = docData.id;
 
     //return error if it could not be added
@@ -267,7 +282,7 @@ export async function NotifyPlayer(playerId, storyId, scenarioId){
     const response = {
         status: 0,
         newDocID: newDocID,
-        newDocData: newDocData,
+        newDocData: newNotificationData,
         message: 'notification successfully added to player with id=' + playerId
     }
     return (response);
@@ -377,7 +392,7 @@ export async function getScenarioCount(collectionID) {
     return querySnapshot.size - 1;
 
 }
-export async function GetPlayerContributions(playerId){
+export async function GetPlayerContributions(playerId) {
 
     const querySnapshot = await getDocs(collection(db, "players/" + playerId + "/contributions"));
 
@@ -389,7 +404,7 @@ export async function GetPlayerContributions(playerId){
     return contributions;
 
 }
-export async function GetPlayerNotifications(playerId){
+export async function GetPlayerNotifications(playerId) {
 
     const querySnapshot = await getDocs(collection(db, "players/" + playerId + "/notifications"));
 
