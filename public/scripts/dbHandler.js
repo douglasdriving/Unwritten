@@ -245,7 +245,6 @@ export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId
     //make sure player is not already notified
     let notificationExist = false;
     const existingNotifications = await GetPlayerNotifications(playerId);
-    console.log(existingNotifications);
     if (existingNotifications) existingNotifications.forEach(notification => { //could remake into a for-loop that can break once we find a matching notification
 
         if (notification.storyId !== storyId) return;

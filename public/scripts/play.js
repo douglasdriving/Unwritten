@@ -4,8 +4,8 @@ import { GetScenarioExample, GetActionExample } from "/scripts/examples.js?v=0.0
 //BALANCING
 const timeBetweenLetters = 15; //ms
 const delayAfterPrintFinished = 500; //ms
-const maxCharsAction = 80;
-const maxCharsScenario = 300;
+const maxCharsAction = 40;
+const maxCharsScenario = 250;
 
 //DOC VARABLE DECLARATIONS
 const storyBlock = document.getElementById('story');
@@ -54,8 +54,16 @@ storyBlock.append(scenariosContainer);
 async function SetPlayingField() {
 
     const sequence = await SetupData();
-    const text = getIntro();
+
+    //My code
+    let text = getIntro().replace(/\\n/g, "\n\n");;
     document.getElementById('ingress').textContent = text;
+    
+    //test code
+    // let textTest = 'row 1\nrow2\nrow3';
+    // document.getElementById('ingress').textContent = textTest;
+
+
     beginButton.style.display = 'block';
 
     //RUN SEQUENCE

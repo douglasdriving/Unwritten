@@ -74,12 +74,13 @@ async function CheckForUpdates(playerId){
 
     const notifications = await GetPlayerNotifications(playerId);
     if (notifications.length > 0){
-        updatesButton.textContent = 'Updates (' + notifications.length + ')';
+        updatesButton.style.display = 'inline';
+        updatesButton.textContent = notifications.length + ' story updates';
         updatesButton.style.backgroundColor = 'green';
     }
     else{
-        console.log('no updates');  
-        console.log(notifications);
+        // console.log('no updates');  
+        // console.log(notifications);
     }
 
 }

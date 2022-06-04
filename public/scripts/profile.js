@@ -3,12 +3,14 @@ import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
 
 //VARIABLES
 const listDiv = document.getElementById('contributions');
+const infoText = document.getElementById('profileName');
 
 //RUN AT START
-AttachToSignIn(user => {
+infoText.textContent = 'Loading your texts... ';
+AttachToSignIn(async (user) => {
   if (user) {
-    document.getElementById('profileName').textContent = 'Profile for ' + user.email;
-    ListAllContributions(user.uid);
+    await ListAllContributions(user.uid);
+    infoText.textContent = 'Texts written by ' + user.email;
   }
 })
 
@@ -42,7 +44,7 @@ async function ListAllContributions(playerID) {
 function ListSingleContribution(text, story, type, time) {
 
   const contributionDiv = document.createElement('div');
-  contributionDiv.className = "inverted bordered";
+  contributionDiv.className = "inverted bordered pointer";
   listDiv.append(contributionDiv);
 
   const textElement = AddRow('"' + text + '"');
@@ -66,8 +68,8 @@ function ListSingleContribution(text, story, type, time) {
 
 }
 
-function OpenStoryAtLocation(storyID, scenarioID, actionID){
-  
+function OpenStoryAtLocation(storyID, scenarioID, actionID) {
+
   let url = `/pages/play.html?v=0.02&storyCollectionID=${storyID}&scenarioID=${scenarioID}`
   if (actionID) url += `&actionID=${actionID}`;
   window.location.href = url;
