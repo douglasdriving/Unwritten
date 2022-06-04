@@ -6,9 +6,10 @@ const listDiv = document.getElementById('updatesContainer');
 const contentDiv = document.getElementById('content');
 
 //RUN AT START
-AttachToSignIn(user => {
+AttachToSignIn(async (user) => {
   if (user) {
-    ListAllUpdates(user.uid);
+    await ListAllUpdates(user.uid);
+    document.getElementById('description').textContent = 'Updates made to stories that you have previously contributed to. Press the updates to navigate to the story.';
   }
 })
 
@@ -30,11 +31,11 @@ async function ListAllUpdates(playerId) {
     var date = new Date(entry.time.seconds * 1000);
 
     let type = 'scenario';
-    if (typeof entry.actionId !== undefined) type = 'action';
+    if (typeof entry.actionId !== 'undefined') type = 'action';
 
     const updateDiv = ListSingleUpdate(date, entry.storyTitle, type, entry.text);
     updateDiv.onclick = async () => {
-      
+
       Array.from(contentDiv.childNodes).forEach(e => {
         e.remove();
       });
@@ -43,7 +44,7 @@ async function ListAllUpdates(playerId) {
       await RemoveNotification(playerId, entry.id);
       if (type === 'action') OpenStoryAtLocation(entry.storyId, entry.scenarioId, entry.actionId);
       else OpenStoryAtLocation(entry.storyId, entry.scenarioId);
-      
+
     }
 
   })
@@ -53,7 +54,7 @@ async function ListAllUpdates(playerId) {
 function ListSingleUpdate(time, storyTitle, type, text) {
 
   const updateDiv = document.createElement('div');
-  updateDiv.className = "inverted bordered";
+  updateDiv.className = "inverted bordered pointer";
   listDiv.append(updateDiv);
 
   AddRow(time.toLocaleString().slice(0, -3));

@@ -38,6 +38,10 @@
   font-weight: bold;
 }
 
+.pointer:hover{
+  cursor:pointer;
+}
+
 body {
   background-color: #fcf8e7;
   max-width: 600px;
