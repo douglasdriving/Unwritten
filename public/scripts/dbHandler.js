@@ -243,22 +243,31 @@ async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
 export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId) {
 
     //make sure player is not already notified
-    const notificationExist = false;
-    const existingNotifications = await GetPlayerNotifications();
-    if (existingNotifications) existingNotifications.forEach(notification => {
+    console.log('trying to add a notification for:', ' playerId: ', playerId, 'storyId:', storyId, 'text:', text, 'scenarioId:', scenarioId, ' and actionId: ', actionId);
+    let notificationExist = false;
+    const existingNotifications = await GetPlayerNotifications(playerId);
+    console.log('existing notifications:');
+    console.log(existingNotifications);
+    if (existingNotifications) existingNotifications.forEach(notification => { //could remake into a for-loop that can break once we find a matching notification
+
+        console.log('checking against', notification);
 
         if (notification.storyId !== storyId) return;
         if (notification.scenarioId !== scenarioId) return;
 
-        if (typeof actionId !== 'undefined') {
+        if (typeof actionId !== 'undefined' && typeof notification.actionId !== 'undefined') {
             if (notification.actionId === actionId) notificationExist = true;
+            console.log('seems to be the same action id, so cancelling here');
         }
         else{
             notificationExist = true;
+            console.log('seems to be the same scenario, so cancelling here');
         }
          
     })
     if (notificationExist) return;
+    console.log('did not cancel');
+    console.log('notification exists = ', notificationExist);
 
     //create doc data
     const newNotificationData = {
@@ -412,6 +421,8 @@ export async function GetPlayerContributions(playerId) {
 }
 export async function GetPlayerNotifications(playerId) {
 
+    if (!playerId) console.error('You need to provide a player id in order to get their notifications');
+
     const querySnapshot = await getDocs(collection(db, "players/" + playerId + "/notifications"));
 
     let notifications = [];
@@ -420,6 +431,9 @@ export async function GetPlayerNotifications(playerId) {
         notification.id = doc.id;
         notifications.push(notification);
     });
+
+    // console.log('get notifications for player ', playerId, 'returned:');
+    // console.log(notifications);
 
     return notifications;
 
