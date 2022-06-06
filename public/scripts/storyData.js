@@ -1,4 +1,4 @@
-import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer } from "/scripts/dbHandler.js?v=0.02";
+import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer } from "/scripts/dbHandler.js?v=0.03";
 import { GetCurrentPlayerId } from '/scripts/authHandler.js?v=0.01';
 
 let storyData;

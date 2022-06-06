@@ -1,4 +1,4 @@
-import { getStories, getScenarioCount, GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.01";
+import { getStories, getScenarioCount, GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.03";
 import { AttachToSignIn, Logout } from '/scripts/authHandler.js?v=0.01';
 
 const storyDiv = document.getElementById('stories');
@@ -31,15 +31,15 @@ async function LoadStoryMeny() {
 
     const stories = await getStories();
     stories.forEach(story => {
-        AddStoryToMeny(story.title, story.description, story.collection);
+        AddStoryToMeny(story.title, story.description, story.id);
     });
 
     loadText.remove();
 }
 
-async function AddStoryToMeny(title, description, collectionID) {
+async function AddStoryToMeny(title, description, id) {
 
-    const count = await getScenarioCount(collectionID);
+    const count = await getScenarioCount(id);
 
     const menuItem = document.createElement('div');
     menuItem.className = 'story';
@@ -66,7 +66,7 @@ async function AddStoryToMeny(title, description, collectionID) {
     menuItem.append(startStoryButton);
 
     startStoryButton.onclick = () => {
-        window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${collectionID}`;
+        window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${id}`;
     }
 }
 

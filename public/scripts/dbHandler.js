@@ -13,7 +13,7 @@ let currentStoryId;
 let scenarioColl;
 let currentStoryTitle;
 let unsubscribe;
-let scenarioCollPath;
+let currentScenarioCollPath;
 
 //RUN ON LOAD
 logEvent(analytics, 'started_app');
@@ -23,13 +23,13 @@ function CheckForCollectionID() {
     var url_string = window.location.href;
     var url = new URL(url_string);
     var id = url.searchParams.get("storyCollectionID");
-    if (id) setStory(id);
+    if (id) setStory(id.replace(/\s+/g, ''));
 }
 export async function setStory(id) {
 
     currentStoryId = id;
-    scenarioCollPath = '/stories/' + currentStoryId + '/scenarios';
-    scenarioColl = collection(db, scenarioCollPath);
+    currentScenarioCollPath = '/stories/' + currentStoryId + '/scenarios';
+    scenarioColl = collection(db, currentScenarioCollPath);
 
     //set title
     const storyDocPath = `/stories/${currentStoryId}`
@@ -49,7 +49,7 @@ export async function addAction(scenarioId, actionText) {
 
     let scenarioData;
 
-    const scenarioDocRef = await doc(db, (scenarioCollPath + '/' + scenarioId));
+    const scenarioDocRef = await doc(db, ScenarioDocPath(scenarioId));
     const scenarioDoc = await getDoc(scenarioDocRef);
 
     if (scenarioDoc.exists()) {
@@ -75,10 +75,10 @@ export async function addAction(scenarioId, actionText) {
     return action;
 
 }
-export async function addScenario(scenarioText, parentID, parentActionIndex) {
+export async function addScenario(scenarioText, parentId, parentActionIndex) {
 
     //check to make sure parent is not already referencing a scenario
-    const parentDocRef = await doc(db, `${scenarioCollPath}/${parentID}`);
+    const parentDocRef = await doc(db, ScenarioDocPath(parentId));
     const parentDoc = await getDoc(parentDocRef);
     const parentDocData = parentDoc.data();
 
@@ -97,7 +97,7 @@ export async function addScenario(scenarioText, parentID, parentActionIndex) {
     //add the new scenario as a document
     const newDocData = {
         text: scenarioText,
-        parentScenarioID: parentID,
+        parentScenarioID: parentId,
         parentActionIndex: parentActionIndex,
         time: new Date(),
         player: GetCurrentPlayerId()
@@ -163,8 +163,8 @@ export async function updateContentCounters(actionArray) {
 export async function createNewStory(title, description, introduction, initialscenario) {
 
     const storyDocId = title.replace(/\s+/g, '');
-    const storyCollPath = '/stories/' + storyDocId + '/scenarios';
-    const storyColl = collection(db, storyCollPath);
+    const scenarioCollPath = 'stories/' + storyDocId + '/scenarios';
+    const storyColl = collection(db, scenarioCollPath);
 
     //check to make sure the story does not allready exist
     const querySnapshot = await getDocs(storyColl);
@@ -175,7 +175,7 @@ export async function createNewStory(title, description, introduction, initialsc
 
     //setup docs
     await Promise.all([
-        setDoc(doc(db, storyCollPath, "start"), {
+        setDoc(doc(db, scenarioCollPath, "start"), {
             text: initialscenario
         }),
         setDoc(doc(db, 'stories', storyDocId), {
@@ -189,6 +189,8 @@ export async function createNewStory(title, description, introduction, initialsc
             console.error(err);
             return -2;
         })
+
+    console.log('new story was created');
 
     return 0;
 }
@@ -288,7 +290,7 @@ export async function RemoveNotification(playerId, notificationId) {
 //MONITOR
 export async function monitorScenario(scenarioId, updateFunction) {
 
-    const docRef = await doc(db, `${scenarioCollPath}/${scenarioId}`);
+    const docRef = await doc(db, `${currentScenarioCollPath}/${scenarioId}`);
     await onSnapshot(docRef, doc => { updateFunction(doc.data()) });
 
 }
@@ -345,12 +347,12 @@ export async function getStoryData(id) {
 }
 export async function getScenario(scenarioId) {
 
-    const docPath = `${scenarioCollPath}/${scenarioId}`;
+    const docPath = `${currentScenarioCollPath}/${scenarioId}`;
     const docRef = await doc(db, docPath);
-    const doc = await getDoc(docRef);
+    const scenarioDoc = await getDoc(docRef);
 
-    if (doc.exists()) {
-        return doc.data();
+    if (scenarioDoc.exists()) {
+        return scenarioDoc.data();
     }
     else {
         console.error(`no doc data found for the given path ${docPath}`);
@@ -361,13 +363,13 @@ export async function getScenario(scenarioId) {
 export async function getIntro(storyId) {
 
     if (currentStoryId === null) CheckForCollectionID();
-    if (!storyId) storyId = currentStoryId;
+    if (!storyId || typeof storyId === 'undefined') storyId = currentStoryId;
 
-    const docRef = await doc(db, StoryDocPath(storyId));
-    const doc = await getDoc(docRef);
+    const docRef = await doc(db, 'stories/' + storyId);
+    const storyDoc = await getDoc(docRef);
 
-    if (doc.exists()) {
-        return doc.data().intro;
+    if (storyDoc.exists()) {
+        return storyDoc.data().intro;
     }
     else {
         console.error(`no intro doc data found for story id ${storyId}`);
@@ -379,8 +381,9 @@ export async function getStories() {
 
     const querySnapshot = await getDocs(collection(db, "stories"));
     let stories = [];
-    querySnapshot.forEach((doc) => {
-        stories.push(doc.data());
+    querySnapshot.forEach((storyDoc) => {
+        if (storyDoc.id === 'TestStory' && GetCurrentPlayerId() !== ('nTyZYjH3UXM1aIu4JoX5A5PaHXs2' || 'wc82MrqkQgU1wInBwiT9nogLVWH3')) return;
+        stories.push(storyDoc.data());
     });
     return stories;
 
@@ -392,7 +395,6 @@ export async function getScenarioCount(scenarioId) {
     return querySnapshot.size - 1;
 
 }
-
 
 //GET DATA - PLAYER
 export async function GetPlayerContributions(playerId) {
@@ -425,12 +427,12 @@ export async function GetPlayerNotifications(playerId) {
 }
 
 //HELPER FUNCTIONS
-function ScenarioCollPath(storyId){
+function ScenarioCollPath(storyId) {
     return ('stories/' + storyId + '/scenarios');
 }
-function StoryDocPath(storyId){
+function StoryDocPath(storyId) {
     return ('stories/' + storyId);
 }
-function ScenarioPath(scenarioId){
-    return scenarioCollPath + '/' + scenarioId;
+function ScenarioDocPath(scenarioId) {
+    return currentScenarioCollPath + '/' + scenarioId;
 }

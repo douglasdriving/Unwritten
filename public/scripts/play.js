@@ -55,15 +55,12 @@ async function SetPlayingField() {
 
     const sequence = await SetupData();
 
-    //My code
-    let text = getIntro().replace(/\\n/g, "\n\n");;
-    document.getElementById('ingress').textContent = text;
-    
-    //test code
-    // let textTest = 'row 1\nrow2\nrow3';
-    // document.getElementById('ingress').textContent = textTest;
+    //print the intro text
+    let introText = await getIntro();
+    introText = introText.replace(/\\n/g, "\n\n");
+    document.getElementById('ingress').textContent = introText;
 
-
+    //show begin button
     beginButton.style.display = 'block';
 
     //RUN SEQUENCE
