@@ -9,7 +9,7 @@ const app = StartFirebase();
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
 
-let storyId;
+let currentStoryId;
 let scenarioColl;
 let currentStoryTitle;
 let unsubscribe;
@@ -27,12 +27,12 @@ function CheckForCollectionID() {
 }
 export async function setStory(id) {
 
-    storyId = id;
-    scenarioCollPath = '/stories/' + storyId + '/scenarios';
+    currentStoryId = id;
+    scenarioCollPath = '/stories/' + currentStoryId + '/scenarios';
     scenarioColl = collection(db, scenarioCollPath);
 
     //set title
-    const storyDocPath = `/stories/${storyId}`
+    const storyDocPath = `/stories/${currentStoryId}`
     const storyDocRef = await doc(db, storyDocPath);
     const storyDoc = await getDoc(storyDocRef);
 
@@ -44,7 +44,7 @@ export async function setStory(id) {
     }
 }
 
-//UPDATE THE DATABASE
+//UPDATE THE STORY DATABASE
 export async function addAction(scenarioId, actionText) {
 
     let scenarioData;
@@ -181,7 +181,6 @@ export async function createNewStory(title, description, introduction, initialsc
         setDoc(doc(db, 'stories', storyDocId), {
             title: title,
             description: description,
-            collection: title,
             intro: introduction
         })
     ])
@@ -193,6 +192,8 @@ export async function createNewStory(title, description, introduction, initialsc
 
     return 0;
 }
+
+//UPDATE THE PLAYER DATABASE
 async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
 
     //create doc data
@@ -201,19 +202,13 @@ async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
         story: currentStoryTitle,
         type: type,
         time: new Date(),
-        storyCollectionID: storyId,
+        storyCollectionID: currentStoryId,
         scenarioDocID: scenarioDocId,
     }
 
     if (typeof actionId !== 'undefined' && query) {
         newDocData.actionId = actionId;
-        // console.log('made a contribution with an action index');
-        // console.log(newDocData);
     }
-    // else{
-    //     console.log('action id is: ' + actionId);
-    //     console.log('added player contribution without action id')
-    // }
 
     //add to player contributions collection
     const coll = collection(db, '/players/' + GetCurrentPlayerId() + '/contributions');
@@ -252,6 +247,7 @@ export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId
         }
 
     })
+
     if (notificationExist) return;
 
     //create doc data
@@ -290,10 +286,9 @@ export async function RemoveNotification(playerId, notificationId) {
 }
 
 //MONITOR
-export async function monitorScenario(scenarioID, updateFunction) {
+export async function monitorScenario(scenarioId, updateFunction) {
 
-    const docRef = await doc(db, `${storyId}/${scenarioID}`);
-
+    const docRef = await doc(db, `${scenarioCollPath}/${scenarioId}`);
     await onSnapshot(docRef, doc => { updateFunction(doc.data()) });
 
 }
@@ -303,22 +298,22 @@ export async function tryUnsubscribe() {
     }
 }
 
-//GET DATA
-export async function getStoryData(collectionID) {
+//GET DATA - STORY
+export async function getStoryData(id) {
 
-    const querySnapshot = await getDocs(collection(db, collectionID));
+    const querySnapshot = await getDocs(collection(db, ScenarioCollPath(id)));
 
     let storyData = {};
     let iterations = 0;
 
     querySnapshot.forEach(doc => {
-        const data = doc.data();
-        if (doc.id === 'intro') storyData.intro = data.text;
-        else if (doc.id === 'start') storyData.start = data;
+        if (doc.id === 'start') storyData.start = doc.data();;
     })
 
+    storyData.intro = await getIntro(id);
     storyData.start.id = 'start';
 
+    //ALL THIS WILL BE REMANUFACTURED ANYWAYS
     AttachScenariosBelow(storyData.start);
     console.log('number of iterations: ' + iterations);
 
@@ -348,50 +343,58 @@ export async function getStoryData(collectionID) {
         return scenario;
     }
 }
-export async function getScenario(scenarioID) {
-    const docRef = await doc(db, `${storyId}/${scenarioID}`);
-    const document = await getDoc(docRef);
-    if (document.exists()) {
-        const docData = document.data();
-        return docData;
+export async function getScenario(scenarioId) {
+
+    const docPath = `${scenarioCollPath}/${scenarioId}`;
+    const docRef = await doc(db, docPath);
+    const doc = await getDoc(docRef);
+
+    if (doc.exists()) {
+        return doc.data();
     }
     else {
-        console.error(`no doc data found for the given path ${storyId}/${scenarioID}`);
+        console.error(`no doc data found for the given path ${docPath}`);
         return false;
     }
+
 }
-export async function getIntro() {
+export async function getIntro(storyId) {
 
-    if (storyId === null) CheckForCollectionID();
+    if (currentStoryId === null) CheckForCollectionID();
+    if (!storyId) storyId = currentStoryId;
 
-    const docRef = await doc(db, `${storyId}/intro`);
-    const document = await getDoc(docRef);
+    const docRef = await doc(db, StoryDocPath(storyId));
+    const doc = await getDoc(docRef);
 
-    if (document.exists()) {
-        const introText = document.data().text;
-        return introText;
+    if (doc.exists()) {
+        return doc.data().intro;
     }
     else {
-        console.error(`no intro doc data found for the current collectionID ${storyId}`);
+        console.error(`no intro doc data found for story id ${storyId}`);
         return false;
     }
 
 }
 export async function getStories() {
+
     const querySnapshot = await getDocs(collection(db, "stories"));
     let stories = [];
     querySnapshot.forEach((doc) => {
         stories.push(doc.data());
     });
     return stories;
-}
-export async function getScenarioCount(collectionID) {
 
-    const coll = collection(db, collectionID);
+}
+export async function getScenarioCount(scenarioId) {
+
+    const coll = collection(db, ScenarioCollPath(scenarioId));
     const querySnapshot = await getDocs(coll);
     return querySnapshot.size - 1;
 
 }
+
+
+//GET DATA - PLAYER
 export async function GetPlayerContributions(playerId) {
 
     const querySnapshot = await getDocs(collection(db, "players/" + playerId + "/contributions"));
@@ -419,4 +422,15 @@ export async function GetPlayerNotifications(playerId) {
 
     return notifications;
 
+}
+
+//HELPER FUNCTIONS
+function ScenarioCollPath(storyId){
+    return ('stories/' + storyId + '/scenarios');
+}
+function StoryDocPath(storyId){
+    return ('stories/' + storyId);
+}
+function ScenarioPath(scenarioId){
+    return scenarioCollPath + '/' + scenarioId;
 }
