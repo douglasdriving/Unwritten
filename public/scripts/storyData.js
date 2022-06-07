@@ -32,7 +32,9 @@ export async function SetupData() {
   return sequence;
 
   function AddActionSequence(scenario) {
-    if (scenario.parentActionIndex !== undefined) sequence.push(scenario.parentActionIndex);
+    console.log(scenario);
+    //console.log(scenario.parentActionIndex);
+    if (scenario.parentActionIndex) sequence.push(scenario.parentActionIndex);
     if (scenario.parentScenarioID) AddActionSequence(GetScenario(scenario.parentScenarioID));
   }
 
@@ -55,7 +57,7 @@ export function MoveToNextScenario(actionId) {
 }
 
 //GET DATA 
-export function getIntro() {
+export function GetStoryIntro() {
   return introText;
 }
 export function GetCurrentScenarioID() {
@@ -68,9 +70,13 @@ export function GetCurrentScenario() {
   return currentScenario;
 }
 function GetScenario(id) {
+  let returnScenario;
   scenarios.forEach(scenario => {
-    if (scenario.id === id) return scenario;
+    if (scenario.id === id) {
+      returnScenario = scenario;
+    }
   })
+  return returnScenario;
 }
 
 //ADD CONTENT

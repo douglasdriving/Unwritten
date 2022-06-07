@@ -1,4 +1,4 @@
-import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario } from "/scripts/storyData.js?v=0.11";
+import { GetStoryIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario } from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
 
 //BALANCING
@@ -64,7 +64,7 @@ function SetupScript() {
         const sequence = await SetupData();
 
         //print the intro text
-        let introText = await getIntro();
+        let introText = await GetStoryIntro();
         introText = introText.replace(/\\n/g, "\n\n");
         document.getElementById('ingress').textContent = introText;
 

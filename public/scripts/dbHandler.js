@@ -306,10 +306,11 @@ export async function GetScenarios(storyId) {
     const scenarioDocs = await getDocs(collection(db, ScenarioCollPath(storyId)));
     const scenarios = [];
     scenarioDocs.forEach(scenarioDoc => {
-        const scenarioData = scenarioDoc.data;
+        const scenarioData = scenarioDoc.data();
         scenarioData.id = scenarioDoc.id;
         scenarios.push(scenarioData);
     })
+    
     return scenarios;
 
     //old code - can remove later
