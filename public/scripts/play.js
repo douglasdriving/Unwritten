@@ -290,10 +290,6 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
     function AssignAddButton(type) {
         addContentTextField.placeholder = `Write a new ${type}. Example: "${GetExample(type)}"`;
         maxNumOfChars = MaxChars(type);
-        console.log(
-            'max num of chars set to: ' + maxChars.type,
-            'where type is: ' + type
-        );
         CountCharactersInTextField();
         tryAddContentButton.onclick = () => { TryAddNewContent(type, actionIndex); };
         onEnterPress = () => { TryAddNewContent(type, actionIndex); };
@@ -455,7 +451,6 @@ function CountCharactersInTextField() {
 
 }
 function MaxChars(type) {
-    console.log('trying to get max chars for type: ' + type);
     if (type === 'action') {
         return maxChars.action;
     }
