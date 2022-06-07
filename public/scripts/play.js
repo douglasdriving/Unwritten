@@ -27,7 +27,7 @@ let currentScenarioId;
 let onEnterPress;
 let contentIsBeingAdded = false;
 let currentActionBlock;
-let maxNumOfChars = maxCharsAction;
+let maxNumOfChars = maxChars.action;
 let terminatePrint;
 
 //RUN AT START
@@ -55,7 +55,7 @@ function SetupScript() {
     function SetDisplayOnStart() {
         keepPlayButton.style.display = 'none';
         addingContentBlock.style.display = 'none';
-        HideAddContentBlock();
+        DisplayAddContentBlock(false);
         document.getElementById("contentAddConfirmBlock").style.display = 'none';
         beginButton.style.display = 'none';
     }
@@ -89,7 +89,7 @@ function PlayScenario(scenarioData, instant) {
 
     const scenarioText = scenarioData.text;
     currentScenarioId = scenarioData.id;
-    HideAddContentBlock();
+    DisplayAddContentBlock(false);
     let printTerminated = StartScenarioPrint();
     CreateActionButtons();
     ScrollDown();
@@ -209,13 +209,13 @@ function LoadActionButtons(actions) {
             dispatchEvent(terminatePrint);
             currentActionBlock = plusButton.parentNode;
             if (plusButton.className != 'plusButton highlightedButton') {
-                ActivateAddContentBlock('write a new action...', 'Add Action', 0);
+                ActivateAddContentBlock('write a new action...', 'Add Action', -1);
                 TryBacktrack(scenarioIdForButton, plusButton.parentNode);
-                SetHighlight(plusButton, true);
+                SetButtonHighlighting(plusButton, true);
             }
             else {
-                HideAddContentBlock();
-                SetHighlight(plusButton, false);
+                DisplayAddContentBlock(false);
+                SetButtonHighlighting(plusButton, false);
             }
 
         });
@@ -227,7 +227,7 @@ function PressActionButton(actionId, buttonPressed, instant, scenarioId) {
     if (contentIsBeingAdded) return;
     if (scenarioId) TryBacktrack(scenarioId, buttonPressed.parentNode);
     if (buttonPressed.className === 'actionButton highlightedButton') {
-        HideAddContentBlock();
+        DisplayAddContentBlock(false);
         SetAllButtonsToNoHighlight();
     }
     else {
@@ -237,7 +237,7 @@ function PressActionButton(actionId, buttonPressed, instant, scenarioId) {
             ActivateAddContentBlock('What happens next?', 'Add Scenario', actionId);
             ScrollDown();
         }
-        SetHighlight(buttonPressed, true);
+        SetButtonHighlighting(buttonPressed, true);
     }
 
     function SetAllButtonsToNoHighlight() {
@@ -271,37 +271,30 @@ function TryBacktrack(scenarioID, actionBlock) {
 //ADD CONTENT
 function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
     //show the block
+    ClearTextField();
     addContentTextField.placeholder = instructionText;
-    addContentTextField.value = '';
-    addContentBlock.style.display = 'block';
+    addContentTextField.style.height = maxChars.type * 250 / window.innerWidth + 'px';
+    DisplayAddContentBlock(true);
     tryAddContentButton.textContent = buttonText;
 
     //assign the "add" function to the button
-    if (buttonText === 'Add Scenario') {
-        AssignButton('scenario');
-    }
-    else if (buttonText === 'Add Action') {
-        addContentTextField.placeholder = `Write a new action. Example: "${GetActionExample()}"`
-        maxNumOfChars = maxCharsAction;
-        CountCharactersInTextField();
-        tryAddContentButton.onclick = () => { TryAddNewContent('action', -1); }
-        onEnterPress = () => { TryAddNewContent('action', -1); };
-    }
+    if (buttonText === 'Add Scenario') AssignAddButton('scenario');
+    else if (buttonText === 'Add Action') AssignAddButton('action');
     else {
         console.error('cant assign a function to the "add content" button because the text was not assigned correctly.');
         onEnterPress = null;
     }
 
-    addContentTextField.style.height = maxNumOfChars * 250 / window.innerWidth + 'px';
-
     ScrollDown();
 
-    function AssignButton(type) {
+    function AssignAddButton(type) {
         addContentTextField.placeholder = `Write a new ${type}. Example: "${GetExample(type)}"`;
-        maxNumOfChars = maxChars.type;
+        maxNumOfChars = MaxChars(type);
+        console.log(
+            'max num of chars set to: ' + maxChars.type,
+            'where type is: ' + type
+        );
         CountCharactersInTextField();
-
-        //specific to scenario. CHANGE!
         tryAddContentButton.onclick = () => { TryAddNewContent(type, actionIndex); };
         onEnterPress = () => { TryAddNewContent(type, actionIndex); };
     }
@@ -312,7 +305,7 @@ async function TryAddNewContent(type, actionIndex) {
     if (!TextIsOk()) return;
     const tryAddContentFunction = onEnterPress;
     onEnterPress = null;
-    HideAddContentBlock();
+    DisplayAddContentBlock(false);
     ShowConfimationBlock();
     ScrollDown();
 
@@ -330,7 +323,7 @@ async function TryAddNewContent(type, actionIndex) {
         };
         document.getElementById('editContentButton').onclick = () => {
             onEnterPress = tryAddContentFunction;
-            addContentBlock.style.display = 'block';
+            DisplayAddContentBlock(true);
             contentAddConfirmBlock.style.display = 'none';
         };
     }
@@ -342,7 +335,7 @@ async function TryAddNewContent(type, actionIndex) {
         function ShowContentAddLoadText(show) {
             if (show) {
                 contentAddConfirmBlock.style.display = 'none';
-                addContentTextField.value = '';
+                ClearTextField();
                 addingContentBlock.style.display = 'block';
                 addingContentStatusText.textContent = 'Adding your content to Unwritten...';
             }
@@ -409,7 +402,7 @@ async function TryAddNewContent(type, actionIndex) {
 function ScrollDown() {
     window.scrollTo(0, document.body.scrollHeight);
 }
-function SetHighlight(button, highlight) {
+function SetButtonHighlighting(button, highlight) {
     if (highlight) {
         button.parentNode.childNodes.forEach(bottonInBlock => {
             if (bottonInBlock.textContent === '+') bottonInBlock.className = 'plusButton';
@@ -428,8 +421,12 @@ function SetHighlight(button, highlight) {
         });
     }
 }
-function HideAddContentBlock() {
-    addContentBlock.style.display = 'none';
+function DisplayAddContentBlock(display) {
+    if (display) addContentBlock.style.display = 'block';
+    else addContentBlock.style.display = 'none';
+}
+function ClearTextField() {
+    addContentTextField.value = '';
 }
 
 //HELPER FUNCTIONS
@@ -456,4 +453,12 @@ function CountCharactersInTextField() {
         tryAddContentButton.style.opacity = 0.3;
     }
 
+}
+function MaxChars(type) {
+    console.log('trying to get max chars for type: ' + type);
+    if (type === 'action') {
+        return maxChars.action;
+    }
+    else if (type === 'scenario') return maxChars.scenario;
+    else console.error('max chars does not exist for that type.');
 }
