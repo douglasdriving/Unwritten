@@ -52,7 +52,7 @@ export function MoveToNextScenario(actionId) {
     return currentScenario;
   }
   else {
-    console.error('could not move to the next scenario using the given action id: ', actionId);
+    return false;
   }
 }
 
@@ -109,7 +109,10 @@ export async function CreateScenario(text, actionID) {
   if (response.status === 0) {
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
+
     currentScenario.actions[actionID].scenarioID = newScenario.id;
+    scenarios.push(newScenario);
+
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
   }

@@ -31,8 +31,8 @@ let maxNumOfChars = maxChars.action;
 let terminatePrint;
 
 //RUN AT START
-SetupScript();
-function SetupScript() {
+SetupStory();
+function SetupStory() {
     SetDisplayOnStart();
     SetPlayingField();
     AssignButtonsAndEvents();
@@ -61,23 +61,25 @@ function SetupScript() {
     }
     async function SetPlayingField() {
 
-        const sequence = await SetupData();
+        let sequence;
+        let introText;
+        
+        await Promise.all([
+            sequence = await SetupData(),
+            introText = await GetStoryIntro(),
+        ]);
 
-        //print the intro text
-        let introText = await GetStoryIntro();
         introText = introText.replace(/\\n/g, "\n\n");
         document.getElementById('ingress').textContent = introText;
 
-        //show begin button
         beginButton.style.display = 'block';
 
-        //RUN SEQUENCE
-        if (!sequence)
-            return;
-
+        RunStartSequence(sequence);
+    }
+    function RunStartSequence(sequence) {
+        if (!sequence) return;
         PlayScenario(MoveToNextScenario(), true);
         beginButton.remove();
-
         for (let i = 0; i < sequence.length; i++) {
             PressActionButton(sequence[i], currentActionBlock.childNodes[sequence[i]], true);
         }
@@ -232,7 +234,9 @@ function PressActionButton(actionId, buttonPressed, instant, scenarioId) {
     }
     else {
         const nextScenario = MoveToNextScenario(actionId);
-        if (nextScenario) PlayScenario(nextScenario, instant);
+        if (nextScenario) {
+            PlayScenario(nextScenario, instant);
+        }
         else {
             ActivateAddContentBlock('What happens next?', 'Add Scenario', actionId);
             ScrollDown();
