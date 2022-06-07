@@ -32,8 +32,6 @@ export async function SetupData() {
   return sequence;
 
   function AddActionSequence(scenario) {
-    console.log(scenario);
-    //console.log(scenario.parentActionIndex);
     if (scenario.parentActionIndex) sequence.push(scenario.parentActionIndex);
     if (scenario.parentScenarioID) AddActionSequence(GetScenario(scenario.parentScenarioID));
   }
@@ -44,16 +42,18 @@ export function SetScenario(id) {
   else currentScenario = GetScenario(id);
 }
 export function MoveToNextScenario(actionId) {
-
-  let nextScenario;
-
-  if (!currentScenario) nextScenario = GetScenario('start');
+  if (!currentScenario) {
+    currentScenario = GetScenario('start');
+    return currentScenario;
+  }
   else if (currentScenario.actions && currentScenario.actions[actionId] && currentScenario.actions[actionId].scenarioID) {
-    nextScenario = GetScenario(currentScenario.actions[actionId].scenarioID);
+    const nextScenario = GetScenario(currentScenario.actions[actionId].scenarioID);
     currentScenario = nextScenario;
     return currentScenario;
   }
-
+  else {
+    console.error('could not move to the next scenario using the given action id: ', actionId);
+  }
 }
 
 //GET DATA 
@@ -109,7 +109,7 @@ export async function CreateScenario(text, actionID) {
   if (response.status === 0) {
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
-    currentScenario.actions[actionID].scenarioID = newScenarioID;
+    currentScenario.actions[actionID].scenarioID = newScenario.id;
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
   }
