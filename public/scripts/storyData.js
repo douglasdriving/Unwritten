@@ -80,6 +80,9 @@ export function GetCurrentScenarioID() {
 export function GetLastScenarioAdded() {
   return lastScenarioAdded;
 }
+export function GetCurrentScenario(){
+  return currentScenario;
+}
 
 //ADD CONTENT
 export async function CreateAction(text) {
