@@ -1,5 +1,5 @@
-import { GetPlayerNotifications, RemoveNotification } from "/scripts/dbHandler.js?v=0.03"; //import functions for getting player branches
-import { AttachToSignIn } from '/scripts/authHandler.js?v=0.01';
+import { GetPlayerNotifications, RemoveNotification } from "/scripts/dbHandler.js?v=0.11"; //import functions for getting player branches
+import { AttachToSignIn } from '/scripts/authHandler.js?v=0.11';
 
 //VARIABLES
 const listDiv = document.getElementById('updatesContainer');
@@ -76,7 +76,7 @@ function ListSingleUpdate(time, storyTitle, type, text) {
 
 function OpenStoryAtLocation(storyID, scenarioID, actionID) {
 
-  let url = `/pages/play.html?v=0.02&storyCollectionID=${storyID}&scenarioID=${scenarioID}`
+  let url = `/pages/play.html?v=0.11&storyCollectionID=${storyID}&scenarioID=${scenarioID}`
   if (actionID) url += `&actionID=${actionID}`;
   window.location.href = url;
 

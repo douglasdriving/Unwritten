@@ -1,5 +1,5 @@
-import { getStories, getScenarioCount, GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.03";
-import { AttachToSignIn, Logout } from '/scripts/authHandler.js?v=0.01';
+import { getStories, getScenarioCount, GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.11";
+import { AttachToSignIn, Logout } from '/scripts/authHandler.js?v=0.11';
 
 const storyDiv = document.getElementById('stories');
 const updatesButton = document.getElementById('updatesButton');
@@ -20,7 +20,7 @@ document.getElementById('signOutButton').onclick = () => {
 }
 
 document.getElementById('createStoryButton').onclick = () => {
-    window.location.href = `/pages/creator.html?v=0.01`;
+    window.location.href = `/pages/creator.html?v=0.11`;
 }
 
 async function LoadStoryMeny() {
@@ -66,7 +66,7 @@ async function AddStoryToMeny(title, description, id) {
     menuItem.append(startStoryButton);
 
     startStoryButton.onclick = () => {
-        window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${id}`;
+        window.location.href = `/pages/play.html?v=0.11&storyCollectionID=${id}`;
     }
 }
 

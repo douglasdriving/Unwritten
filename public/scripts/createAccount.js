@@ -1,4 +1,4 @@
-import { CreateAccount, AttachToSignIn } from "/scripts/authHandler.js?v=0.04";
+import { CreateAccount, AttachToSignIn } from "/scripts/authHandler.js?v=0.11";
 
 const emailField = document.getElementById('emailField');
 const passwordField = document.getElementById('passwordField');
@@ -6,7 +6,7 @@ const createAccountButton = document.getElementById('createAccountButton');
 const errorText = document.getElementById('errorText');
 
 AttachToSignIn(user => {
-  if (user) window.location.href = '/pages/hub.html?v=0.03';
+  if (user) window.location.href = '/pages/hub.html?v=0.11';
 })
 
 Show(errorText, '', false);

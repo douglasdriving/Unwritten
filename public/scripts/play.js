@@ -1,5 +1,5 @@
-import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded } from "/scripts/storyData.js?v=0.07";
-import { GetScenarioExample, GetActionExample } from "/scripts/examples.js?v=0.02";
+import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded } from "/scripts/storyData.js?v=0.11";
+import { GetScenarioExample, GetActionExample } from "/scripts/examples.js?v=0.11";
 
 //BALANCING
 const timeBetweenLetters = 15; //ms

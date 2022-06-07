@@ -1,4 +1,4 @@
-import { StartFirebase } from "/scripts/firebaseConfig.js?v=0.01";
+import { StartFirebase } from "/scripts/firebaseConfig.js?v=0.11";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -18,7 +18,7 @@ AttachToSignIn(user => {
   else {
     currentPlayerId = '';
     const currentPage = window.location.pathname.split("/").pop();
-    if (currentPage !== 'login.html' && currentPage !== 'createAccount.html') window.location.href = '/pages/login.html?v=0.01';
+    if (currentPage !== 'login.html' && currentPage !== 'createAccount.html') window.location.href = '/pages/login.html?v=0.11';
   }
 })
 

@@ -1,4 +1,4 @@
-import { createNewStory } from "/scripts/dbHandler.js?v=0.03";
+import { createNewStory } from "/scripts/dbHandler.js?v=0.11";
 
 const creator = document.getElementById('creator');
 
@@ -147,7 +147,7 @@ async function CreateStory() {
     continueButton.textContent = 'Enter story';
     continueButton.onclick = () => {
       const storyId = fields[0].inputField.value.replace(/\s+/g, '');
-      window.location.href = `/pages/play.html?v=0.02&storyCollectionID=${storyId}`;
+      window.location.href = `/pages/play.html?v=0.11&storyCollectionID=${storyId}`;
     }
 
   }

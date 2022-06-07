@@ -1,4 +1,4 @@
-import { Login, AttachToSignIn } from "/scripts/authHandler.js?v=0.03";
+import { Login, AttachToSignIn } from "/scripts/authHandler.js?v=0.11";
 
 const emailField = document.getElementById('emailField');
 const passwordField = document.getElementById('passwordField');
@@ -9,7 +9,7 @@ const pwError = document.getElementById('passwordError');
 const usernameError = document.getElementById('usernameError');
 
 AttachToSignIn(user => {
-  if (user) window.location.href = '/pages/hub.html?v=0.01';
+  if (user) window.location.href = '/pages/hub.html?v=0.11';
 })
 
 Show(loginErrorText, '', false);
