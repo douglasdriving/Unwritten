@@ -1,11 +1,13 @@
 import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario } from "/scripts/storyData.js?v=0.11";
-import { GetScenarioExample, GetActionExample } from "/scripts/examples.js?v=0.11";
+import { GetScenarioExample, GetActionExample, GetExample } from "/scripts/examples.js?v=0.11";
 
 //BALANCING
 const timeBetweenLetters = 15; //ms
 const delayAfterPrintFinished = 500; //ms
-const maxCharsAction = 40;
-const maxCharsScenario = 250;
+const maxChars = {
+    action: 40,
+    scenario: 250
+}
 
 //DOC VARABLE DECLARATIONS
 const storyBlock = document.getElementById('story');
@@ -29,8 +31,8 @@ let maxNumOfChars = maxCharsAction;
 let terminatePrint;
 
 //RUN AT START
-PlayScriptSetup();
-function PlayScriptSetup() {
+SetupScript();
+function SetupScript() {
     SetDisplayOnStart();
     SetPlayingField();
     AssignButtonsAndEvents();
@@ -77,7 +79,7 @@ function PlayScriptSetup() {
         beginButton.remove();
 
         for (let i = 0; i < sequence.length; i++) {
-            TakeAction(sequence[i], currentActionBlock.childNodes[sequence[i]], true);
+            PressActionButton(sequence[i], currentActionBlock.childNodes[sequence[i]], true);
         }
     }
 }
@@ -156,21 +158,41 @@ function PlayScenario(scenarioData, instant) {
 }
 function LoadActionButtons(actions) {
 
-    if (currentActionBlock.childNodes.length > 0) {
-        Array.from(currentActionBlock.childNodes).forEach(button => {
-            button.remove();
-        })
-    }
-
-    if (actions) {
-        actions.forEach((actionElement, actionID) => {
-            CreateActionButton(actionElement, actionID);
-        });
-    }
-
+    ClearButtonBlock();
+    CreateActionButtons();
     CreatePlusButton();
     ScrollDown();
 
+    function CreateActionButtons() {
+        if (actions) {
+            actions.forEach((actionElement, actionID) => {
+                CreateActionButton(actionElement, actionID);
+            });
+        }
+        function CreateActionButton(actionObject, actionID) {
+
+            //CREATE THE BUTTON ELEMENT
+            const actionButton = document.createElement('button');
+            currentActionBlock.appendChild(actionButton);
+            actionButton.className = 'actionButton';
+            actionButton.textContent = actionObject.action;
+
+            //ASSIGN THE ONCLICK FUNCTION
+            const scenarioIdForThisAction = currentScenarioId;
+            actionButton.onclick = (async () => {
+                PressActionButton(actionID, actionButton, false, scenarioIdForThisAction);
+            });
+
+            return actionButton;
+        }
+    }
+    function ClearButtonBlock() {
+        if (currentActionBlock.childNodes.length > 0) {
+            Array.from(currentActionBlock.childNodes).forEach(button => {
+                button.remove();
+            });
+        }
+    }
     function CreatePlusButton() {
         if (contentIsBeingAdded) return;
 
@@ -198,34 +220,15 @@ function LoadActionButtons(actions) {
 
         });
     }
-    function CreateActionButton(actionObject, actionID) {
 
-        //CREATE THE BUTTON ELEMENT
-        const actionButton = document.createElement('button');
-        currentActionBlock.appendChild(actionButton);
-        actionButton.className = 'actionButton';
-        actionButton.textContent = actionObject.action;
-
-        //ASSIGN THE ONCLICK FUNCTION
-        const scenarioIdForThisAction = currentScenarioId;
-        actionButton.onclick = (async () => {
-            TakeAction(actionID, actionButton, false, scenarioIdForThisAction);
-        });
-
-        return actionButton;
-    }
 }
-function TakeAction(actionId, buttonPressed, instant, scenarioId) { //improvement: all of these params could be containted within the same obj.
+function PressActionButton(actionId, buttonPressed, instant, scenarioId) {
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
     if (scenarioId) TryBacktrack(scenarioId, buttonPressed.parentNode);
     if (buttonPressed.className === 'actionButton highlightedButton') {
         HideAddContentBlock();
-        Array.from(buttonPressed.parentNode.childNodes).forEach(button => {
-            const firstWord = button.className.split(' ')[0];
-            if (firstWord === 'actionButton') button.className = 'actionButton';
-            else if (firstWord === 'plusButton') button.className = 'plusButton';
-        })
+        SetAllButtonsToNoHighlight();
     }
     else {
         const nextScenario = MoveToNextScenario(actionId);
@@ -235,6 +238,16 @@ function TakeAction(actionId, buttonPressed, instant, scenarioId) { //improvemen
             ScrollDown();
         }
         SetHighlight(buttonPressed, true);
+    }
+
+    function SetAllButtonsToNoHighlight() {
+        Array.from(buttonPressed.parentNode.childNodes).forEach(button => {
+            const firstWord = button.className.split(' ')[0];
+            if (firstWord === 'actionButton')
+                button.className = 'actionButton';
+            else if (firstWord === 'plusButton')
+                button.className = 'plusButton';
+        });
     }
 }
 function TryBacktrack(scenarioID, actionBlock) {
@@ -255,7 +268,6 @@ function TryBacktrack(scenarioID, actionBlock) {
     return true;
 }
 
-
 //ADD CONTENT
 function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
     //show the block
@@ -266,11 +278,7 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
 
     //assign the "add" function to the button
     if (buttonText === 'Add Scenario') {
-        addContentTextField.placeholder = `Write a new scenario. Example: "${GetScenarioExample()}"`
-        maxNumOfChars = maxCharsScenario;
-        CountCharactersInTextField();
-        tryAddContentButton.onclick = () => { TryAddNewContent('scenario', actionIndex); }
-        onEnterPress = () => { TryAddNewContent('scenario', actionIndex); };
+        AssignButton('scenario');
     }
     else if (buttonText === 'Add Action') {
         addContentTextField.placeholder = `Write a new action. Example: "${GetActionExample()}"`
@@ -286,56 +294,46 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
 
     addContentTextField.style.height = maxNumOfChars * 250 / window.innerWidth + 'px';
 
-    //TryUnsubscribe();
     ScrollDown();
+
+    function AssignButton(type) {
+        addContentTextField.placeholder = `Write a new ${type}. Example: "${GetExample(type)}"`;
+        maxNumOfChars = maxChars.type;
+        CountCharactersInTextField();
+
+        //specific to scenario. CHANGE!
+        tryAddContentButton.onclick = () => { TryAddNewContent(type, actionIndex); };
+        onEnterPress = () => { TryAddNewContent(type, actionIndex); };
+    }
 }
 async function TryAddNewContent(type, actionIndex) {
 
-    //make sure there is a value in the input field
     const contentText = addContentTextField.value;
-    if (contentText === '') {
-        console.error('please write something in the text field!');
-        return;
-    }
-
-    //make sure there aren't too many characters
-    if (contentText.length > maxNumOfChars) {
-        console.error('too many characters!');
-        return;
-    }
-
-    //make sure type is correct
-    if (type != 'action' && type != 'scenario') {
-        console.error('type was defined inapropriately to: ' + type);
-        return;
-    }
-
-    //hide out the add content and action window
+    if (!TextIsOk()) return;
     const tryAddContentFunction = onEnterPress;
     onEnterPress = null;
     HideAddContentBlock();
-
-    //show the confirm box
-    const contentAddConfirmBlock = document.getElementById("contentAddConfirmBlock");
-    contentAddConfirmBlock.style.display = 'block';
-    const contentToConfirmText = document.getElementById('contentToConfirm')
-    if (type === 'action') contentToConfirmText.textContent = `> ${contentText}`;
-    else if (type === 'scenario') contentToConfirmText.textContent = `"${contentText}"`;
+    ShowConfimationBlock();
     ScrollDown();
 
-    //assign dem buttons
-    document.getElementById('addContentButton').onclick = () => {
-
-        AddContent(type, contentAddConfirmBlock, contentText, actionIndex);
-
+    function ShowConfimationBlock() {
+        const contentAddConfirmBlock = document.getElementById("contentAddConfirmBlock");
+        contentAddConfirmBlock.style.display = 'block';
+        const contentToConfirmText = document.getElementById('contentToConfirm');
+        if (type === 'action')
+            contentToConfirmText.textContent = `> ${contentText}`;
+        else if (type === 'scenario')
+            contentToConfirmText.textContent = `"${contentText}"`;
+        //assign dem buttons
+        document.getElementById('addContentButton').onclick = () => {
+            AddContent(type, contentAddConfirmBlock, contentText, actionIndex);
+        };
+        document.getElementById('editContentButton').onclick = () => {
+            onEnterPress = tryAddContentFunction;
+            addContentBlock.style.display = 'block';
+            contentAddConfirmBlock.style.display = 'none';
+        };
     }
-
-    document.getElementById('editContentButton').onclick = () => {
-        onEnterPress = tryAddContentFunction;
-        addContentBlock.style.display = 'block';
-        contentAddConfirmBlock.style.display = 'none';
-    }
-
     function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
         ShowContentAddLoadText(true);
         contentIsBeingAdded = true;
@@ -366,7 +364,7 @@ async function TryAddNewContent(type, actionIndex) {
                         action: contentText,
                     }
                     LoadActionButtons(GetCurrentScenario().actions);
-                    TakeAction(actionId, currentActionBlock.childNodes[actionId], false, GetCurrentScenarioID());
+                    PressActionButton(actionId, currentActionBlock.childNodes[actionId], false, GetCurrentScenarioID());
                     ShowContentAddLoadText(false);
                 });
         }
@@ -388,7 +386,22 @@ async function TryAddNewContent(type, actionIndex) {
                     ShowContentAddLoadText(false);
                 });
         }
-    
+
+    }
+    function TextIsOk() {
+        if (contentText === '') {
+            console.error('please write something in the text field!');
+            return false;
+        }
+        else if (contentText.length > maxNumOfChars) {
+            console.error('too many characters!');
+            return false;
+        }
+        else if (type != 'action' && type != 'scenario') {
+            console.error('type was defined inapropriately to: ' + type);
+            return false;
+        }
+        else return true;
     }
 }
 
@@ -415,7 +428,7 @@ function SetHighlight(button, highlight) {
         });
     }
 }
-function HideAddContentBlock(){
+function HideAddContentBlock() {
     addContentBlock.style.display = 'none';
 }
 

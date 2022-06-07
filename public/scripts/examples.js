@@ -34,6 +34,11 @@ export function GetActionExample() {
   return RandomArrayItem(actionExamples);
 }
 
+export function GetExample(type){
+  if (type==='scenario') return RandomArrayItem(scenarioExamples);
+  else if (type==='action') return RandomArrayItem(actionExamples);
+}
+
 function RandomArrayItem(array) {
   const numberOfItems = array.length;
   const randomNumber = Math.floor(Math.random() * numberOfItems)
