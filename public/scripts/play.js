@@ -182,7 +182,9 @@ function LoadActionButtons(actions) {
         const priorScenarios = Array.from(scenariosContainer.childNodes)
 
         plusButton.onclick = (() => {
+
             dispatchEvent(terminatePrint);
+            currentActionBlock = plusButton.parentNode;
             if (plusButton.className != 'plusButton highlightedButton') {
                 ActivateAddContentBlock('write a new action...', 'Add Action', 0);
                 TryBacktrack(scenarioIdForButton, plusButton.parentNode);
@@ -192,6 +194,7 @@ function LoadActionButtons(actions) {
                 addContentBlock.style.display = 'none';
                 SetHighlight(plusButton, false);
             }
+
         });
     }
 }
@@ -217,9 +220,9 @@ function CreateActionButton(actionObject, actionID) {
 function TryBacktrack(scenarioID, actionBlock) {
 
     const scenarioContainer = actionBlock.parentNode;
-    if (!scenarioContainer.parentNode.childNodes) {
+    if (!scenarioContainer || !scenarioContainer.parentNode || !scenarioContainer.parentNode.childNodes) {
         console.log('no child nodes for the parent of the scenario container');
-        return;
+        return false;
     }
     const allScenarioContainers = Array.from(scenarioContainer.parentNode.childNodes);
     const scenarioContainerId = allScenarioContainers.indexOf(scenarioContainer);
@@ -229,13 +232,14 @@ function TryBacktrack(scenarioID, actionBlock) {
     }
 
     SetScenario(scenarioID);
+    return true;
 }
 
-function TakeAction(actionID, buttonPressed, instant, scenarioID) { //improvement: all of these params could be containted within the same obj.
+function TakeAction(actionId, buttonPressed, instant, scenarioId) { //improvement: all of these params could be containted within the same obj.
 
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
-    if(scenarioID) TryBacktrack(scenarioID, buttonPressed.parentNode);
+    if (scenarioId) TryBacktrack(scenarioId, buttonPressed.parentNode);
 
     if (buttonPressed.className === 'actionButton highlightedButton') {
 
@@ -250,9 +254,9 @@ function TakeAction(actionID, buttonPressed, instant, scenarioID) { //improvemen
     }
     else {
 
-        const nextScenario = MoveToNextScenario(actionID);
+        const nextScenario = MoveToNextScenario(actionId);
         if (nextScenario) PlayScenario(nextScenario, instant);
-        else ReachEndpointAction(actionID);
+        else ReachEndpointAction(actionId);
         SetHighlight(buttonPressed, true);
 
     }
@@ -284,9 +288,9 @@ function SetHighlight(button, highlight) {
 
 }
 
-function ReshuffleActionButtons(block) {
-    block.childNodes.forEach(button => {
-        if (button.textContent === '+') block.append(button);
+function ReshuffleButtons(actionBlock) {
+    actionBlock.childNodes.forEach(button => {
+        if (button.textContent === '+') actionBlock.append(button);
     });
 }
 
@@ -367,18 +371,16 @@ function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
                     addingContentStatusText.textContent = 'ERROR - your action could not be added.';
                     return;
                 }
-                //ConfirmContentAddition('action', contentText, null, newActionID);
 
                 contentIsBeingAdded = false;
-                //hideAddContentBlock();
                 const newActionObj = {
                     scenarioCount: 0,
                     action: contentText,
                 }
                 const actionButton = CreateActionButton(newActionObj, newAction.id);
-                SetHighlight(actionButton, true);
-                ReshuffleActionButtons(actionButton.parentNode);
+                ReshuffleButtons(actionButton.parentNode);
                 TakeAction(newAction.id, actionButton, false, GetCurrentScenarioID());
+                //SetHighlight(actionButton, true);
                 ShowContentAddLoadText(false);
 
             });
@@ -435,7 +437,7 @@ function ConfirmContentAddition(type, contentText, newScenarioID, newActionID) {
             }
             const actionButton = CreateActionButton(newActionObj, newActionID);
             SetHighlight(actionButton, true);
-            ReshuffleActionButtons(actionButton.parentNode);
+            ReshuffleButtons(actionButton.parentNode);
             TakeAction(newActionID, actionButton, false, GetCurrentScenarioID());
         }
     }

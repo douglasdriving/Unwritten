@@ -109,19 +109,11 @@ export async function CreateScenario(text, actionID) {
   const response = await addScenario(text, currentScenario.id, actionID)
 
   if (response.status === 0) {
-
-    // console.log('successfully added a new scenario. The response looks like this:');
-    // console.log(response);
-
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
     currentScenario.actions[actionID].scenario = newScenario;
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
-
-    // console.log('current scenario was set to: ');
-    // console.log(currentScenario);
-
   }
   else {
     console.error('there was an error in adding the new scenario! The response looks like this:');
@@ -147,8 +139,31 @@ function NotifyAllPlayersOnBranch() {
 
     if (scenario.parentScenarioID) {
       const scenarioAbove = FindScenario(scenario.parentScenarioID);
-      const actionAbove = scenarioAbove.actions[scenario.parentActionIndex];
-      if (actionAbove.player) Notify(actionAbove.player, actionAbove.action, scenarioAbove.id, scenario.parentActionIndex);
+
+      if (!scenarioAbove) {
+        console.error(
+          'tried to find the scenario above with id: ' + scenario.parentScenarioID,
+          'but it did not return a valid scenario it returned: ',
+          scenarioAbove,
+          'story data is:',
+          storyData
+        );
+        return;
+      }
+
+      if (scenarioAbove.actions) {
+        const actionAbove = scenarioAbove.actions[scenario.parentActionIndex];
+        if (actionAbove.player) Notify(actionAbove.player, actionAbove.action, scenarioAbove.id, scenario.parentActionIndex);
+      }
+      else {
+        console.error(
+          'tried to notify players in the action above this scenario: ' + scenario,
+          'that has this scenario ID: ' + scenario.parentScenarioID,
+          'it showed this scenario: ' + scenarioAbove,
+          'but could not find any ACTIONS on that scenario.'
+        );
+      }
+
       NotifyUpwards(scenarioAbove);
     }
 
@@ -161,7 +176,7 @@ function NotifyAllPlayersOnBranch() {
 
     NotifyPlayer(playerToNotify, currentStoryId, text, scenarioId, actionId);
     playersNotified.push(playerToNotify);
-    
+
   }
 
 }
@@ -184,27 +199,25 @@ function CheckForURLParam(param) {
 function FindScenario(id) {
 
   if (id === 'start') return storyData.start;
-  else return searchChildScenarios(storyData.start);
 
-  function searchChildScenarios(scenario) {
+  let foundScenario;
+  searchScenario(storyData.start);
+  return foundScenario;
 
-    if (!scenario) return false;
-    if (!scenario.actions) return false;
+  function searchScenario(scenario) {
 
-    const actions = scenario.actions;
-
-    for (let i = 0; i < actions.length; i++) {
-
-      const action = actions[i];
-      if (action.scenarioID === id) return action.scenario;
-      const scenaroBelow = searchChildScenarios(action.scenario);
-      if (scenaroBelow) return scenaroBelow;
-      //if there is no scenario below that returns true (i.e. has the right id), the loop will just keep going
-
+    if (scenario && (typeof foundScenario === 'undefined')) {
+      if (scenario.id === id) {
+        foundScenario = scenario;
+      }
+      else if (scenario.actions) {
+        const actions = scenario.actions;
+        actions.forEach(action => {
+          if (action.scenario) searchScenario(action.scenario);
+        })
+      }
     }
-
   }
-
 }
 function MonitorAllScenarios() {
 

@@ -31,7 +31,7 @@ async function LoadStoryMeny() {
 
     const stories = await getStories();
     stories.forEach(story => {
-        AddStoryToMeny(story.title, story.description, story.id);
+        AddStoryToMeny(story.data().title, story.data().description, story.id);
     });
 
     loadText.remove();

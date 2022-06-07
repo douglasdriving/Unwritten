@@ -382,8 +382,8 @@ export async function getStories() {
     const querySnapshot = await getDocs(collection(db, "stories"));
     let stories = [];
     querySnapshot.forEach((storyDoc) => {
-        if (storyDoc.id === 'TestStory' && GetCurrentPlayerId() !== ('nTyZYjH3UXM1aIu4JoX5A5PaHXs2' || 'wc82MrqkQgU1wInBwiT9nogLVWH3')) return;
-        stories.push(storyDoc.data());
+        if (storyDoc.id === 'TestStory' && (GetCurrentPlayerId() !== ('nTyZYjH3UXM1aIu4JoX5A5PaHXs2')) && (GetCurrentPlayerId() !== 'wc82MrqkQgU1wInBwiT9nogLVWH3')) return;
+        stories.push(storyDoc);
     });
     return stories;
 
@@ -392,7 +392,7 @@ export async function getScenarioCount(scenarioId) {
 
     const coll = collection(db, ScenarioCollPath(scenarioId));
     const querySnapshot = await getDocs(coll);
-    return querySnapshot.size - 1;
+    return querySnapshot.size;
 
 }
 
