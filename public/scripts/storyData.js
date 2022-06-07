@@ -1,70 +1,54 @@
-import { setStory, getStoryData, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer } from "/scripts/dbHandler.js?v=0.11";
+import { setStory, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer, GetScenarios, getIntro } from "/scripts/dbHandler.js?v=0.11";
 import { GetCurrentPlayerId } from '/scripts/authHandler.js?v=0.11';
 
-let storyData;
+let scenarios;
 let currentScenario;
 let lastScenarioAdded;
 let currentStoryId;
+let introText
 
 //SET DATA
 export async function SetupData() {
 
   currentStoryId = CheckForURLParam("storyCollectionID")
   setStory(currentStoryId);
-  storyData = await getStoryData(currentStoryId);
+  scenarios = await GetScenarios(currentStoryId);
+  introText = await getIntro(currentStoryId);
   MonitorAllScenarios();
 
   //SET UP A SEQUENCE OF ACTIONS TO TAKE
-  const scenarioID = CheckForURLParam('scenarioID');
-  const actionID = CheckForURLParam('actionID');
+  const scenarioId = CheckForURLParam('scenarioID');
+  const actionId = CheckForURLParam('actionID');
 
-  if (!scenarioID) return;
+  if (!scenarioId) return;
 
   const sequence = [];
-  if (actionID && actionID != 'undefined') {
-    sequence.push(actionID);
+  if (actionId && actionId != 'undefined') {
+    sequence.push(actionId);
   }
 
-  AddActionSequence(FindScenario(scenarioID));
+  AddActionSequence(GetScenario(scenarioId));
   sequence.reverse();
   return sequence;
 
   function AddActionSequence(scenario) {
-    if (scenario.parentActionIndex != undefined) sequence.push(scenario.parentActionIndex);
-    if (scenario.parentScenarioID) AddActionSequence(FindScenario(scenario.parentScenarioID));
+    if (scenario.parentActionIndex !== undefined) sequence.push(scenario.parentActionIndex);
+    if (scenario.parentScenarioID) AddActionSequence(GetScenario(scenario.parentScenarioID));
   }
 
 }
 export function SetScenario(id) {
-
   if (currentScenario.id === id) return;
-
-  currentScenario = FindScenario(id);
-
-  // console.log('setting scenario with id ' + id);
-  // console.log('current scenario was set to ');
-  // console.log(currentScenario);
-
+  else currentScenario = GetScenario(id);
 }
-export function MoveToNextScenario(actionID) {
+export function MoveToNextScenario(actionId) {
 
   let nextScenario;
 
-  if (!currentScenario) nextScenario = storyData.start;
-  else if (currentScenario.actions && currentScenario.actions[actionID] && currentScenario.actions[actionID].scenario) {
-    nextScenario = currentScenario.actions[actionID].scenario;
-  }
-
-  if (!nextScenario) {
-    return false;
-  }
-  else {
+  if (!currentScenario) nextScenario = GetScenario('start');
+  else if (currentScenario.actions && currentScenario.actions[actionId] && currentScenario.actions[actionId].scenarioID) {
+    nextScenario = GetScenario(currentScenario.actions[actionId].scenarioID);
     currentScenario = nextScenario;
-
-    //console.log('moving to next scenario using action id ' + actionID);
-    //console.log('current scenario was set to ');
-    //console.log(currentScenario);
-
     return currentScenario;
   }
 
@@ -72,7 +56,7 @@ export function MoveToNextScenario(actionID) {
 
 //GET DATA 
 export function getIntro() {
-  return storyData.intro;
+  return introText;
 }
 export function GetCurrentScenarioID() {
   return currentScenario.id;
@@ -80,8 +64,13 @@ export function GetCurrentScenarioID() {
 export function GetLastScenarioAdded() {
   return lastScenarioAdded;
 }
-export function GetCurrentScenario(){
+export function GetCurrentScenario() {
   return currentScenario;
+}
+function GetScenario(id) {
+  scenarios.forEach(scenario => {
+    if (scenario.id === id) return scenario;
+  })
 }
 
 //ADD CONTENT
@@ -114,7 +103,7 @@ export async function CreateScenario(text, actionID) {
   if (response.status === 0) {
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
-    currentScenario.actions[actionID].scenario = newScenario;
+    currentScenario.actions[actionID].scenarioID = newScenarioID;
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
   }
@@ -141,7 +130,7 @@ function NotifyAllPlayersOnBranch() {
     }
 
     if (scenario.parentScenarioID) {
-      const scenarioAbove = FindScenario(scenario.parentScenarioID);
+      const scenarioAbove = GetScenario(scenario.parentScenarioID);
 
       if (!scenarioAbove) {
         console.error(
@@ -149,7 +138,7 @@ function NotifyAllPlayersOnBranch() {
           'but it did not return a valid scenario it returned: ',
           scenarioAbove,
           'story data is:',
-          storyData
+          scenarios
         );
         return;
       }
@@ -199,45 +188,21 @@ function CheckForURLParam(param) {
   }
 
 }
-function FindScenario(id) {
-
-  if (id === 'start') return storyData.start;
-
-  let foundScenario;
-  searchScenario(storyData.start);
-  return foundScenario;
-
-  function searchScenario(scenario) {
-
-    if (scenario && (typeof foundScenario === 'undefined')) {
-      if (scenario.id === id) {
-        foundScenario = scenario;
-      }
-      else if (scenario.actions) {
-        const actions = scenario.actions;
-        actions.forEach(action => {
-          if (action.scenario) searchScenario(action.scenario);
-        })
-      }
-    }
-  }
-}
 function MonitorAllScenarios() {
 
-  Monitor(storyData.start);
+  Monitor(GetScenario('start'));
 
   function Monitor(scenario) {
 
     if (!scenario) return;
 
-    //start monitr of this scenario using dbhandler, and give it a function
     monitorScenario(scenario.id, newData => { ScenarioUpdated(newData); });
     let fired = false;
 
     if (!scenario.actions) return;
 
     scenario.actions.forEach(action => {
-      Monitor(action.scenario);
+      if (action.scenarioID) Monitor(GetScenario(action.scenarioID));
     })
 
     async function ScenarioUpdated(newData) {

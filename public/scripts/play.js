@@ -1,8 +1,8 @@
 import { getIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario } from "/scripts/storyData.js?v=0.11";
-import { GetScenarioExample, GetActionExample, GetExample } from "/scripts/examples.js?v=0.11";
+import { GetExample } from "/scripts/examples.js?v=0.11";
 
 //BALANCING
-const timeBetweenLetters = 15; //ms
+const timeBetweenLetters = 10; //ms
 const delayAfterPrintFinished = 500; //ms
 const maxChars = {
     action: 40,

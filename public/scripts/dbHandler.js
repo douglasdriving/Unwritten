@@ -301,18 +301,26 @@ export async function tryUnsubscribe() {
 }
 
 //GET DATA - STORY
-export async function getStoryData(id) {
+export async function GetScenarios(storyId) {
 
-    const querySnapshot = await getDocs(collection(db, ScenarioCollPath(id)));
+    const scenarioDocs = await getDocs(collection(db, ScenarioCollPath(storyId)));
+    const scenarios = [];
+    scenarioDocs.forEach(scenarioDoc => {
+        const scenarioData = scenarioDoc.data;
+        scenarioData.id = scenarioDoc.id;
+        scenarios.push(scenarioData);
+    })
+    return scenarios;
 
+    //old code - can remove later
     let storyData = {};
     let iterations = 0;
 
-    querySnapshot.forEach(doc => {
+    scenarioDocs.forEach(doc => {
         if (doc.id === 'start') storyData.start = doc.data();;
     })
 
-    storyData.intro = await getIntro(id);
+    storyData.intro = await getIntro(storyId);
     storyData.start.id = 'start';
 
     //ALL THIS WILL BE REMANUFACTURED ANYWAYS
@@ -338,7 +346,7 @@ export async function getStoryData(id) {
 
     function FindDocData(id) {
         let scenario;
-        querySnapshot.forEach(doc => {
+        scenarioDocs.forEach(doc => {
             iterations++;
             if (doc.id === id) scenario = doc.data();
         })
