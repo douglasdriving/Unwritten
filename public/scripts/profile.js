@@ -3,14 +3,16 @@ import { AttachToSignIn } from '/scripts/authHandler.js?v=0.11';
 
 //VARIABLES
 const listDiv = document.getElementById('contributions');
-const infoText = document.getElementById('profileName');
+const loadText = document.getElementById('loadText');
+const emptyListText = document.getElementById('emptyListText');
 
 //RUN AT START
-infoText.textContent = 'Loading your texts... ';
+loadText.textContent = 'Loading your texts... ';
+emptyListText.style.display = 'none'
 AttachToSignIn(async (user) => {
   if (user) {
     await ListAllContributions(user.uid);
-    infoText.remove();
+    loadText.remove();
   }
 })
 
@@ -19,6 +21,11 @@ async function ListAllContributions(playerID) {
 
   //Get the data
   const contributionsData = await GetPlayerContributions(playerID);
+
+  if (contributionsData.length === 0){
+    emptyListText.style.display = 'block';
+    return;
+  }
 
   //sort contributions according to time.
   contributionsData.sort(function (a, b) {
@@ -36,9 +43,7 @@ async function ListAllContributions(playerID) {
       if (c.actionId) OpenStoryAtLocation(c.storyCollectionID, c.scenarioDocID, c.actionId);
       else OpenStoryAtLocation(c.storyCollectionID, c.scenarioDocID);
     }
-
   })
-
 }
 
 function ListSingleContribution(text, story, type, time) {
@@ -49,7 +54,7 @@ function ListSingleContribution(text, story, type, time) {
   const textElement = AddRow('"' + text + '"');
   textElement.className = 'white bold noMargin';
 
-  contributionDiv.append(document.createElement('hr'));
+  // contributionDiv.append(document.createElement('hr'));
 
   GetHeader().append(contributionDiv);
 
@@ -69,7 +74,7 @@ function ListSingleContribution(text, story, type, time) {
         dateDiv = node;
       }
     });
-    if (!dateHeader) {
+    if (!dateDiv) {
       dateDiv = document.createElement('div');
       listDiv.append(dateDiv);
       const dateHeader = document.createElement('h2');
@@ -79,17 +84,21 @@ function ListSingleContribution(text, story, type, time) {
 
     //Story title header
     let storyHeader = false;
-    Array.from(dateHeader.childNodes).forEach(node => {
-      console.log(node.textContent);
-      if (node.textContent === story) storyHeader = node;
+    let storyDiv = false;
+    Array.from(dateDiv.childNodes).forEach(node => {
+      if (node.childNodes[0].textContent === story){
+        storyDiv = node;
+      }
     })
-    if (!storyHeader) {
-      storyHeader = document.createElement('h3');
+    if (!storyDiv) {
+      storyDiv = document.createElement('div');
+      dateDiv.append(storyDiv);
+      const storyHeader = document.createElement('h3');
       storyHeader.textContent = story;
-      dateHeader.append(storyHeader);
+      storyDiv.append(storyHeader);
     }
 
-    return storyHeader;
+    return storyDiv;
   }
   function AddRow(str) {
     const element = document.createElement('p');
