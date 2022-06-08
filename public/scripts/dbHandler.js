@@ -2,7 +2,7 @@
 import { StartFirebase } from "/scripts/firebaseConfig.js?v=0.11";
 import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc, query, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
-import { GetCurrentPlayerId } from '/scripts/authHandler.js?v=0.11';
+import { GetCurrentPlayerId, GetPlayerDisplayName } from '/scripts/authHandler.js?v=0.11';
 
 //VARIABLES
 const app = StartFirebase();
@@ -63,7 +63,8 @@ export async function addAction(scenarioId, actionText) {
     let actions = scenarioData.actions || [];
     const action = {
         action: actionText,
-        player: GetCurrentPlayerId()
+        player: GetCurrentPlayerId(),
+        playerDisplayName: GetPlayerDisplayName()
     };
     actions.push(action);
     let actionIndex = actions.length - 1;

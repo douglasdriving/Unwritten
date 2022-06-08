@@ -22,7 +22,7 @@ AttachToSignIn(user => {
     SetLoginButton(true);
     ShowPlayButtons(true);
     loggedInText.style.display = 'block';
-    loggedInText.textContent = 'Signed in as: ' + user.email;
+    loggedInText.textContent = 'Signed in as: ' + user.displayName;
     CheckForUpdates(user.uid);
   }
   else {

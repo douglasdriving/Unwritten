@@ -4,7 +4,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  updateProfile
 } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-auth.js";
 
 const app = StartFirebase();
@@ -17,8 +18,6 @@ AttachToSignIn(user => {
   }
   else {
     currentPlayerId = '';
-    // const currentPage = window.location.pathname.split("/").pop();
-    // if (currentPage !== 'login.html' && currentPage !== 'createAccount.html') window.location.href = '/pages/login.html?v=0.11';
   }
 })
 
@@ -27,7 +26,6 @@ export function AttachToSignIn(func) {
   onAuthStateChanged(auth, user => { func(user) })
 
 }
-
 export async function Login(email, pw) {
 
   return signInWithEmailAndPassword(auth, email, pw)
@@ -39,7 +37,6 @@ export async function Login(email, pw) {
     })
 
 }
-
 export async function Logout() {
 
   console.log('starting sign out');
@@ -52,19 +49,29 @@ export async function Logout() {
   });
 
 }
-
-export async function CreateAccount(email, pw) {
-
+export async function CreateAccount(email, pw, displayName) {
   createUserWithEmailAndPassword(auth, email, pw)
-    .then((userCredential) => {
+    .then(async (userCredential) => {
+      await ChangePlayerDisplayName(displayName);
       return true;
     })
     .catch((error) => {
       return false;
     });
-
 }
-
 export function GetCurrentPlayerId() {
   return currentPlayerId;
+}
+export async function ChangePlayerDisplayName(newName) {
+  await updateProfile(auth.currentUser, {
+    displayName: newName
+  })
+}
+export async function GetPlayerDisplayName(id) {
+  const user = auth.currentUser;
+  if (user !== null) {
+    user.providerData.forEach((profile) => {
+      return profile.displayName
+    });
+  }
 }
