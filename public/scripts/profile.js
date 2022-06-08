@@ -10,7 +10,7 @@ infoText.textContent = 'Loading your texts... ';
 AttachToSignIn(async (user) => {
   if (user) {
     await ListAllContributions(user.uid);
-    infoText.textContent = 'Texts written by ' + user.email;
+    infoText.remove();
   }
 })
 

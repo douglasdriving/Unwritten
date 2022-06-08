@@ -9,7 +9,7 @@ const pwError = document.getElementById('passwordError');
 const usernameError = document.getElementById('usernameError');
 
 AttachToSignIn(user => {
-  if (user) window.location.href = '/pages/hub.html?v=0.11';
+  if (user) window.location.href = '/pages/storyList.html?v=0.11';
 })
 
 Show(loginErrorText, '', false);

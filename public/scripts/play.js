@@ -1,4 +1,4 @@
-import { GetStoryIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario } from "/scripts/storyData.js?v=0.11";
+import { GetStoryIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario, GetCurrentStoryTitle } from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
 
 //BALANCING
@@ -19,6 +19,7 @@ const addingContentBlock = document.getElementById('addingContent');
 const addingContentStatusText = document.getElementById('addContentStatus');
 const keepPlayButton = document.getElementById('keepPlayButton');
 const charCounter = document.getElementById('charCounter');
+const introDiv = document.getElementById('ingress')
 const scenariosContainer = document.createElement('div');
 storyBlock.append(scenariosContainer);
 
@@ -55,6 +56,7 @@ function SetupStory() {
     function SetDisplayOnStart() {
         keepPlayButton.style.display = 'none';
         addingContentBlock.style.display = 'none';
+        introDiv.style.display = 'none';
         DisplayAddContentBlock(false);
         document.getElementById("contentAddConfirmBlock").style.display = 'none';
         beginButton.style.display = 'none';
@@ -63,15 +65,18 @@ function SetupStory() {
 
         let sequence;
         let introText;
+        let title;
         
         await Promise.all([
             sequence = await SetupData(),
             introText = await GetStoryIntro(),
+            title = await GetCurrentStoryTitle()
         ]);
 
         introText = introText.replace(/\\n/g, "\n\n");
-        document.getElementById('ingress').textContent = introText;
-
+        introDiv.textContent = introText;
+        introDiv.style.display = 'block';
+        document.getElementById('titleHeading').textContent = title;
         beginButton.style.display = 'block';
 
         RunStartSequence(sequence);

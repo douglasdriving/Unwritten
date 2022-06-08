@@ -17,8 +17,8 @@ AttachToSignIn(user => {
   }
   else {
     currentPlayerId = '';
-    const currentPage = window.location.pathname.split("/").pop();
-    if (currentPage !== 'login.html' && currentPage !== 'createAccount.html') window.location.href = '/pages/login.html?v=0.11';
+    // const currentPage = window.location.pathname.split("/").pop();
+    // if (currentPage !== 'login.html' && currentPage !== 'createAccount.html') window.location.href = '/pages/login.html?v=0.11';
   }
 })
 

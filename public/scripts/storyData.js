@@ -1,4 +1,4 @@
-import { setStory, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer, GetScenarios, getIntro } from "/scripts/dbHandler.js?v=0.11";
+import { setStory, addAction, addScenario, monitorScenario, getScenario, NotifyPlayer, GetScenarios, getIntro, GetTitle } from "/scripts/dbHandler.js?v=0.11";
 import { GetCurrentPlayerId } from '/scripts/authHandler.js?v=0.11';
 
 let scenarios;
@@ -77,6 +77,10 @@ function GetScenario(id) {
     }
   })
   return returnScenario;
+}
+export async function GetCurrentStoryTitle(){
+  const title = await GetTitle(currentStoryId);
+  return title;
 }
 
 //ADD CONTENT

@@ -11,6 +11,14 @@
   padding: 10px;
 }
 
+.paleButton {
+  background-color: #fcf8e7;
+  color: #766a68;
+  border-color:#766a68;
+  border-width: 2px;
+  font-weight: normal;
+}
+
 .bordered {
   border-style: solid;
   border-width: 3px;
@@ -22,31 +30,31 @@
   opacity: 0.4;
 }
 
-.warning{
-  color:red;
+.warning {
+  color: red;
 }
 
-.white{
+.white {
   color: #fcf8e7;
 }
 
-.noMargin{
+.noMargin {
   margin: 0px;
 }
 
-.bold{
+.bold {
   font-weight: bold;
 }
 
-.pointer:hover{
-  cursor:pointer;
+.pointer:hover {
+  cursor: pointer;
 }
 
-.readLineBreaks{
+.readLineBreaks {
   white-space: pre-line;
 }
 
-.hidden{
+.hidden {
   display: none;
 }
 
@@ -102,19 +110,19 @@ a:hover {
   cursor: pointer;
 }
 
-button:hover{
-  cursor:pointer;
+button:hover {
+  cursor: pointer;
 }
 
-table{
+table {
   width: 100%;
 }
 
-th{
+th {
   text-align: left;
 }
 
-td{
+td {
   border: solid 1px black;
   margin-right: 10px;
 }

@@ -404,6 +404,20 @@ export async function getScenarioCount(scenarioId) {
     return querySnapshot.size;
 
 }
+export async function GetTitle(storyId){
+
+    const docRef = await doc(db, ('stories/' + storyId));
+    const scenarioDoc = await getDoc(docRef);
+
+    if (scenarioDoc.exists()) {
+        return scenarioDoc.data().title;
+    }
+    else {
+        console.error(`no doc data found for the given id ` + storyId);
+        return false;
+    }
+
+}
 
 //GET DATA - PLAYER
 export async function GetPlayerContributions(playerId) {
