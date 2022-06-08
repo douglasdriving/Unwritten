@@ -362,10 +362,6 @@ async function TryAddNewContent(type, actionIndex) {
                         return;
                     }
                     contentIsBeingAdded = false;
-                    const newActionObj = {
-                        scenarioCount: 0,
-                        action: contentText,
-                    }
                     LoadActionButtons(GetCurrentScenario().actions);
                     PressActionButton(actionId, currentActionBlock.childNodes[actionId], false, GetCurrentScenarioID());
                     ShowContentAddLoadText(false);

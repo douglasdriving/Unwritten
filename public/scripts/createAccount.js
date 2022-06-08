@@ -6,7 +6,7 @@ const createAccountButton = document.getElementById('createAccountButton');
 const errorText = document.getElementById('errorText');
 
 AttachToSignIn(user => {
-  if (user) window.location.href = '/pages/hub.html?v=0.11';
+  if (user) window.location.href = '/pages/stories.html?v=0.11';
 })
 
 Show(errorText, '', false);
