@@ -45,25 +45,67 @@ function ListSingleContribution(text, story, type, time) {
 
   const contributionDiv = document.createElement('div');
   contributionDiv.className = "inverted bordered pointer";
-  listDiv.append(contributionDiv);
 
   const textElement = AddRow('"' + text + '"');
   textElement.className = 'white bold noMargin';
 
   contributionDiv.append(document.createElement('hr'));
 
+  GetHeader().append(contributionDiv);
+
   AddRow(type);
-  AddRow(story);
-  AddRow(time.toLocaleString().slice(0, -3));
+  //AddRow(story);
+  // AddRow(time.toLocaleString().slice(0, -3));
 
   return contributionDiv;
 
+  function GetHeader() {
+
+    //Date header
+    const dateStr = CreateDateString();
+    let dateDiv = false;
+    Array.from(listDiv.childNodes).forEach(node => {
+      if (node.childNodes[0].textContent === dateStr) {
+        dateDiv = node;
+      }
+    });
+    if (!dateHeader) {
+      dateDiv = document.createElement('div');
+      listDiv.append(dateDiv);
+      const dateHeader = document.createElement('h2');
+      dateHeader.textContent = dateStr;
+      dateDiv.append(dateHeader);
+    }
+
+    //Story title header
+    let storyHeader = false;
+    Array.from(dateHeader.childNodes).forEach(node => {
+      console.log(node.textContent);
+      if (node.textContent === story) storyHeader = node;
+    })
+    if (!storyHeader) {
+      storyHeader = document.createElement('h3');
+      storyHeader.textContent = story;
+      dateHeader.append(storyHeader);
+    }
+
+    return storyHeader;
+  }
   function AddRow(str) {
     const element = document.createElement('p');
     element.className = 'white noMargin';
     element.textContent = str;
     contributionDiv.append(element);
     return element;
+  }
+  function CreateDateString() {
+    const d = new Date(time),
+      minutes = d.getMinutes().toString().length == 1 ? '0' + d.getMinutes() : d.getMinutes(),
+      hours = d.getHours().toString().length == 1 ? '0' + d.getHours() : d.getHours(),
+      ampm = d.getHours() >= 12 ? 'pm' : 'am',
+      months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    return months[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear();
   }
 
 }
