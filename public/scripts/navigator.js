@@ -13,7 +13,7 @@ const logInButton = CreateNavButton('Sign In', '/pages/login');
 
 const loggedInText = document.createElement('p');
 navBar.append(loggedInText);
-loggedInText.textContent = 'Logged in as: ';
+loggedInText.textContent = 'Signed in as: ';
 
 const playButtons = [storiesButton, createStoryButton, myTextsButton, notificationsButton];
 
@@ -22,7 +22,7 @@ AttachToSignIn(user => {
     SetLoginButton(true);
     ShowPlayButtons(true);
     loggedInText.style.display = 'block';
-    loggedInText.textContent = 'Logged in as: ' + user.email;
+    loggedInText.textContent = 'Signed in as: ' + user.email;
     CheckForUpdates(user.uid);
   }
   else {

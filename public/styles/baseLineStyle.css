@@ -58,6 +58,15 @@
   display: none;
 }
 
+.blueText{
+  color: #776fc5;
+}
+
+.blueButton{
+  background-color: #696590;
+  border-color: #3c3573;
+}
+
 body {
   background-color: #fcf8e7;
   max-width: 600px;

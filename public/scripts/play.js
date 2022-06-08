@@ -1,5 +1,6 @@
 import { GetStoryIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario, GetCurrentStoryTitle } from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
+import { GetCurrentPlayerId } from "/scripts/authHandler.js?v=0.11";
 
 //BALANCING
 const timeBetweenLetters = 10; //ms
@@ -138,7 +139,7 @@ function PlayScenario(scenarioData, instant) {
         function Print() {
             const scenarioTextBlock = document.createElement('div');
             scenarioTextBlock.className = 'scenarioText';
-
+            if (PlayerWrote(scenarioData.player)) scenarioTextBlock.className += ' blueText';
             if (instant) {
                 scenarioTextBlock.textContent = scenarioText;
                 ScrollDown();
@@ -163,6 +164,7 @@ function PlayScenario(scenarioData, instant) {
         }
     }
 }
+
 function LoadActionButtons(actions) {
 
     ClearButtonBlock();
@@ -176,20 +178,24 @@ function LoadActionButtons(actions) {
                 CreateActionButton(actionElement, actionID);
             });
         }
-        function CreateActionButton(actionObject, actionID) {
+        function CreateActionButton(action, actionID) {
 
             //CREATE THE BUTTON ELEMENT
             const actionButton = document.createElement('button');
             currentActionBlock.appendChild(actionButton);
             actionButton.className = 'actionButton';
-            actionButton.textContent = actionObject.action;
+            actionButton.textContent = action.action;
 
             //ASSIGN THE ONCLICK FUNCTION
             const scenarioIdForThisAction = currentScenarioId;
             actionButton.onclick = (async () => {
-                PressActionButton(actionID, actionButton, false, scenarioIdForThisAction);
+                PressActionButton(actionID, actionButton, false, scenarioIdForThisAction, PlayerWrote(action.player));
             });
 
+            //IS THIS MY ACTION?
+            if (PlayerWrote(action.player)) actionButton.className += ' blueButton';
+
+            //RETURN
             return actionButton;
         }
     }
@@ -218,18 +224,17 @@ function LoadActionButtons(actions) {
             if (plusButton.className != 'plusButton highlightedButton') {
                 ActivateAddContentBlock('write a new action...', 'Add Action', -1);
                 TryBacktrack(scenarioIdForButton, plusButton.parentNode);
-                SetButtonHighlighting(plusButton, true);
+                SetButtonHighlighting(plusButton, true, false);
             }
             else {
                 DisplayAddContentBlock(false);
-                SetButtonHighlighting(plusButton, false);
+                SetButtonHighlighting(plusButton, false, false);
             }
 
         });
     }
-
 }
-function PressActionButton(actionId, buttonPressed, instant, scenarioId) {
+function PressActionButton(actionId, buttonPressed, instant, scenarioId, playerWrote) {
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
     if (scenarioId) TryBacktrack(scenarioId, buttonPressed.parentNode);
@@ -246,7 +251,7 @@ function PressActionButton(actionId, buttonPressed, instant, scenarioId) {
             ActivateAddContentBlock('What happens next?', 'Add Scenario', actionId);
             ScrollDown();
         }
-        SetButtonHighlighting(buttonPressed, true);
+        SetButtonHighlighting(buttonPressed, true, playerWrote);
     }
 
     function SetAllButtonsToNoHighlight() {
@@ -407,22 +412,26 @@ async function TryAddNewContent(type, actionIndex) {
 function ScrollDown() {
     window.scrollTo(0, document.body.scrollHeight);
 }
-function SetButtonHighlighting(button, highlight) {
+function SetButtonHighlighting(pressedButton, highlight) {
     if (highlight) {
-        button.parentNode.childNodes.forEach(bottonInBlock => {
-            if (bottonInBlock.textContent === '+') bottonInBlock.className = 'plusButton';
-            else bottonInBlock.className = 'actionButton';
-            if (bottonInBlock === button) bottonInBlock.className += ' highlightedButton';
-            else bottonInBlock.className += ' fadedButton';
+        pressedButton.parentNode.childNodes.forEach(b => {
+            const playerCreatedThisButton = b.className.includes('blueButton');
+            if (b.textContent === '+') b.className = 'plusButton';
+            else b.className = 'actionButton';
+            if (b === pressedButton) b.className += ' highlightedButton';
+            else b.className += ' fadedButton';
+            if (playerCreatedThisButton) b.className += ' blueButton';
         });
     }
     else {
-        if (button.textContent === '+') button.className = 'plusButton';
-        else button.className = 'actionButton';
-        button.parentNode.childNodes.forEach(bottonInBlock => {
-            if (bottonInBlock === button) return;
-            if (bottonInBlock.textContent === '+') bottonInBlock.className = 'plusButton';
-            else bottonInBlock.className = 'actionButton';
+        if (pressedButton.textContent === '+') pressedButton.className = 'plusButton';
+        else pressedButton.className = 'actionButton';
+        pressedButton.parentNode.childNodes.forEach(b => {
+            const playerCreatedThisButton = b.className.includes('blueButton');
+            if (b === pressedButton) return;
+            if (b.textContent === '+') b.className = 'plusButton';
+            else b.className = 'actionButton';
+            if (playerCreatedThisButton) b.className += ' blueButton';
         });
     }
 }
@@ -465,4 +474,7 @@ function MaxChars(type) {
     }
     else if (type === 'scenario') return maxChars.scenario;
     else console.error('max chars does not exist for that type.');
+}
+function PlayerWrote(playerId) {
+    return (playerId === GetCurrentPlayerId());
 }
