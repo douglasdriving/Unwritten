@@ -16,16 +16,11 @@
   font-weight: bold;
 }
 
-#createButton {
-  height: 40pt;
-}
-
 .createStoryInputField {
-  border-color: #766a68;
-  border-width: 3px;
   width: 95%;
   min-height: 15pt;
   max-height: 100pt;
+  background-color: #fcf8e7;
 }
 
 .charCounter{
@@ -36,4 +31,5 @@
 
 #form{
   margin-bottom: 10px;
+  padding: 20px;
 }

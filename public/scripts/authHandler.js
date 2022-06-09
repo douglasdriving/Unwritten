@@ -22,9 +22,12 @@ AttachToSignIn(async user => {
       window.location.href = '/pages/storyList.html?v=0.11';
     }
 
-    //Check for now - remove later when oxxar is updated
+    //Check for now - remove later when names are updated
     if (currentPlayerId === 'nquBcfPUEoQPFpzaOsep3DwFInt1') {
       ChangePlayerDisplayName('Oxxar');
+    }
+    if (currentPlayerId === 'p0Xf5IvKorVOhT9K63Rlda1UJRN2') {
+      ChangePlayerDisplayName('Alex');
     }
   }
   else {

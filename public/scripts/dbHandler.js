@@ -69,8 +69,6 @@ export async function addAction(scenarioId, actionText) {
     actions.push(action);
     let actionIndex = actions.length - 1;
 
-    console.log('trying to add ', actions);
-
     await updateDoc(scenarioDocRef, { actions: actions })
     await AddPlayerContribution('Action', actionText, scenarioId, actionIndex);
 
@@ -456,9 +454,6 @@ export async function GetPlayerNotifications(playerId) {
 //HELPER FUNCTIONS
 function ScenarioCollPath(storyId) {
     return ('stories/' + storyId + '/scenarios');
-}
-function StoryDocPath(storyId) {
-    return ('stories/' + storyId);
 }
 function ScenarioDocPath(scenarioId) {
     return currentScenarioCollPath + '/' + scenarioId;

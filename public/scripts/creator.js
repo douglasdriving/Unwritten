@@ -34,29 +34,19 @@ document.getElementById('createButton').onclick = CreateStory;
 function CreateInputArea(headingText, descriptionText, maxChars) {
 
   const area = document.createElement('div');
-  const heading = document.createElement('h3');
-  const description = document.createElement('p');
-  const inputField = document.createElement('textarea');
-  const charCounter = document.createElement('p');
-
-  heading.textContent = headingText;
-  description.textContent = descriptionText;
-  charCounter.textContent = '0 / ' + maxChars;
-
   document.getElementById('form').append(area);
-  area.append(heading);
-  area.append(description);
-  area.append(inputField);
-  area.append(charCounter);
 
-  charCounter.className = 'charCounter';
-  inputField.className = 'createStoryInputField';
+  CreateRow('h3', 'white', headingText);
+  CreateRow('p', 'white', descriptionText);
+  const inputField = CreateRow('textArea', 'createStoryInputField', '');
+  const charCounter = CreateRow('p', 'white noMargin', '0 / ' + maxChars);
+
   inputField.style.height = maxChars/3 + 'pt';
   const defaultFieldBorderColor = inputField.style.borderBlockColor;
+  const defaultCounterColor = charCounter.style.color;
 
   inputField.addEventListener('input',
     function CountChars() {
-
       let numOfEnteredChars = inputField.value.length;
       let counter = maxChars - numOfEnteredChars;
       charCounter.textContent = counter + " / " + maxChars;
@@ -68,7 +58,7 @@ function CreateInputArea(headingText, descriptionText, maxChars) {
         inputField.style.borderColor = 'red';
       }
       else if (counter > 10) {
-        charCounter.style.color = '#382e2c';
+        charCounter.style.color = defaultCounterColor;
       }
       else if (counter > 0) {
         charCounter.style.color = 'darkorange';
@@ -81,6 +71,14 @@ function CreateInputArea(headingText, descriptionText, maxChars) {
   );
 
   return inputField;
+
+  function CreateRow(type, className, textContent){
+    const element = document.createElement(type);
+    element.textContent = textContent;
+    element.className = className;
+    area.append(element);
+    return element;
+  }
 }
 
 async function CreateStory() {
