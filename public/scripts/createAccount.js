@@ -11,15 +11,21 @@ const passwordError = document.getElementById('passwordError');
 const createAccountButton = document.getElementById('createAccountButton');
 const errorText = document.getElementById('errorText');
 
-AttachToSignIn(user => {
-  if (user) window.location.href = '/pages/storyList.html?v=0.11';
-})
+// AttachToSignIn(user => {
+//   if (user) window.location.href = '/pages/storyList.html?v=0.11';
+// })
 
 Show(errorText, '', false);
 
-displayNameField.addEventListener('input', SetDisplayNameError);
-passwordError.addEventListener('input', SetEmailError);
-emailError.addEventListener('input', SetPasswordError);
+displayNameField.addEventListener('input', () => {
+  SetError(displayNameError, displayNameField, DisplayNameHasError());
+});
+passwordField.addEventListener('input', () => {
+  SetError(passwordError, passwordField, PasswordHasError());
+});
+emailField.addEventListener('input', () => {
+  SetError(emailError, emailField, EmailHasError());
+});
 
 createAccountButton.onclick = async () => {
 
@@ -32,72 +38,38 @@ createAccountButton.onclick = async () => {
     return;
   }
 
-  const createAccountSuccess = await CreateAccount(email, pw, displayName);
+  //show a load text!!!
 
-  if (!createAccountSuccess){
-    Show(errorText, 'User could not be created, please check to make sure that email and password is in the correct format', true);
-  }
-
+  let response = await CreateAccount(email, pw, displayName);
+  console.log(response);
 }
 function Show(element, text, show) {
   element.textContent = text;
   if (show) element.style.display = 'block';
   else element.style.display = 'none';
 }
+
+function SetError(errorElement, inputField, errorMessage){
+  if (errorMessage){
+    errorElement.style.display = 'block';
+    errorElement.textContent = errorMessage;
+    inputField.style.color = 'red';
+  }
+  else{
+    errorElement.style.display = 'none';
+    inputField.style.color = 'black';
+  }
+}
+
 function TextHasError(text, maxLength, minLength, spacesAllowed, onlyLettersAndNumbers){
 
-  if (text.length > maxLength) return 'Text cannot contain more than ' + maxLength + ' characters';
-  else if (text.length < minLength) return 'Text must contain at least ' + minLength + ' characters';
-  else if (!spacesAllowed && text.includes(' ')) return 'Text cannot contain spaces';
-  else if (onlyLettersAndNumbers && !/^[A-Za-z0-9]*$/.test(text)) return 'Text can only contain letters and numbers';
+  if (text.length > maxLength) return 'Cannot contain more than ' + maxLength + ' characters';
+  else if (text.length < minLength) return 'Must contain at least ' + minLength + ' characters';
+  else if (!spacesAllowed && text.includes(' ')) return 'Cannot contain spaces';
+  else if (onlyLettersAndNumbers && !/^[A-Za-z0-9]*$/.test(text)) return 'Can only contain letters and numbers';
   else return false;
 
 }
-
-function SetDisplayNameError() {
-
-  const textError = DisplayNameHasError();
-  if (textError){
-    displayNameError.style.display = 'block';
-    displayNameError.textContent = textError;
-    displayNameField.style.color = 'red';
-  }
-  else{
-    displayNameError.style.display = 'none';
-    displayNameField.style.color = 'black';
-  }
-
-}
-function SetEmailError() {
-
-  const textError = EmailHasError();
-  if (textError){
-    displayNameError.style.display = 'block';
-    displayNameError.textContent = textError;
-    displayNameField.style.color = 'red';
-  }
-  else{
-    displayNameError.style.display = 'none';
-    displayNameField.style.color = 'black';
-  }
-
-}
-function SetDisplayNameError() {
-
-  const textError = DisplayNameHasError();
-  if (textError){
-    displayNameError.style.display = 'block';
-    displayNameError.textContent = textError;
-    displayNameField.style.color = 'red';
-  }
-  else{
-    displayNameError.style.display = 'none';
-    displayNameField.style.color = 'black';
-  }
-
-}
-
-
 function DisplayNameHasError(){
   return TextHasError(displayNameField.value, 20, 6, false, true);
 }

@@ -11,10 +11,16 @@ import {
 const app = StartFirebase();
 const auth = getAuth(app);
 let currentPlayerId;
+let createDispName = false;
 
 AttachToSignIn(user => {
   if (user) {
     currentPlayerId = user.uid;
+
+    if (createDispName){
+      await ChangePlayerDisplayName(createDispName);
+      window.location.href = '/pages/storyList.html?v=0.11';
+    }
 
     //Check for now - remove later when oxxar is updated
     if (currentPlayerId === 'nquBcfPUEoQPFpzaOsep3DwFInt1') {
@@ -55,14 +61,12 @@ export async function Logout() {
 
 }
 export async function CreateAccount(email, pw, displayName) {
-  createUserWithEmailAndPassword(auth, email, pw)
-    .then(async (userCredential) => {
-      await ChangePlayerDisplayName(displayName);
-      return true;
-    })
-    .catch((error) => {
-      return false;
-    });
+
+  const creds = await createUserWithEmailAndPassword(auth, email, pw);
+  if (!creds) return false;
+  createDispName = displayName;
+  return true;
+
 }
 export function GetCurrentPlayerId() {
   return currentPlayerId;
