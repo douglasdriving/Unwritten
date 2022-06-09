@@ -1,5 +1,4 @@
-import { getStories, getScenarioCount, GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.11";
-import { AttachToSignIn, Logout } from '/scripts/authHandler.js?v=0.11';
+import { getStories, getScenarioCount } from "/scripts/dbHandler.js?v=0.11";
 
 const storyDiv = document.getElementById('stories');
 
@@ -12,16 +11,26 @@ async function LoadStoryMeny() {
     loadText.textContent = 'Loading unwritten stories...';
 
     const stories = await getStories();
+
+    await Promise.all(stories.map(async (story) => {
+        const count = await getScenarioCount(story.id);
+        story.scenarioCount = count;
+    }))
+
+    stories.sort(function (a, b) {
+        if (a.scenarioCount < b.scenarioCount) return 1;
+        if (a.scenarioCount > b.scenarioCount) return -1;
+        return 0;
+    });
+
     stories.forEach(story => {
-        AddStoryToMeny(story.data().title, story.data().description, story.id);
+        AddStoryToMeny(story.data().title, story.data().description, story.id, story.scenarioCount);
     });
 
     loadText.remove();
 }
 
-async function AddStoryToMeny(title, description, id) {
-
-    const count = await getScenarioCount(id);
+async function AddStoryToMeny(title, description, id, scenarioCount) {
 
     const menuItem = document.createElement('div');
     menuItem.className = 'story';
@@ -39,7 +48,7 @@ async function AddStoryToMeny(title, description, id) {
 
     const scenarioCounter = document.createElement('p');
     scenarioCounter.className = 'storyItemText';
-    scenarioCounter.textContent = ('(' + count + ' scenarios)');
+    scenarioCounter.textContent = ('(' + scenarioCount + ' scenarios)');
     menuItem.append(scenarioCounter);
 
     const startStoryButton = document.createElement('button');
