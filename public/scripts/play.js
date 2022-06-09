@@ -1,6 +1,6 @@
 import { GetStoryIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario, GetCurrentStoryTitle } from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
-import { GetCurrentPlayerId } from "/scripts/authHandler.js?v=0.11";
+import { GetCurrentPlayerId, GetPlayerDisplayName } from "/scripts/authHandler.js?v=0.11";
 
 //BALANCING
 const timeBetweenLetters = 10; //ms
@@ -67,7 +67,7 @@ function SetupStory() {
         let sequence;
         let introText;
         let title;
-        
+
         await Promise.all([
             sequence = await SetupData(),
             introText = await GetStoryIntro(),
@@ -93,10 +93,10 @@ function SetupStory() {
 }
 
 //LOADING A SCENARIO
-function PlayScenario(scenarioData, instant) {
+function PlayScenario(scenario, instant) {
 
-    const scenarioText = scenarioData.text;
-    currentScenarioId = scenarioData.id;
+    const scenarioText = scenario.text;
+    currentScenarioId = scenario.id;
     DisplayAddContentBlock(false);
     let printTerminated = StartScenarioPrint();
     CreateActionButtons();
@@ -104,14 +104,14 @@ function PlayScenario(scenarioData, instant) {
 
     function CreateActionButtons() {
         if (instant) {
-            LoadActionButtons(scenarioData.actions);
+            LoadActionButtons(scenario.actions);
         }
         else {
             const timeBeforePrintDone = Array.from(scenarioText).length * timeBetweenLetters;
             setTimeout(() => {
                 if (printTerminated)
                     return;
-                LoadActionButtons(scenarioData.actions);
+                LoadActionButtons(scenario.actions);
             }, timeBeforePrintDone + delayAfterPrintFinished);
         }
     }
@@ -128,39 +128,80 @@ function PlayScenario(scenarioData, instant) {
             return printTerminated;
         }
         function CreateScenarioContainer() {
+
             const scenarioBlock = document.createElement('div');
             scenarioBlock.className = 'scenarioContainer';
-            scenarioBlock.appendChild(scenarioTextBlock);
-            scenariosContainer.appendChild(scenarioBlock);
+
             const actionBlock = document.createElement('div');
             currentActionBlock = actionBlock;
+
+            scenarioBlock.appendChild(scenarioTextBlock);
+            scenariosContainer.appendChild(scenarioBlock);
             scenarioBlock.appendChild(actionBlock);
+
         }
         function Print() {
-            const scenarioTextBlock = document.createElement('div');
-            scenarioTextBlock.className = 'scenarioText';
-            if (PlayerWrote(scenarioData.player)) scenarioTextBlock.className += ' blueText';
+
+            const scenarioPrintDiv = document.createElement('div');
+            const scenarioPar = document.createElement('p');
+            scenarioPrintDiv.append(scenarioPar);
+
+            if (PlayerWrote(scenario.player)) {
+                scenarioPar.className = 'scenarioText blueText';
+            }
+            else {
+                scenarioPar.className = 'scenarioText';
+            }
+
             if (instant) {
-                scenarioTextBlock.textContent = scenarioText;
+                scenarioPar.textContent = scenarioText;
+                ShowSignature();
                 ScrollDown();
             }
             else {
+
                 let delayForNextLetter = 0;
                 let printedText = '';
+
                 Array.from(scenarioText).forEach(char => {
                     setTimeout(() => {
-                        if (!scenarioTextBlock)
+                        if (!scenarioPrintDiv)
                             return;
                         if (printTerminated)
-                            scenarioTextBlock.remove();
+                            scenarioPrintDiv.remove();
                         printedText += char;
-                        scenarioTextBlock.textContent = printedText;
+                        scenarioPar.textContent = printedText;
                         ScrollDown();
                     }, delayForNextLetter);
                     delayForNextLetter += timeBetweenLetters;
                 });
+
+                const timeBeforePrintDone = Array.from(scenarioText).length * timeBetweenLetters;
+                setTimeout(() => {
+                    if (printTerminated) return;
+                    ShowSignature();
+                }, timeBeforePrintDone);
+
             }
-            return scenarioTextBlock;
+
+            return scenarioPrintDiv;
+
+            function ShowSignature() {
+                if (scenario.playerDisplayName) {
+
+                    const signaturePar = document.createElement('p');
+                    scenarioPrintDiv.append(signaturePar);
+                    signaturePar.textContent = '(' + scenario.playerDisplayName + ')';
+
+                    if (PlayerWrote(scenario.player)) {
+                        signaturePar.className = 'signature blueText';
+                    }
+                    else {
+                        signaturePar.className = 'signature';
+
+                    }
+                }
+            }
         }
     }
 }

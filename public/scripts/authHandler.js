@@ -15,6 +15,11 @@ let currentPlayerId;
 AttachToSignIn(user => {
   if (user) {
     currentPlayerId = user.uid;
+
+    //Check for now - remove later when oxxar is updated
+    if (currentPlayerId === 'nquBcfPUEoQPFpzaOsep3DwFInt1') {
+      ChangePlayerDisplayName('Oxxar');
+    }
   }
   else {
     currentPlayerId = '';
@@ -67,11 +72,13 @@ export async function ChangePlayerDisplayName(newName) {
     displayName: newName
   })
 }
-export async function GetPlayerDisplayName(id) {
+export function GetPlayerDisplayName(id) {
   const user = auth.currentUser;
+  let dispName;
   if (user !== null) {
     user.providerData.forEach((profile) => {
-      return profile.displayName
+      dispName = profile.displayName;
     });
   }
+  return dispName;
 }

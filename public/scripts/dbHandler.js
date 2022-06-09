@@ -69,6 +69,8 @@ export async function addAction(scenarioId, actionText) {
     actions.push(action);
     let actionIndex = actions.length - 1;
 
+    console.log('trying to add ', actions);
+
     await updateDoc(scenarioDocRef, { actions: actions })
     await AddPlayerContribution('Action', actionText, scenarioId, actionIndex);
 
@@ -101,7 +103,8 @@ export async function addScenario(scenarioText, parentId, parentActionIndex) {
         parentScenarioID: parentId,
         parentActionIndex: parentActionIndex,
         time: new Date(),
-        player: GetCurrentPlayerId()
+        player: GetCurrentPlayerId(),
+        playerDisplayName: GetPlayerDisplayName()
     }
     const docData = await addDoc(scenarioColl, newDocData)
     const newDocId = docData.id;
@@ -311,7 +314,7 @@ export async function GetScenarios(storyId) {
         scenarioData.id = scenarioDoc.id;
         scenarios.push(scenarioData);
     })
-    
+
     return scenarios;
 
     //old code - can remove later
@@ -405,7 +408,7 @@ export async function getScenarioCount(scenarioId) {
     return querySnapshot.size;
 
 }
-export async function GetTitle(storyId){
+export async function GetTitle(storyId) {
 
     const docRef = await doc(db, ('stories/' + storyId));
     const scenarioDoc = await getDoc(docRef);

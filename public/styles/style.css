@@ -16,6 +16,13 @@
     display: none;
 }
 
+.signature{
+    font-style: italic;
+    font-size: 13px;
+    margin-top: 0px;
+    margin-bottom: 20px;
+}
+
 .actionButton {
     margin-right: 5pt;
     margin-bottom: 5pt;
@@ -117,7 +124,7 @@
 
 .scenarioText {
     margin-top: 0pt;
-    margin-bottom: 15pt;
+    margin-bottom: 0px;
 }
 
 @media screen and (max-device-width: 480px) {
