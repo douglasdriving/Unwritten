@@ -14,7 +14,7 @@
 .paleButton {
   background-color: #fcf8e7;
   color: #766a68;
-  border-color:#766a68;
+  border-color: #766a68;
   border-width: 2px;
   font-weight: normal;
 }
@@ -58,13 +58,31 @@
   display: none;
 }
 
-.blueText{
+.blueText {
   color: #776fc5;
 }
 
-.blueButton{
+.blueButton {
   background-color: #696590;
   border-color: #3c3573;
+}
+
+.tooltip {
+  visibility: hidden;
+  background-color: #fcf8e7;
+  padding: 0px;
+  position: absolute;
+  width: max-content;
+  bottom: -27px;
+  left: 0px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: normal;
+  font-style: italic;
+  z-index: 1;
+  color: #766a68;
+  opacity: 1;
+
 }
 
 body {

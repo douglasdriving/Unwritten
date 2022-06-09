@@ -36,3 +36,11 @@ function Show(element, text, show) {
   if (show) element.style.display = 'block';
   else element.style.display = 'none';
 }
+function TextHasError(text, maxLength, minLength, spacesAllowed, onlyLettersAndNumbers){
+
+  if (text.lengt > maxLength) return 'Text cannot contain more than ' + maxLength + 'characters';
+  if (text.lengt < minLength) return 'Text must contain at least ' + minLength + 'characters';
+  if (!spacesAllowed && text.includes(' ')) return 'Text cannot contain spaces';
+  //add rest of rules. if all pass return false.
+
+}

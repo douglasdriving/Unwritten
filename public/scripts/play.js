@@ -214,31 +214,38 @@ function LoadActionButtons(actions) {
     ScrollDown();
 
     function CreateActionButtons() {
-        if (actions) {
-            actions.forEach((actionElement, actionID) => {
-                CreateActionButton(actionElement, actionID);
-            });
-        }
-        function CreateActionButton(action, actionID) {
-
+        if (!actions) return;
+        actions.forEach((actionElement, actionID) => {
             //CREATE THE BUTTON ELEMENT
             const actionButton = document.createElement('button');
             currentActionBlock.appendChild(actionButton);
             actionButton.className = 'actionButton';
-            actionButton.textContent = action.action;
+            actionButton.textContent = actionElement.action;
 
             //ASSIGN THE ONCLICK FUNCTION
             const scenarioIdForThisAction = currentScenarioId;
             actionButton.onclick = (async () => {
-                PressActionButton(actionID, actionButton, false, scenarioIdForThisAction, PlayerWrote(action.player));
+                PressActionButton(actionID, actionButton, false, scenarioIdForThisAction, PlayerWrote(actionElement.player));
             });
 
             //IS THIS MY ACTION?
-            if (PlayerWrote(action.player)) actionButton.className += ' blueButton';
+            if (PlayerWrote(actionElement.player)) actionButton.className += ' blueButton';
+
+            //ADD SIGNATURE
+            if (actionElement.playerDisplayName){
+                const signatureToolTip = document.createElement('div');
+                signatureToolTip.className = 'tooltip';
+                actionButton.append(signatureToolTip);
+                signatureToolTip.textContent = 'Added by ' + actionElement.playerDisplayName;
+
+                actionButton.style.position = 'relative';
+                actionButton.onmouseenter = () => {signatureToolTip.style.visibility = 'visible'}
+                actionButton.onmouseleave = () => {signatureToolTip.style.visibility = 'hidden'}
+            }
 
             //RETURN
             return actionButton;
-        }
+        });
     }
     function ClearButtonBlock() {
         if (currentActionBlock.childNodes.length > 0) {
