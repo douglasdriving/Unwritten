@@ -13,7 +13,7 @@ const auth = getAuth(app);
 let currentPlayerId;
 let createDispName = false;
 
-AttachToSignIn(user => {
+AttachToSignIn(async user => {
   if (user) {
     currentPlayerId = user.uid;
 
@@ -62,9 +62,9 @@ export async function Logout() {
 }
 export async function CreateAccount(email, pw, displayName) {
 
+  createDispName = displayName;
   const creds = await createUserWithEmailAndPassword(auth, email, pw);
   if (!creds) return false;
-  createDispName = displayName;
   return true;
 
 }

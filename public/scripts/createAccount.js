@@ -39,6 +39,10 @@ createAccountButton.onclick = async () => {
   }
 
   //show a load text!!!
+  const loadText = document.createElement('p');
+  loadText.textContent = 'Creating account, please wait...';
+  document.body.append(loadText);
+  document.getElementById('content').style.display = 'none';
 
   let response = await CreateAccount(email, pw, displayName);
   console.log(response);
