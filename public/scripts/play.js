@@ -386,10 +386,12 @@ async function TryAddNewContent(type, actionIndex) {
         };
     }
     function AddContent(type, contentAddConfirmBlock, contentText, actionIndex) {
+
         ShowContentAddLoadText(true);
         contentIsBeingAdded = true;
         if (type === 'action') AddAction();
         else if (type === 'scenario') AddScenario();
+
         function ShowContentAddLoadText(show) {
             if (show) {
                 contentAddConfirmBlock.style.display = 'none';
@@ -418,20 +420,48 @@ async function TryAddNewContent(type, actionIndex) {
         async function AddScenario() {
             CreateScenario(contentText, actionIndex)
                 .then(response => {
+
                     if (response.status === -1) {
                         addingContentStatusText.textContent = 'Failed to add the scenario to Unwritten. Please try again.';
+                        addingContentStatusText.style.color = 'red';
+
+                        console.log('upload failed');
+
+                        const tryAgainButton = document.createElement('button');
+                        document.getElementById('addingContent').append(tryAgainButton);
+                        tryAgainButton.textContent = 'Try upload again';
+                        tryAgainButton.onclick = () =>{
+                            ShowContentAddLoadText(true);
+                            AddScenario();
+                            tryAgainButton.remove();
+                        }
+
                         return;
                     }
-                    if (response.status === -2) {
-                        addingContentStatusText.textContent = 'Another player just added a scenario to this action! Keep playing to see what it was';
+                    else if (response.status === -2) {
+                        addingContentStatusText.textContent = 'Another player just added a scenario to this action. Keep playing to see what it was';
+                        addingContentStatusText.style.color = 'red';
+
+                        console.log('Upload failed. Someone else already added a scenario');
+
+                        const viewScenarioButton = document.createElement('button');
+                        document.getElementById('addingContent').append(viewScenarioButton);
+                        viewScenarioButton.textContent = 'View newly added scenario';
+                        viewScenarioButton.onclick = () =>{
+                            MoveToNextScenario(); //this doesnt really work now, because the scenario has not yet been added to the db. if we DO THAT, HOWEVER, THIS WILL WORK
+                            viewScenarioButton.remove();
+                        }
                         return;
                     }
-                    //ConfirmContentAddition('scenario', contentText, response.newDocID, 0);
-                    contentIsBeingAdded = false;
-                    //hideAddContentBlock();
-                    PlayScenario(GetLastScenarioAdded(), false);
-                    ShowContentAddLoadText(false);
+                    else MoveToNextScenario();
+
                 });
+
+            function MoveToNextScenario() {
+                contentIsBeingAdded = false;
+                PlayScenario(GetLastScenarioAdded(), false);
+                ShowContentAddLoadText(false);
+            }
         }
 
     }

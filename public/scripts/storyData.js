@@ -119,16 +119,13 @@ export async function CreateScenario(text, actionID) {
 
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
+    NotifyAllPlayersOnBranch();
   }
-  else {
-    console.error('there was an error in adding the new scenario! The response looks like this:');
-    console.log(response);
+  else if (response.status === -2){
+    //someone else added a scenario. Add that one to the db!!!
   }
-
-  NotifyAllPlayersOnBranch();
 
   return response;
-
 }
 function NotifyAllPlayersOnBranch() {
 
