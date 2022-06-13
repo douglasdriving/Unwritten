@@ -79,8 +79,7 @@ export async function addAction(scenarioId, actionText) {
 export async function addScenario(scenarioText, parentId, parentActionIndex) {
 
     //TESTCODE - FAKE A FAIL ERROR
-    return ({ status: -1 }); //this means that it could not find the parent doc
-    return ({ status: -2 }); //this means that it another scenario was added first
+    //return ({ status: -1 }); //this means that it could not find the parent doc
 
     //check to make sure parent is not already referencing a scenario
     const parentDocRef = await doc(db, ScenarioDocPath(parentId));
@@ -97,10 +96,10 @@ export async function addScenario(scenarioText, parentId, parentActionIndex) {
     if (parentActionList[parentActionIndex].scenarioID) {
         const newScenarioId = parentActionList[parentActionIndex].scenarioID;
         const newScenario = await getScenario(newScenarioId);
-        newScenario.id = newScenarioId;
         return ({
             status: -2,
-            newScenario: newScenario
+            newDocData: newScenario,
+            newDocID: newScenarioId
         });
     }
 

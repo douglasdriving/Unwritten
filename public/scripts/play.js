@@ -398,6 +398,7 @@ async function TryAddNewContent(type, actionIndex) {
                 ClearTextField();
                 addingContentBlock.style.display = 'block';
                 addingContentStatusText.textContent = 'Adding your content to Unwritten...';
+                addingContentStatusText.style.color = 'black';
             }
             else {
                 addingContentBlock.style.display = 'none';
@@ -448,7 +449,7 @@ async function TryAddNewContent(type, actionIndex) {
                         document.getElementById('addingContent').append(viewScenarioButton);
                         viewScenarioButton.textContent = 'View newly added scenario';
                         viewScenarioButton.onclick = () =>{
-                            MoveToNextScenario(); //this doesnt really work now, because the scenario has not yet been added to the db. if we DO THAT, HOWEVER, THIS WILL WORK
+                            MoveToNextScenario();
                             viewScenarioButton.remove();
                         }
                         return;

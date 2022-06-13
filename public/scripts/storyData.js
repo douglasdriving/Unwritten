@@ -111,6 +111,16 @@ export async function CreateScenario(text, actionID) {
   const response = await addScenario(text, currentScenario.id, actionID)
 
   if (response.status === 0) {
+    MoveToNewlyAddedScenario();
+    NotifyAllPlayersOnBranch();
+  }
+  else if (response.status === -2){
+    MoveToNewlyAddedScenario();
+  }
+
+  return response;
+
+  function MoveToNewlyAddedScenario() {
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
 
@@ -119,13 +129,7 @@ export async function CreateScenario(text, actionID) {
 
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
-    NotifyAllPlayersOnBranch();
   }
-  else if (response.status === -2){
-    //someone else added a scenario. Add that one to the db!!!
-  }
-
-  return response;
 }
 function NotifyAllPlayersOnBranch() {
 
