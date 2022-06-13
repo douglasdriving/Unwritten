@@ -14,6 +14,7 @@ let scenarioColl;
 let currentStoryTitle;
 let unsubscribe;
 let currentScenarioCollPath;
+let playerHasAddedToThisStory = false;
 
 //RUN ON LOAD
 logEvent(analytics, 'started_app');
@@ -42,6 +43,16 @@ export async function setStory(id) {
     else {
         console.error(`could not set story title. no doc data found for the given path: ` + storyDocPath);
     }
+
+    //check to see if player has added to this story already
+    const docPath = `players/` + GetCurrentPlayerId();
+    const docRef = await doc(db, docPath);
+    const playerDoc = await getDoc(docRef);
+
+    if (playerDoc.exists()) {
+        if (playerDoc.data().stories.includes(currentStoryId)) playerHasAddedToThisStory = true;
+    }
+
 }
 
 //UPDATE THE STORY DATABASE
@@ -56,7 +67,6 @@ export async function addAction(scenarioId, actionText) {
         scenarioData = scenarioDoc.data();
     }
     else {
-        console.error(`no doc data found for the given scenario`);
         return -1;
     }
 
@@ -69,8 +79,11 @@ export async function addAction(scenarioId, actionText) {
     actions.push(action);
     let actionIndex = actions.length - 1;
 
-    await updateDoc(scenarioDocRef, { actions: actions })
-    await AddPlayerContribution('Action', actionText, scenarioId, actionIndex);
+    await Promise.all([
+        updateDoc(scenarioDocRef, { actions: actions }),
+        AddStoryToPlayersList(),
+        // AddPlayerContribution('Action', actionText, scenarioId, actionIndex); oldie system - remove
+    ]);
 
     action.id = actionIndex;
     return action;
@@ -78,16 +91,12 @@ export async function addAction(scenarioId, actionText) {
 }
 export async function addScenario(scenarioText, parentId, parentActionIndex) {
 
-    //TESTCODE - FAKE A FAIL ERROR
-    //return ({ status: -1 }); //this means that it could not find the parent doc
-
     //check to make sure parent is not already referencing a scenario
     const parentDocRef = await doc(db, ScenarioDocPath(parentId));
     const parentDoc = await getDoc(parentDocRef);
     const parentDocData = parentDoc.data();
 
     if (!parentDocData) {
-        console.error('could not find the parent doc to add a ref to the new ID, so cant add a new one');
         return ({ status: -1 });
     }
 
@@ -125,7 +134,8 @@ export async function addScenario(scenarioText, parentId, parentActionIndex) {
     updateDoc(parentDocRef, { actions: parentActionList });
 
     //Update player data
-    await AddPlayerContribution('Scenario', scenarioText, newDocId);
+    //await AddPlayerContribution('Scenario', scenarioText, newDocId); //old system - replace with story list
+    await AddStoryToPlayersList(); // could run in parrallell for speed?
 
     //return a "success" response
     const response = {
@@ -206,7 +216,7 @@ export async function createNewStory(title, description, introduction, initialsc
 }
 
 //UPDATE THE PLAYER DATABASE
-async function AddPlayerContribution(type, text, scenarioDocId, actionId) {
+async function AddPlayerContribution(type, text, scenarioDocId, actionId) { //old, can be removed
 
     //create doc data
     const newDocData = {
@@ -296,6 +306,38 @@ export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId
 export async function RemoveNotification(playerId, notificationId) {
     const response = await deleteDoc(doc(db, `players/${playerId}/notifications`, notificationId));
 }
+async function AddStoryToPlayersList() {
+
+    if (playerHasAddedToThisStory) return;
+    playerHasAddedToThisStory = true;
+
+    //get current list
+    const docRef = await doc(db, 'players/' + GetCurrentPlayerId());
+    const playerDoc = await getDoc(docRef);
+
+    let storyList = false;
+    if (playerDoc.exists() && playerDoc.data().stories) {
+        storyList = playerDoc.data().stories;
+    }
+
+    //Check if story its alread in the list
+    if (storyList && storyList.includes(currentStoryId)) {
+        return;
+    }
+
+    //Create an updated list
+    let updatedStoryList
+    if (storyList) {
+        updatedStoryList = storyList;
+        updatedStoryList.push(currentStoryId);
+    }
+    else {
+        updatedStoryList = [currentStoryId];
+    }
+
+    //then set the doc with the new list
+    await setDoc(doc(db, "players", GetCurrentPlayerId()), { stories: updatedStoryList });
+}
 
 //MONITOR
 export async function monitorScenario(scenarioId, updateFunction) {
@@ -322,47 +364,6 @@ export async function GetScenarios(storyId) {
     })
 
     return scenarios;
-
-    //old code - can remove later
-    let storyData = {};
-    let iterations = 0;
-
-    scenarioDocs.forEach(doc => {
-        if (doc.id === 'start') storyData.start = doc.data();;
-    })
-
-    storyData.intro = await getIntro(storyId);
-    storyData.start.id = 'start';
-
-    //ALL THIS WILL BE REMANUFACTURED ANYWAYS
-    AttachScenariosBelow(storyData.start);
-    console.log('number of iterations: ' + iterations);
-
-    return storyData;
-
-    function AttachScenariosBelow(scenario) {
-
-        if (!scenario.actions) return;
-        scenario.actions.forEach(a => {
-            if (!a.scenarioID) return;
-            const scenario = FindDocData(a.scenarioID);
-            if (scenario) {
-                a.scenario = scenario;
-                a.scenario.id = a.scenarioID
-                AttachScenariosBelow(scenario);
-            }
-        })
-
-    }
-
-    function FindDocData(id) {
-        let scenario;
-        scenarioDocs.forEach(doc => {
-            iterations++;
-            if (doc.id === id) scenario = doc.data();
-        })
-        return scenario;
-    }
 }
 export async function getScenario(scenarioId) {
 
@@ -432,15 +433,73 @@ export async function GetTitle(storyId) {
 //GET DATA - PLAYER
 export async function GetPlayerContributions(playerId) {
 
-    const querySnapshot = await getDocs(collection(db, "players/" + playerId + "/contributions"));
+    //JUST AN EXAMPLE
+    const exampleEntry = {
+        actionId: 0,
+        scenarioDocID: 'start',
+        story: 'TestStory',
+        storyCollectionID: 'TestStory',
+        text: 'Hello World!',
+        time: 2022 - 03 - 14,
+        type: 'Action'
+    }
 
-    let contributions = [];
-    querySnapshot.forEach((doc) => {
-        contributions.push(doc.data());
-    });
+    //ADD THE CODE HERE
+    //get list of stories that the player has contributed to
+    const docRef = doc(db, "players", playerId);
+    const docSnap = await getDoc(docRef);
+    const storyList = [];
+    if (docSnap.exists()) {
+        if (docSnap.data().stories) {
+            storyList = docSnap.data.stories();
+        }
+    }
+
+    if (storyList.length === 0) return;
+
+    const contributions = [];
+    //iterate through every story
+    await Promise.all(storyList.map(async (storyId) => {
+
+        //Get the scenarios and the title of the story
+        let scenarios;
+        let title;
+        await Promise.all([
+            scenarios = await GetScenarios(storyId),
+            title = await GetTitle(storyId)
+        ])
+
+        //iterate through each document in the story data
+        scenarios.forEach(scenario => {
+            //whenever a scenario occurs that has this players name on it - add it to the contributions list
+            if (scenario.player === playerId){
+                contributions.push({
+                    scenarioDocID: scenario.id,
+                    story: title,
+                    storyCollectionID: storyId,
+                    text: scenario.text,
+                    time: scenario.time,
+                    type: 'scenario'
+                })
+            }
+            //do the same with action
+            scenario.actions.forEach((action, actionId) => {
+                if (action.player === playerId){
+                    contributions.push({
+                        actionId: actionId,
+                        scenarioDocID: scenario.id,
+                        story: title,
+                        storyCollectionID: storyId,
+                        text: action.action,
+                        time: scenario.time, //This is wrong!!!! This is not when the ACTION was added. But this is not saved yet. So we have to start saving that
+                        type: 'action'
+                    })
+                }
+            })
+        })
+    }))
 
     return contributions;
-
 }
 export async function GetPlayerNotifications(playerId) {
 
