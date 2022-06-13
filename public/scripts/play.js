@@ -6,7 +6,7 @@ import { GetCurrentPlayerId, GetPlayerDisplayName } from "/scripts/authHandler.j
 const timeBetweenLetters = 10; //ms
 const delayAfterPrintFinished = 500; //ms
 const maxChars = {
-    action: 40,
+    action: 60,
     scenario: 250
 }
 

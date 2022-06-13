@@ -22,27 +22,32 @@
 
   <h2>Login to Unwritten</h2>
 
-  <div>
+  <p id="loginLoadText">Signing in...</p>
+
+  <div id="loginControls">
 
     <p>Email</p>
     <input type="text" id="emailField">
     <p id="usernameError" class="warning"></p>
 
     <p>Password</p>
-    <input type="text" id="passwordField">
+    <input type="password" id="passwordField">
     <p id="passwordError" class="warning"></p>
 
+    <div>
+      <button id="loginButton">Login</button>
+      <p id="loginErrorText" class="warning">Wrong username or password!</p>
+    </div>
+
+    <div>
+      <hr>
+      <a onclick="window.location.href='/pages/createAccount.html?v=0.11'">Dont have an account yet? Click here to
+        create one!</a>
+    </div>
+
   </div>
 
-  <div>
-    <button id="loginButton">Login</button>
-    <p id="loginErrorText" class="warning">Wrong username or password!</p>
-  </div>
 
-  <div>
-    <hr>
-    <a onclick="window.location.href='/pages/createAccount.html?v=0.11'">Dont have an account yet? Click here to create one!</a>
-  </div>
 
 </body>
 
