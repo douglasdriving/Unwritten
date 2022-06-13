@@ -36,7 +36,10 @@ async function ListAllContributions(playerID) {
 
   //list the contributions
   contributionsData.forEach(c => {
-    var date = new Date(c.time.seconds * 1000);
+    let date;
+    
+    if(c.time) date = new Date(c.time.seconds * 1000);
+    else date = new Date("January 01, 2000 00:00:00");
     const contributionDiv = ListSingleContribution(c.text, c.story, c.type, date);
 
     contributionDiv.onclick = () => {

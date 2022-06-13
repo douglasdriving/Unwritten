@@ -3,6 +3,7 @@ import { StartFirebase } from "/scripts/firebaseConfig.js?v=0.11";
 import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc, query, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
 import { GetCurrentPlayerId, GetPlayerDisplayName } from '/scripts/authHandler.js?v=0.11';
+import { time } from "console";
 
 //VARIABLES
 const app = StartFirebase();
@@ -74,7 +75,8 @@ export async function addAction(scenarioId, actionText) {
     const action = {
         action: actionText,
         player: GetCurrentPlayerId(),
-        playerDisplayName: GetPlayerDisplayName()
+        playerDisplayName: GetPlayerDisplayName(),
+        time: new Date()
     };
     actions.push(action);
     let actionIndex = actions.length - 1;
@@ -433,25 +435,13 @@ export async function GetTitle(storyId) {
 //GET DATA - PLAYER
 export async function GetPlayerContributions(playerId) {
 
-    //JUST AN EXAMPLE
-    const exampleEntry = {
-        actionId: 0,
-        scenarioDocID: 'start',
-        story: 'TestStory',
-        storyCollectionID: 'TestStory',
-        text: 'Hello World!',
-        time: 2022 - 03 - 14,
-        type: 'Action'
-    }
-
-    //ADD THE CODE HERE
     //get list of stories that the player has contributed to
     const docRef = doc(db, "players", playerId);
     const docSnap = await getDoc(docRef);
-    const storyList = [];
+    let storyList = [];
     if (docSnap.exists()) {
         if (docSnap.data().stories) {
-            storyList = docSnap.data.stories();
+            storyList = docSnap.data().stories;
         }
     }
 
@@ -483,7 +473,7 @@ export async function GetPlayerContributions(playerId) {
                 })
             }
             //do the same with action
-            scenario.actions.forEach((action, actionId) => {
+            if (scenario.actions) scenario.actions.forEach((action, actionId) => {
                 if (action.player === playerId){
                     contributions.push({
                         actionId: actionId,
@@ -491,9 +481,10 @@ export async function GetPlayerContributions(playerId) {
                         story: title,
                         storyCollectionID: storyId,
                         text: action.action,
-                        time: scenario.time, //This is wrong!!!! This is not when the ACTION was added. But this is not saved yet. So we have to start saving that
+                        time: (action.time || scenario.time), //This is wrong!!!! This is not when the ACTION was added. But this is not saved yet. So we have to start saving that
                         type: 'action'
                     })
+
                 }
             })
         })
