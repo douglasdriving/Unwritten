@@ -230,44 +230,34 @@ function MonitorAllScenarios() {
     })
 
     async function ScenarioUpdated(newData) {
-
       if (!fired) {
         fired = true;
         return;
       }
-
+      console.log('a scenario was updated! New data: ', newData);
       scenario.text = newData.text;
-
       if (!newData.actions) return;
       for (let i = 0; i < newData.actions.length; i++) {
 
         const updatedAction = newData.actions[i];
+        let clientSideAction = scenario.actions[i];
 
-        if (!scenario.actions) {
-          scenario.actions = [updatedAction];
-        }
-
-        if (scenario.actions.length < (i - 1)) {
+        if (!scenario.actions) scenario.actions = [updatedAction];
+        else if (typeof clientSideAction === 'undefined') {
+          console.log('new action was added: ', updatedAction);
           scenario.actions.push(updatedAction);
           return;
         }
-
-        let clientSideAction = scenario.actions[i];
-        clientSideAction.action = updatedAction.action; //updates text
-        const newScenarioID = updatedAction.scenarioID
-
-        if (!newScenarioID) return;
-        if (clientSideAction.scenarioID === newScenarioID) return;
-
-        const newScenarioData = await getScenario(newScenarioID);
-        clientSideAction.scenarioID = newScenarioID;
-        clientSideAction.scenario = newScenarioData;
-        clientSideAction.scenario.id = newScenarioID;
-
+        else if (!clientSideAction.scenarioID && updatedAction.scenarioID) {
+          console.log('a scenario was added to this action: ', updatedAction);
+          const newScenarioID = updatedAction.scenarioID
+          const newScenario = await getScenario(newScenarioID);
+          console.log('it points to this scenario: ', newScenario);
+          clientSideAction.scenarioID = newScenarioID;
+          newScenario.id = newScenarioID;
+          scenarios.push(newScenario);
+        }
       }
-
     }
-
   }
-
 }

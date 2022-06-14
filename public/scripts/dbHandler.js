@@ -147,40 +147,6 @@ export async function addScenario(scenarioText, parentId, parentActionIndex) {
     return (response);
 
 }
-/*
-export async function updateContentCounters(actionArray) {
-
-    let promiseArray = [];
-
-    actionArray.forEach(actionRef => {
-
-        const promise = new Promise(async () => {
-
-            const scenarioID = actionRef.scenarioID;
-            const actionID = actionRef.actionID;
-            const docRef = await doc(db, `${storyId}/${scenarioID}`)
-
-            const currentScenarioData = await getScenario(scenarioID);
-            let actions = currentScenarioData.actions;
-
-            if (actions[actionID].scenarioCount) actions[actionID].scenarioCount++;
-            else actions[actionID].scenarioCount = 1;
-
-            await updateDoc(docRef, { actions: actions }) //gillar inte att man måste ersätta hela arrayen. Det vore smidigare om man bara kunde uppdatera en action.
-
-        });
-
-        promiseArray.push(promise);
-
-    });
-
-    Promise.all(promiseArray).
-        then(() => {
-            console.log('all actions updated');
-        });
-
-}
-*/
 export async function createNewStory(title, description, introduction, initialscenario) {
 
     const storyDocId = title.replace(/\s+/g, '');
@@ -217,42 +183,6 @@ export async function createNewStory(title, description, introduction, initialsc
 }
 
 //UPDATE THE PLAYER DATABASE
-async function AddPlayerContribution(type, text, scenarioDocId, actionId) { //old, can be removed
-
-    //create doc data
-    const newDocData = {
-        text: text,
-        story: currentStoryTitle,
-        type: type,
-        time: new Date(),
-        storyCollectionID: currentStoryId,
-        scenarioDocID: scenarioDocId,
-    }
-
-    if (typeof actionId !== 'undefined' && query) {
-        newDocData.actionId = actionId;
-    }
-
-    //add to player contributions collection
-    const coll = collection(db, '/players/' + GetCurrentPlayerId() + '/contributions');
-    const docData = await addDoc(coll, newDocData)
-    const newDocID = docData.id;
-
-    //return error if it could not be added
-    if (!newDocID) {
-        console.error('data could not be added to the player profile');
-        return ({ status: -1 });
-    }
-
-    //else return a "success" response
-    const response = {
-        status: 0,
-        newDocID: newDocID,
-        newDocData: newDocData
-    }
-    return (response);
-
-}
 export async function NotifyPlayer(playerId, storyId, text, scenarioId, actionId) {
 
     //make sure player is not already notified
