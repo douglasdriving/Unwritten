@@ -3,7 +3,7 @@ import { GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.11";
 
 const navBar = document.createElement('div');
 document.body.prepend(navBar);
-navBar.className = 'bordered';
+navBar.className = 'inverted';
 
 const homeButton = CreateNavButton('Home', '/index');
 const storiesButton = CreateNavButton('Stories', '/pages/storyList');
@@ -15,6 +15,7 @@ const logInButton = CreateNavButton('Sign In', '/pages/login');
 const loggedInText = document.createElement('p');
 navBar.append(loggedInText);
 loggedInText.textContent = 'Signed in as: ';
+loggedInText.className = 'white';
 
 const playButtons = [storiesButton, createStoryButton, myTextsButton, notificationsButton];
 
