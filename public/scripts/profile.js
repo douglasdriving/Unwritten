@@ -57,13 +57,8 @@ function ListSingleContribution(text, story, type, time) {
   const textElement = AddRow('"' + text + '"');
   textElement.className = 'white bold noMargin';
 
-  // contributionDiv.append(document.createElement('hr'));
-
   GetHeader().append(contributionDiv);
-
   AddRow(type);
-  //AddRow(story);
-  // AddRow(time.toLocaleString().slice(0, -3));
 
   return contributionDiv;
 

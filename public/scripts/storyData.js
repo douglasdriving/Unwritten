@@ -32,7 +32,9 @@ export async function SetupData() {
   return sequence;
 
   function AddActionSequence(scenario) {
-    if (scenario.parentActionIndex) sequence.push(scenario.parentActionIndex);
+    if (typeof scenario.parentActionIndex !== 'undefined') {
+      sequence.push(scenario.parentActionIndex);
+    }
     if (scenario.parentScenarioID) AddActionSequence(GetScenario(scenario.parentScenarioID));
   }
 
@@ -67,6 +69,7 @@ export function GetLastScenarioAdded() {
   return lastScenarioAdded;
 }
 export function GetCurrentScenario() {
+  console.log('getting the current scenario: ', currentScenario);
   return currentScenario;
 }
 function GetScenario(id) {
@@ -78,7 +81,7 @@ function GetScenario(id) {
   })
   return returnScenario;
 }
-export async function GetCurrentStoryTitle(){
+export async function GetCurrentStoryTitle() {
   const title = await GetTitle(currentStoryId);
   return title;
 }
@@ -97,7 +100,15 @@ export async function CreateAction(text) {
 
   //also - add to the local data
   if (newAction.id != -1) {
+    let actionAlreadyAdded = false;
     if (!currentScenario.actions) currentScenario.actions = [];
+    else {
+      currentScenario.actions.forEach(action => {
+        if (action.action === newAction.action) actionAlreadyAdded = true;
+      })
+    }
+    if (actionAlreadyAdded) return;
+    console.log('adding this action locally: ', newAction);
     currentScenario.actions.push(newAction);
   }
 
@@ -114,7 +125,7 @@ export async function CreateScenario(text, actionID) {
     MoveToNewlyAddedScenario();
     NotifyAllPlayersOnBranch();
   }
-  else if (response.status === -2){
+  else if (response.status === -2) {
     MoveToNewlyAddedScenario();
   }
 
@@ -238,6 +249,7 @@ function MonitorAllScenarios() {
         }
 
         if (scenario.actions.length < (i - 1)) {
+          console.log('adding a new action via monitor: ', updatedAction);
           scenario.actions.push(updatedAction);
           return;
         }

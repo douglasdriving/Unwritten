@@ -205,7 +205,6 @@ function PlayScenario(scenario, instant) {
         }
     }
 }
-
 function LoadActionButtons(actions) {
 
     ClearButtonBlock();
@@ -407,12 +406,13 @@ async function TryAddNewContent(type, actionIndex) {
         async function AddAction() {
             CreateAction(contentText)
                 .then(newAction => {
-                    const actionId = newAction.id;
+                    const actionId = newAction.id; //huh?
                     if (actionId === -1) {
                         addingContentStatusText.textContent = 'ERROR - your action could not be added.';
                         return;
                     }
                     contentIsBeingAdded = false;
+                    //might be that action is added to db 2 times, since its also comes in through monitoring???
                     LoadActionButtons(GetCurrentScenario().actions);
                     PressActionButton(actionId, currentActionBlock.childNodes[actionId], false, GetCurrentScenarioID());
                     ShowContentAddLoadText(false);
