@@ -10,6 +10,7 @@ import {
     GetCurrentScenario,
     GetCurrentStoryTitle,
     SetScenarioBeingWritten,
+    GetScenario
 } from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
 import { GetCurrentPlayerId } from "/scripts/authHandler.js?v=0.11";
@@ -33,6 +34,7 @@ const addingContentStatusText = document.getElementById('addContentStatus');
 const keepPlayButton = document.getElementById('keepPlayButton');
 const charCounter = document.getElementById('charCounter');
 const introDiv = document.getElementById('ingress')
+const writingInterruptionBlock = document.getElementById('writingInterruption');
 const scenariosContainer = document.createElement('div');
 storyBlock.append(scenariosContainer);
 
@@ -43,7 +45,6 @@ let contentIsBeingAdded = false;
 let currentActionBlock;
 let maxNumOfChars = maxChars.action;
 let terminatePrint;
-let someoneElseWroteScenario;
 
 //RUN AT START
 SetupStory();
@@ -367,9 +368,22 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
 
     if (buttonText === 'Add Scenario') {
         AssignAddButton('scenario');
+
         //change on update
-        someoneElseWroteScenario = new Event('HTMLEvent'); //assign what happens of this event. Also send in next func and make sure it is dispatched
-        SetScenarioBeingWritten(GetCurrentScenarioID(), actionIndex);
+        const interruptionEvent = new Event('interruptWriting');
+        document.addEventListener('interruptWriting', function (e) {
+            //what happens on update?
+            console.log('interrupting the scenario writing!');
+            writingInterruptionBlock.style.display = 'block';
+            addContentBlock.style.display = 'none';
+            onEnterPress = null;
+            document.getElementById('showNewScenario').onclick = () => {
+                writingInterruptionBlock.style.display = 'none';
+                PlayScenario(GetScenario(GetCurrentScenario().actions[actionIndex].scenarioID));
+            }
+            //MUST REMOVE CLREAT THIS EVENT LISTENER WHEN WE ARE DONE
+        }, false);
+        SetScenarioBeingWritten(GetCurrentScenarioID(), actionIndex, interruptionEvent); //pass the event in here
     }
     else if (buttonText === 'Add Action') AssignAddButton('action');
     else {

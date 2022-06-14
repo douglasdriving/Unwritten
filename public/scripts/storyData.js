@@ -72,7 +72,7 @@ export function GetLastScenarioAdded() {
 export function GetCurrentScenario() {
   return currentScenario;
 }
-function GetScenario(id) {
+export function GetScenario(id) {
   let returnScenario;
   scenarios.forEach(scenario => {
     if (scenario.id === id) {
@@ -248,9 +248,8 @@ function MonitorAllScenarios() {
           return;
         }
         else if (!clientSideAction.scenarioID && updatedAction.scenarioID) {
-          console.log('new sceanrio added to scenarioId: ', newData.id, ', and action id: ', i);
           if(currentlyWritingScenarioOn.scenarioId === newData.id && currentlyWritingScenarioOn.actionId === i){
-            console.log('update to the scenario you are curretly writing!!!') //dispatch an event from the play script?
+            document.dispatchEvent(currentlyWritingScenarioOn.interruptionEvent);
           }
           const newScenarioID = updatedAction.scenarioID
           const newScenario = await getScenario(newScenarioID);
@@ -264,10 +263,10 @@ function MonitorAllScenarios() {
 }
 
 //TRACKING
-export function SetScenarioBeingWritten(scenarioId, actionId){
+export function SetScenarioBeingWritten(scenarioId, actionId, interruptionEvent){
   currentlyWritingScenarioOn = {
     scenarioId: scenarioId,
-    actionId: actionId
+    actionId: actionId,
+    interruptionEvent: interruptionEvent
   }
-  console.log('you are currently wrigin: ', currentlyWritingScenarioOn);
 }
