@@ -3,7 +3,6 @@ import { StartFirebase } from "/scripts/firebaseConfig.js?v=0.11";
 import { getFirestore, collection, addDoc, doc, getDoc, getDocs, updateDoc, onSnapshot, setDoc, query, deleteDoc } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore.js";
 import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/9.6.11/firebase-analytics.js";
 import { GetCurrentPlayerId, GetPlayerDisplayName } from '/scripts/authHandler.js?v=0.11';
-import { time } from "console";
 
 //VARIABLES
 const app = StartFirebase();
