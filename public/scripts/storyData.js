@@ -6,6 +6,7 @@ let currentScenario;
 let lastScenarioAdded;
 let currentStoryId;
 let introText
+let currentlyWritingScenarioOn;
 
 //SET DATA
 export async function SetupData() {
@@ -234,7 +235,6 @@ function MonitorAllScenarios() {
         fired = true;
         return;
       }
-      console.log('a scenario was updated! New data: ', newData);
       scenario.text = newData.text;
       if (!newData.actions) return;
       for (let i = 0; i < newData.actions.length; i++) {
@@ -244,15 +244,16 @@ function MonitorAllScenarios() {
 
         if (!scenario.actions) scenario.actions = [updatedAction];
         else if (typeof clientSideAction === 'undefined') {
-          console.log('new action was added: ', updatedAction);
           scenario.actions.push(updatedAction);
           return;
         }
         else if (!clientSideAction.scenarioID && updatedAction.scenarioID) {
-          console.log('a scenario was added to this action: ', updatedAction);
+          console.log('new sceanrio added to scenarioId: ', newData.id, ', and action id: ', i);
+          if(currentlyWritingScenarioOn.scenarioId === newData.id && currentlyWritingScenarioOn.actionId === i){
+            console.log('update to the scenario you are curretly writing!!!') //dispatch an event from the play script?
+          }
           const newScenarioID = updatedAction.scenarioID
           const newScenario = await getScenario(newScenarioID);
-          console.log('it points to this scenario: ', newScenario);
           clientSideAction.scenarioID = newScenarioID;
           newScenario.id = newScenarioID;
           scenarios.push(newScenario);
@@ -260,4 +261,13 @@ function MonitorAllScenarios() {
       }
     }
   }
+}
+
+//TRACKING
+export function SetScenarioBeingWritten(scenarioId, actionId){
+  currentlyWritingScenarioOn = {
+    scenarioId: scenarioId,
+    actionId: actionId
+  }
+  console.log('you are currently wrigin: ', currentlyWritingScenarioOn);
 }

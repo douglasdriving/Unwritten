@@ -1,6 +1,18 @@
-import { GetStoryIntro, SetupData, MoveToNextScenario, SetScenario, CreateAction, CreateScenario, GetCurrentScenarioID, GetLastScenarioAdded, GetCurrentScenario, GetCurrentStoryTitle } from "/scripts/storyData.js?v=0.11";
+import {
+    GetStoryIntro,
+    SetupData,
+    MoveToNextScenario,
+    SetScenario,
+    CreateAction,
+    CreateScenario,
+    GetCurrentScenarioID,
+    GetLastScenarioAdded,
+    GetCurrentScenario,
+    GetCurrentStoryTitle,
+    SetScenarioBeingWritten,
+} from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
-import { GetCurrentPlayerId, GetPlayerDisplayName } from "/scripts/authHandler.js?v=0.11";
+import { GetCurrentPlayerId } from "/scripts/authHandler.js?v=0.11";
 
 //BALANCING
 let timeBetweenLetters = 10; //ms
@@ -31,6 +43,7 @@ let contentIsBeingAdded = false;
 let currentActionBlock;
 let maxNumOfChars = maxChars.action;
 let terminatePrint;
+let someoneElseWroteScenario;
 
 //RUN AT START
 SetupStory();
@@ -96,11 +109,11 @@ function SetupStory() {
 var slider = document.getElementById("textSpeedSlider");
 var output = document.getElementById("textSpeedDisplay");
 UpdateTextSpeed();
-slider.oninput = function () {UpdateTextSpeed();}
+slider.oninput = function () { UpdateTextSpeed(); }
 function UpdateTextSpeed() {
     output.innerHTML = slider.value;
     timeBetweenLetters = 100 / slider.value;
-    if (slider.value === '10'){
+    if (slider.value === '10') {
         output.innerHTML = 'instant';
         timeBetweenLetters = 0;
     }
@@ -345,15 +358,19 @@ function TryBacktrack(scenarioID, actionBlock) {
 
 //ADD CONTENT
 function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
-    //show the block
+
     ClearTextField();
     addContentTextField.placeholder = instructionText;
     addContentTextField.style.height = maxChars.type * 250 / window.innerWidth + 'px';
     DisplayAddContentBlock(true);
     tryAddContentButton.textContent = buttonText;
 
-    //assign the "add" function to the button
-    if (buttonText === 'Add Scenario') AssignAddButton('scenario');
+    if (buttonText === 'Add Scenario') {
+        AssignAddButton('scenario');
+        //change on update
+        someoneElseWroteScenario = new Event('HTMLEvent'); //assign what happens of this event. Also send in next func and make sure it is dispatched
+        SetScenarioBeingWritten(GetCurrentScenarioID(), actionIndex);
+    }
     else if (buttonText === 'Add Action') AssignAddButton('action');
     else {
         console.error('cant assign a function to the "add content" button because the text was not assigned correctly.');

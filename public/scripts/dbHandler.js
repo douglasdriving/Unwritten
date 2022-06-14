@@ -274,7 +274,11 @@ async function AddStoryToPlayersList() {
 export async function monitorScenario(scenarioId, updateFunction) {
 
     const docRef = await doc(db, `${currentScenarioCollPath}/${scenarioId}`);
-    await onSnapshot(docRef, doc => { updateFunction(doc.data()) });
+    await onSnapshot(docRef, doc => {
+        const updatedScenario = doc.data();
+        updatedScenario.id = doc.id;
+        updateFunction(updatedScenario);
+    });
 
 }
 export async function tryUnsubscribe() {
