@@ -69,7 +69,6 @@ export function GetLastScenarioAdded() {
   return lastScenarioAdded;
 }
 export function GetCurrentScenario() {
-  console.log('getting the current scenario: ', currentScenario);
   return currentScenario;
 }
 function GetScenario(id) {
@@ -107,9 +106,9 @@ export async function CreateAction(text) {
         if (action.action === newAction.action) actionAlreadyAdded = true;
       })
     }
-    if (actionAlreadyAdded) return;
-    console.log('adding this action locally: ', newAction);
-    currentScenario.actions.push(newAction);
+    if (!actionAlreadyAdded) {
+      currentScenario.actions.push(newAction);
+    }
   }
 
   NotifyAllPlayersOnBranch();
@@ -249,7 +248,6 @@ function MonitorAllScenarios() {
         }
 
         if (scenario.actions.length < (i - 1)) {
-          console.log('adding a new action via monitor: ', updatedAction);
           scenario.actions.push(updatedAction);
           return;
         }
