@@ -10,15 +10,21 @@
     <link href='https://fonts.googleapis.com/css?family=Lato' rel='stylesheet'>
     <link rel="stylesheet" href="/styles/baseLineStyle.css?v=0.11">
     <link rel="stylesheet" href="/styles/style.css?v=0.11">
-    
+
 </head>
 
-<body>  
+<body>
 
     <script type='module' src="/scripts/navigator.js?v=0.11"></script>
 
+    <div>
+        <p class="inline">Text Speed:</p>
+        <input type="range" min="1" max="10" value="5" class="slider" id="textSpeedSlider">
+        <p class="inline" id="textSpeedDisplay">100</p>
+    </div>
+
     <h1 id="titleHeading">Loading story...</h1>
-    
+
     <div id="ingress" class="readLineBreaks">Loading intro. If nothing happens, please refresh the page</div>
 
     <button id="beginPlay">Begin your adventure</button>

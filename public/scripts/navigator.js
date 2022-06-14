@@ -3,6 +3,7 @@ import { GetPlayerNotifications } from "/scripts/dbHandler.js?v=0.11";
 
 const navBar = document.createElement('div');
 document.body.prepend(navBar);
+navBar.className = 'bordered';
 
 const homeButton = CreateNavButton('Home', '/index');
 const storiesButton = CreateNavButton('Stories', '/pages/storyList');

@@ -3,7 +3,7 @@ import { GetExample } from "/scripts/examples.js?v=0.11";
 import { GetCurrentPlayerId, GetPlayerDisplayName } from "/scripts/authHandler.js?v=0.11";
 
 //BALANCING
-const timeBetweenLetters = 10; //ms
+let timeBetweenLetters = 10; //ms
 const delayAfterPrintFinished = 500; //ms
 const maxChars = {
     action: 60,
@@ -89,6 +89,20 @@ function SetupStory() {
         for (let i = 0; i < sequence.length; i++) {
             PressActionButton(sequence[i], currentActionBlock.childNodes[sequence[i]], true);
         }
+    }
+}
+
+//TEXT SLIDER
+var slider = document.getElementById("textSpeedSlider");
+var output = document.getElementById("textSpeedDisplay");
+UpdateTextSpeed();
+slider.oninput = function () {UpdateTextSpeed();}
+function UpdateTextSpeed() {
+    output.innerHTML = slider.value;
+    timeBetweenLetters = 100 / slider.value;
+    if (slider.value === '10'){
+        output.innerHTML = 'instant';
+        timeBetweenLetters = 0;
     }
 }
 
@@ -231,15 +245,15 @@ function LoadActionButtons(actions) {
             if (PlayerWrote(actionElement.player)) actionButton.className += ' blueButton';
 
             //ADD SIGNATURE
-            if (actionElement.playerDisplayName){
+            if (actionElement.playerDisplayName) {
                 const signatureToolTip = document.createElement('div');
                 signatureToolTip.className = 'tooltip';
                 actionButton.append(signatureToolTip);
                 signatureToolTip.textContent = 'Added by ' + actionElement.playerDisplayName;
 
                 actionButton.style.position = 'relative';
-                actionButton.onmouseenter = () => {signatureToolTip.style.visibility = 'visible'}
-                actionButton.onmouseleave = () => {signatureToolTip.style.visibility = 'hidden'}
+                actionButton.onmouseenter = () => { signatureToolTip.style.visibility = 'visible' }
+                actionButton.onmouseleave = () => { signatureToolTip.style.visibility = 'hidden' }
             }
 
             //RETURN
@@ -431,7 +445,7 @@ async function TryAddNewContent(type, actionIndex) {
                         const tryAgainButton = document.createElement('button');
                         document.getElementById('addingContent').append(tryAgainButton);
                         tryAgainButton.textContent = 'Try upload again';
-                        tryAgainButton.onclick = () =>{
+                        tryAgainButton.onclick = () => {
                             ShowContentAddLoadText(true);
                             AddScenario();
                             tryAgainButton.remove();
@@ -448,7 +462,7 @@ async function TryAddNewContent(type, actionIndex) {
                         const viewScenarioButton = document.createElement('button');
                         document.getElementById('addingContent').append(viewScenarioButton);
                         viewScenarioButton.textContent = 'View newly added scenario';
-                        viewScenarioButton.onclick = () =>{
+                        viewScenarioButton.onclick = () => {
                             MoveToNextScenario();
                             viewScenarioButton.remove();
                         }

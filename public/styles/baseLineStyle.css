@@ -83,7 +83,17 @@
   z-index: 1;
   color: #766a68;
   opacity: 1;
+}
 
+.inline{
+  display: inline-block;
+}
+
+.slider{
+  margin: 10px;
+  display: inline-block;
+  width: auto;
+  accent-color: #766a68;
 }
 
 body {
