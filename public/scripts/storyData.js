@@ -134,12 +134,11 @@ export async function CreateScenario(text, actionID) {
   function MoveToNewlyAddedScenario() {
     const newScenario = response.newDocData;
     newScenario.id = response.newDocID;
-
     currentScenario.actions[actionID].scenarioID = newScenario.id;
     scenarios.push(newScenario);
-
     lastScenarioAdded = newScenario;
     currentScenario = newScenario;
+    Monitor(newScenario.id, newScenario);
   }
 }
 function NotifyAllPlayersOnBranch() {
@@ -213,82 +212,69 @@ function CheckForURLParam(param) {
   }
 
 }
+
+//MONITORING
 function MonitorAllScenarios() {
 
   MonitorEachScenarioDownwards(GetScenario('start'));
-
   function MonitorEachScenarioDownwards(scenario) {
 
     if (!scenario) return;
-
-    monitorScenario(scenario.id, newData => { ScenarioUpdated(newData, scenario); });
-    // let fired = false;
-
+    Monitor(scenario.id, scenario);
     if (!scenario.actions || typeof scenario.actions === 'undefined') return;
-
     scenario.actions.forEach(action => {
       if (action.scenarioID) MonitorEachScenarioDownwards(GetScenario(action.scenarioID));
     })
 
-    async function ScenarioUpdated(newData, oldData) {
+  }
+}
+function Monitor(scenarioId, scenarioData) {
+  monitorScenario(scenarioId, newData => { ScenarioUpdated(newData, scenarioData); });
+  async function ScenarioUpdated(newData, oldData) {
 
-      // if (!fired) {
-      //   fired = true;
-      //   return;
-      // }
+    if (typeof newData.actions === 'undefined') {
+      return;
+    }
 
-      console.log('scenario with id ', newData.id, ' was just updated with the following data: ', newData);
+    if (typeof oldData.actions === 'undefined') {
+      oldData.actions = newData.actions;
+      return;
+    }
 
-      if (typeof newData.actions === 'undefined') {
-        console.log('the update provides no actions, so returning');
-        return;
+    for (let i = 0; i < newData.actions.length; i++) {
+
+      const updatedAction = newData.actions[i];
+
+      if (oldData.actions.length < i + 1) {
+        oldData.actions.push(updatedAction);
       }
-
-      if (typeof oldData.actions === 'undefined') {
-        console.log('the current scenario has no actions, so just adds the updated one and returning');
-        oldData.actions = newData.actions;
-        return;
+      else if (typeof oldData.actions[i].scenarioID !== 'undefined') {
+        // console.log('the action already has a scenario attached to it, so there isnt a new one');
+        // console.log('the action looks like this: ', oldData.actions[i]);
       }
+      else if (typeof updatedAction.scenarioID === 'undefined') {
+        // console.log('the updated provided no ref to a new scenario, so stopping here')
+      }
+      else {
+        // console.log('seems like a new scenario was created with id: ', updatedAction.scenarioID);
+        const newScenarioID = updatedAction.scenarioID
+        const clientSideAction = oldData.actions[i];
+        clientSideAction.scenarioID = newScenarioID;
 
-      console.log('the new data has ', newData.actions.length, ' actions to browse through');
-      for (let i = 0; i < newData.actions.length; i++) {
-
-        console.log('checking action no.', i);
-        const updatedAction = newData.actions[i];
-
-        if (oldData.actions.length < i + 1) {
-          console.log('there was just a new action, so pushes that into the data');
-          oldData.actions.push(updatedAction);
+        if (currentlyWritingScenarioOn.scenarioId === oldData.id && currentlyWritingScenarioOn.actionId === i) {
+          document.dispatchEvent(currentlyWritingScenarioOn.interruptionEvent);
         }
-        else if (typeof oldData.actions[i].scenarioID !== 'undefined') {
-          console.log('the action already has a scenario attached to it, so there isnt a new one');
-          console.log('the action looks like this: ', oldData.actions[i]);
-        }
-        else if (typeof updatedAction.scenarioID === 'undefined') {
-          console.log('the updated provided no ref to a new scenario, so stopping here')
-        }
-        else {
-          console.log('seems like a new scenario was created with id: ', updatedAction.scenarioID);
-          const newScenarioID = updatedAction.scenarioID
-          const clientSideAction = oldData.actions[i];
-          clientSideAction.scenarioID = newScenarioID;
 
-          if (currentlyWritingScenarioOn.scenarioId === newScenarioID && currentlyWritingScenarioOn.actionId === i) {
-            document.dispatchEvent(currentlyWritingScenarioOn.interruptionEvent);
-          }
+        const newScenario = await getScenario(newScenarioID);
+        newScenario.id = newScenarioID;
+        scenarios.push(newScenario);
+        Monitor(updatedAction.scenarioID, newScenario);
 
-          const newScenario = await getScenario(newScenarioID);
-          newScenario.id = newScenarioID;
-          scenarios.push(newScenario);
-          monitorScenario(updatedAction.scenarioID, newData => { ScenarioUpdated(newData, newScenario); });
-
-        }
       }
     }
   }
 }
 
-//TRACKING
 export function SetScenarioBeingWritten(scenarioId, actionId, interruptionEvent) {
   currentlyWritingScenarioOn = {
     scenarioId: scenarioId,
