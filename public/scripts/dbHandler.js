@@ -395,7 +395,7 @@ export async function GetPlayerContributions(playerId) {
         //iterate through each document in the story data
         scenarios.forEach(scenario => {
             //whenever a scenario occurs that has this players name on it - add it to the contributions list
-            if (scenario.player === playerId){
+            if (scenario.player === playerId) {
                 contributions.push({
                     scenarioDocID: scenario.id,
                     story: title,
@@ -407,7 +407,7 @@ export async function GetPlayerContributions(playerId) {
             }
             //do the same with action
             if (scenario.actions) scenario.actions.forEach((action, actionId) => {
-                if (action.player === playerId){
+                if (action.player === playerId) {
                     contributions.push({
                         actionId: actionId,
                         scenarioDocID: scenario.id,
