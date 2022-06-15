@@ -224,31 +224,41 @@ function MonitorAllScenarios() {
     monitorScenario(scenario.id, newData => { ScenarioUpdated(newData); });
     let fired = false;
 
-    if (!scenario.actions) return;
+    if (!scenario.actions || typeof scenario.actions === 'undefined') return;
 
     scenario.actions.forEach(action => {
       if (action.scenarioID) Monitor(GetScenario(action.scenarioID));
     })
 
     async function ScenarioUpdated(newData) {
+
       if (!fired) {
         fired = true;
         return;
       }
-      scenario.text = newData.text;
-      if (!newData.actions) return;
+
+      if (typeof newData.actions === 'undefined') {
+        return;
+      }
+
+      if (typeof scenario.actions === 'undefined') {
+        scenario.actions = newData.actions;
+        return;
+      }
+
       for (let i = 0; i < newData.actions.length; i++) {
 
         const updatedAction = newData.actions[i];
-        let clientSideAction = scenario.actions[i];
 
-        if (!scenario.actions) scenario.actions = [updatedAction];
-        else if (typeof clientSideAction === 'undefined') {
+        if (scenario.actions.length < i + 1) {
           scenario.actions.push(updatedAction);
           return;
         }
-        else if (!clientSideAction.scenarioID && updatedAction.scenarioID) {
-          if(currentlyWritingScenarioOn.scenarioId === newData.id && currentlyWritingScenarioOn.actionId === i){
+        
+        const clientSideAction = scenario.actions[i];
+
+        if (!clientSideAction.scenarioID && updatedAction.scenarioID) {
+          if (currentlyWritingScenarioOn.scenarioId === newData.id && currentlyWritingScenarioOn.actionId === i) {
             document.dispatchEvent(currentlyWritingScenarioOn.interruptionEvent);
           }
           const newScenarioID = updatedAction.scenarioID
@@ -263,7 +273,7 @@ function MonitorAllScenarios() {
 }
 
 //TRACKING
-export function SetScenarioBeingWritten(scenarioId, actionId, interruptionEvent){
+export function SetScenarioBeingWritten(scenarioId, actionId, interruptionEvent) {
   currentlyWritingScenarioOn = {
     scenarioId: scenarioId,
     actionId: actionId,
