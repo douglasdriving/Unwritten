@@ -129,21 +129,33 @@ function PlayScenario(scenario, instant) {
     DisplayAddContentBlock(false);
     let printTerminated = StartScenarioPrint();
     CreateActionButtons();
-    const actionBlock = currentActionBlock;
-    AddPrintedScenario(scenario.id, (newAction, newActionId) => {
-        console.log('firing the function for adding a new action to the DOM');
-        let buttonExist = false;
-        scenario.actions.forEach(a => {
-            console.log('checking ', a.action, ' against ', newAction.action);
-            if (a.action === newAction.action) buttonExist = true;
-        })
-        if (!buttonExist) {
-            CreateActionButton(newAction, newActionId, actionBlock, scenario.id);
-            console.log('added an action to the dom from monitoring.');
-        }
-    })
+    MonitorActionAdditions();
     ScrollDown();
 
+    function MonitorActionAdditions() {
+        const addedActions = [];
+        const actionBlock = currentActionBlock;
+        if (typeof scenario.actions !== 'undefined') {
+            scenario.actions.forEach(a => {
+                addedActions.push(a.action);
+            });
+        }
+        AddPrintedScenario(scenario.id, (newAction, newActionId) => {
+            let buttonExist = false;
+            addedActions.forEach(a => {
+                if (a === newAction.action)
+                    buttonExist = true;
+            });
+            if (!buttonExist) {
+                CreateActionButton(newAction, newActionId, actionBlock, scenario.id);
+                actionBlock.childNodes.forEach(b => {
+                    if (b.textContent === '+') {
+                        actionBlock.append(b)
+                    }
+                })
+            }
+        });
+    }
     function CreateActionButtons() {
         if (instant) {
             LoadActionButtons(scenario.actions);
@@ -360,7 +372,6 @@ function TryBacktrack(scenarioID, actionBlock) {
 
     const scenarioContainer = actionBlock.parentNode;
     if (!scenarioContainer || !scenarioContainer.parentNode || !scenarioContainer.parentNode.childNodes) {
-        console.log('no child nodes for the parent of the scenario container');
         return false;
     }
     const allScenarioContainers = Array.from(scenarioContainer.parentNode.childNodes);
@@ -390,7 +401,6 @@ function ActivateAddContentBlock(instructionText, buttonText, actionIndex) {
         const interruptionEvent = new Event('interruptWriting');
         document.addEventListener('interruptWriting', function (e) {
             //what happens on update?
-            console.log('interrupting the scenario writing!');
             writingInterruptionBlock.style.display = 'block';
             addContentBlock.style.display = 'none';
             onEnterPress = null;
@@ -487,9 +497,6 @@ async function TryAddNewContent(type, actionIndex) {
                     if (response.status === -1) {
                         addingContentStatusText.textContent = 'Failed to add the scenario to Unwritten. Please try again.';
                         addingContentStatusText.style.color = 'red';
-
-                        console.log('upload failed');
-
                         const tryAgainButton = document.createElement('button');
                         document.getElementById('addingContent').append(tryAgainButton);
                         tryAgainButton.textContent = 'Try upload again';
@@ -504,9 +511,6 @@ async function TryAddNewContent(type, actionIndex) {
                     else if (response.status === -2) {
                         addingContentStatusText.textContent = 'Another player just added a scenario to this action. Keep playing to see what it was';
                         addingContentStatusText.style.color = 'red';
-
-                        console.log('Upload failed. Someone else already added a scenario');
-
                         const viewScenarioButton = document.createElement('button');
                         document.getElementById('addingContent').append(viewScenarioButton);
                         viewScenarioButton.textContent = 'View newly added scenario';
