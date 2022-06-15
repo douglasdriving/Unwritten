@@ -213,7 +213,7 @@ function CheckForURLParam(param) {
   }
 
 }
-export function AddPrintedScenario(id, UpdatePrintedActions){
+export function AddPrintedScenario(id, UpdatePrintedActions) {
   printedScenarios.push({
     id: id,
     UpdatePrintedActions: UpdatePrintedActions
@@ -243,14 +243,7 @@ function Monitor(scenarioId, scenarioData) {
 
     if (typeof newData.actions === 'undefined') return;
     if (typeof oldData.actions === 'undefined') {
-      oldData.actions = newData.actions;
-      printedScenarios.forEach(printedScenario => {
-        if (printedScenario.id === scenarioId){
-          printedScenario.UpdatePrintedActions(newData.actions);
-        }
-      })
-      //add each printed scenario to the array
-      //create a function for updating printed actions
+      AddNewAction(newData.actions[0], 0);
       return;
     }
 
@@ -258,7 +251,7 @@ function Monitor(scenarioId, scenarioData) {
       const updatedAction = newData.actions[i];
 
       if (oldData.actions.length < i + 1) {
-        oldData.actions.push(updatedAction);
+        AddNewAction(updatedAction, i);
       }
       else if (typeof oldData.actions[i].scenarioID === 'undefined' && typeof updatedAction.scenarioID !== 'undefined') {
         const newScenarioID = updatedAction.scenarioID
@@ -274,6 +267,16 @@ function Monitor(scenarioId, scenarioData) {
         scenarios.push(newScenario);
         Monitor(updatedAction.scenarioID, newScenario);
       }
+    }
+
+    function AddNewAction(newAction, newActionId) {
+      if (typeof oldData.actions === 'undefined') oldData.actions = [newAction];
+      else oldData.actions.push(newAction);
+      printedScenarios.forEach(printedScenario => {
+        if (printedScenario.id === scenarioId) {
+          printedScenario.UpdatePrintedActions(newAction, newActionId);
+        }
+      });
     }
   }
 }

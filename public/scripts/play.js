@@ -125,22 +125,22 @@ function UpdateTextSpeed() {
 function PlayScenario(scenario, instant) {
 
     const scenarioText = scenario.text;
-    const actions = scenario.actions;
     currentScenarioId = scenario.id;
     DisplayAddContentBlock(false);
     let printTerminated = StartScenarioPrint();
     CreateActionButtons();
-    AddPrintedScenario(scenario.id, (updatedActions) => { //this would be much easier if the function just got the new action, and no the whole list....
-        if (actions.length === updatedActions.length) return;
-        updatedActions.forEach(updatedAction => {
-            let buttonExists = false;
-            actions.forEach(action => {
-                if (action.action === updatedAction.action) buttonExists = true;
-            })
-            if (!buttonExists){
-                //create a new button for this updated action!!!
-            }
+    const actionBlock = currentActionBlock;
+    AddPrintedScenario(scenario.id, (newAction, newActionId) => {
+        console.log('firing the function for adding a new action to the DOM');
+        let buttonExist = false;
+        scenario.actions.forEach(a => {
+            console.log('checking ', a.action, ' against ', newAction.action);
+            if (a.action === newAction.action) buttonExist = true;
         })
+        if (!buttonExist) {
+            CreateActionButton(newAction, newActionId, actionBlock, scenario.id);
+            console.log('added an action to the dom from monitoring.');
+        }
     })
     ScrollDown();
 
@@ -257,35 +257,7 @@ function LoadActionButtons(actions) {
     function CreateActionButtons() {
         if (!actions) return;
         actions.forEach((actionElement, actionID) => {
-            //CREATE THE BUTTON ELEMENT
-            const actionButton = document.createElement('button');
-            currentActionBlock.appendChild(actionButton);
-            actionButton.className = 'actionButton';
-            actionButton.textContent = actionElement.action;
-
-            //ASSIGN THE ONCLICK FUNCTION
-            const scenarioIdForThisAction = currentScenarioId;
-            actionButton.onclick = (async () => {
-                PressActionButton(actionID, actionButton, false, scenarioIdForThisAction, PlayerWrote(actionElement.player));
-            });
-
-            //IS THIS MY ACTION?
-            if (PlayerWrote(actionElement.player)) actionButton.className += ' blueButton';
-
-            //ADD SIGNATURE
-            if (actionElement.playerDisplayName) {
-                const signatureToolTip = document.createElement('div');
-                signatureToolTip.className = 'tooltip';
-                actionButton.append(signatureToolTip);
-                signatureToolTip.textContent = 'Added by ' + actionElement.playerDisplayName;
-
-                actionButton.style.position = 'relative';
-                actionButton.onmouseenter = () => { signatureToolTip.style.visibility = 'visible' }
-                actionButton.onmouseleave = () => { signatureToolTip.style.visibility = 'hidden' }
-            }
-
-            //RETURN
-            return actionButton;
+            CreateActionButton(actionElement, actionID, currentActionBlock, currentScenarioId);
         });
     }
     function ClearButtonBlock() {
@@ -323,6 +295,37 @@ function LoadActionButtons(actions) {
         });
     }
 }
+function CreateActionButton(actionElement, actionID, actionBlock, scenarioId) {
+    const actionButton = document.createElement('button');
+    actionBlock.appendChild(actionButton);
+    actionButton.className = 'actionButton';
+    actionButton.textContent = actionElement.action;
+
+    //ASSIGN THE ONCLICK FUNCTION
+    actionButton.onclick = (async () => {
+        PressActionButton(actionID, actionButton, false, scenarioId, PlayerWrote(actionElement.player));
+    });
+
+    //IS THIS MY ACTION?
+    if (PlayerWrote(actionElement.player))
+        actionButton.className += ' blueButton';
+
+    //ADD SIGNATURE
+    if (actionElement.playerDisplayName) {
+        const signatureToolTip = document.createElement('div');
+        signatureToolTip.className = 'tooltip';
+        actionButton.append(signatureToolTip);
+        signatureToolTip.textContent = 'Added by ' + actionElement.playerDisplayName;
+
+        actionButton.style.position = 'relative';
+        actionButton.onmouseenter = () => { signatureToolTip.style.visibility = 'visible'; };
+        actionButton.onmouseleave = () => { signatureToolTip.style.visibility = 'hidden'; };
+    }
+
+    //RETURN
+    return actionButton;
+}
+
 function PressActionButton(actionId, buttonPressed, instant, scenarioId, playerWrote) {
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
