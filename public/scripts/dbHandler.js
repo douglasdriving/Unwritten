@@ -273,6 +273,7 @@ async function AddStoryToPlayersList() {
 //MONITOR
 export async function monitorScenario(scenarioId, updateFunction) {
 
+    console.log('started monitoring scenario with id ', scenarioId);
     const docRef = await doc(db, `${currentScenarioCollPath}/${scenarioId}`);
     await onSnapshot(docRef, doc => {
         const updatedScenario = doc.data();
