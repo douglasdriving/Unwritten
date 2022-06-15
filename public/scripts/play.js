@@ -10,7 +10,8 @@ import {
     GetCurrentScenario,
     GetCurrentStoryTitle,
     SetScenarioBeingWritten,
-    GetScenario
+    GetScenario,
+    AddPrintedScenario
 } from "/scripts/storyData.js?v=0.11";
 import { GetExample } from "/scripts/examples.js?v=0.11";
 import { GetCurrentPlayerId } from "/scripts/authHandler.js?v=0.11";
@@ -124,10 +125,23 @@ function UpdateTextSpeed() {
 function PlayScenario(scenario, instant) {
 
     const scenarioText = scenario.text;
+    const actions = scenario.actions;
     currentScenarioId = scenario.id;
     DisplayAddContentBlock(false);
     let printTerminated = StartScenarioPrint();
     CreateActionButtons();
+    AddPrintedScenario(scenario.id, (updatedActions) => { //this would be much easier if the function just got the new action, and no the whole list....
+        if (actions.length === updatedActions.length) return;
+        updatedActions.forEach(updatedAction => {
+            let buttonExists = false;
+            actions.forEach(action => {
+                if (action.action === updatedAction.action) buttonExists = true;
+            })
+            if (!buttonExists){
+                //create a new button for this updated action!!!
+            }
+        })
+    })
     ScrollDown();
 
     function CreateActionButtons() {

@@ -7,6 +7,7 @@ let lastScenarioAdded;
 let currentStoryId;
 let introText
 let currentlyWritingScenarioOn;
+const printedScenarios = [];
 
 //SET DATA
 export async function SetupData() {
@@ -212,6 +213,12 @@ function CheckForURLParam(param) {
   }
 
 }
+export function AddPrintedScenario(id, UpdatePrintedActions){
+  printedScenarios.push({
+    id: id,
+    UpdatePrintedActions: UpdatePrintedActions
+  })
+}
 
 //MONITORING
 function MonitorAllScenarios() {
@@ -229,34 +236,31 @@ function MonitorAllScenarios() {
   }
 }
 function Monitor(scenarioId, scenarioData) {
+
   monitorScenario(scenarioId, newData => { ScenarioUpdated(newData, scenarioData); });
+
   async function ScenarioUpdated(newData, oldData) {
 
-    if (typeof newData.actions === 'undefined') {
-      return;
-    }
-
+    if (typeof newData.actions === 'undefined') return;
     if (typeof oldData.actions === 'undefined') {
       oldData.actions = newData.actions;
+      printedScenarios.forEach(printedScenario => {
+        if (printedScenario.id === scenarioId){
+          printedScenario.UpdatePrintedActions(newData.actions);
+        }
+      })
+      //add each printed scenario to the array
+      //create a function for updating printed actions
       return;
     }
 
     for (let i = 0; i < newData.actions.length; i++) {
-
       const updatedAction = newData.actions[i];
 
       if (oldData.actions.length < i + 1) {
         oldData.actions.push(updatedAction);
       }
-      else if (typeof oldData.actions[i].scenarioID !== 'undefined') {
-        // console.log('the action already has a scenario attached to it, so there isnt a new one');
-        // console.log('the action looks like this: ', oldData.actions[i]);
-      }
-      else if (typeof updatedAction.scenarioID === 'undefined') {
-        // console.log('the updated provided no ref to a new scenario, so stopping here')
-      }
-      else {
-        // console.log('seems like a new scenario was created with id: ', updatedAction.scenarioID);
+      else if (typeof oldData.actions[i].scenarioID === 'undefined' && typeof updatedAction.scenarioID !== 'undefined') {
         const newScenarioID = updatedAction.scenarioID
         const clientSideAction = oldData.actions[i];
         clientSideAction.scenarioID = newScenarioID;
@@ -269,7 +273,6 @@ function Monitor(scenarioId, scenarioData) {
         newScenario.id = newScenarioID;
         scenarios.push(newScenario);
         Monitor(updatedAction.scenarioID, newScenario);
-
       }
     }
   }
