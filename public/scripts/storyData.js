@@ -237,10 +237,17 @@ function MonitorAllScenarios() {
 }
 function Monitor(scenarioId, scenarioData) {
 
-  monitorScenario(scenarioId, newData => { ScenarioUpdated(newData, scenarioData); });
+  let initialFire = true;
+  monitorScenario(scenarioId, newData => { ScenarioUpdated(newData, scenarioData); }); //fires directly on assign, which is a problem
 
   async function ScenarioUpdated(newData, oldData) {
 
+    if (initialFire){
+      initialFire = false;
+      console.log('initial fire called');
+      return;
+    }
+    
     if (typeof newData.actions === 'undefined') return;
     if (typeof oldData.actions === 'undefined') {
       AddNewAction(newData.actions[0], 0);

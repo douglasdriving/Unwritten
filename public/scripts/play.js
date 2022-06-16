@@ -140,7 +140,14 @@ function PlayScenario(scenario, instant) {
                 addedActions.push(a.action);
             });
         }
+        let initialFire = true;
         AddPrintedScenario(scenario.id, (newAction, newActionId) => {
+            if (initialFire){
+                initialFire = false;
+                console.log('initial fired action add');
+                return;
+            }
+            console.log('actions added event was fired');
             let buttonExist = false;
             addedActions.forEach(a => {
                 if (a === newAction.action)
