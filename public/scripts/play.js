@@ -46,6 +46,7 @@ let contentIsBeingAdded = false;
 let currentActionBlock;
 let maxNumOfChars = maxChars.action;
 let terminatePrint;
+const printedScenarios = [];
 
 //RUN AT START
 SetupStory();
@@ -106,6 +107,33 @@ function SetupStory() {
         }
     }
 }
+const newActionEvent = new Event('actionAdded');
+document.addEventListener('actionAdded', function (scenarioId, newAction) {
+    
+    printedScenarios.forEach(printedScenario => {
+        if (printedScenario.id === scenarioId){
+            
+            let buttonExist = false;
+            printedScenario.addedActions.forEach(a => {
+                if (a === newAction.action) buttonExist = true;
+            })
+
+            if (!buttonExist){
+
+                console.log('adding an action from a monitoring!');
+                CreateActionButton(newAction, addedActions.length, printedScenario.actionBlock, scenarioId);
+                printedScenario.actionBlock.childNodes.forEach(b => {
+
+                    if (b.textContent === '+') actionBlock.append(b);
+
+                })
+
+            }
+
+        }
+    })
+
+}, false);
 
 //TEXT SLIDER
 var slider = document.getElementById("textSpeedSlider");
@@ -120,6 +148,7 @@ function UpdateTextSpeed() {
         timeBetweenLetters = 0;
     }
 }
+
 
 //LOADING A SCENARIO
 function PlayScenario(scenario, instant) {
@@ -140,13 +169,20 @@ function PlayScenario(scenario, instant) {
                 addedActions.push(a.action);
             });
         }
-        AddPrintedScenario(scenario.id, (newAction, newActionId) => {
+        printedScenarios.push({
+            id: scenario.id,
+            addedActions: addedActions,
+            actionBlock: actionBlock
+        })
+        // AddPrintedScenario(scenario.id, AddExtraActionButton);
+        function AddExtraActionButton(newAction, newActionId){
             let buttonExist = false;
             addedActions.forEach(a => {
                 if (a === newAction.action)
                     buttonExist = true;
             });
             if (!buttonExist) {
+                console.log('calling the monitoring funcion');
                 CreateActionButton(newAction, newActionId, actionBlock, scenario.id);
                 actionBlock.childNodes.forEach(b => {
                     if (b.textContent === '+') {
@@ -154,7 +190,7 @@ function PlayScenario(scenario, instant) {
                     }
                 })
             }
-        });
+        }
     }
     function CreateActionButtons() {
         if (instant) {
@@ -337,7 +373,6 @@ function CreateActionButton(actionElement, actionID, actionBlock, scenarioId) {
     //RETURN
     return actionButton;
 }
-
 function PressActionButton(actionId, buttonPressed, instant, scenarioId, playerWrote) {
     dispatchEvent(terminatePrint);
     if (contentIsBeingAdded) return;
@@ -478,13 +513,13 @@ async function TryAddNewContent(type, actionIndex) {
         async function AddAction() {
             CreateAction(contentText)
                 .then(newAction => {
-                    const actionId = newAction.id; //huh?
+                    const actionId = newAction.id;
                     if (actionId === -1) {
                         addingContentStatusText.textContent = 'ERROR - your action could not be added.';
                         return;
                     }
                     contentIsBeingAdded = false;
-                    //might be that action is added to db 2 times, since its also comes in through monitoring???
+                    console.log('action added! Creating the button');
                     LoadActionButtons(GetCurrentScenario().actions);
                     PressActionButton(actionId, currentActionBlock.childNodes[actionId], false, GetCurrentScenarioID());
                     ShowContentAddLoadText(false);
