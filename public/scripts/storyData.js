@@ -7,6 +7,7 @@ let lastScenarioAdded;
 let currentStoryId;
 let introText
 let currentlyWritingScenarioOn;
+const printedScenarios = [];
 
 //SET DATA
 export async function SetupData() {
@@ -212,11 +213,10 @@ function CheckForURLParam(param) {
   }
 
 }
-export function AddPrintedScenario(id, actionButtonBloc, addedActions) { //or just store all of this in the play script? Since that is where we control the UI
+export function AddPrintedScenario(id, UpdatePrintedActions) {
   printedScenarios.push({
     id: id,
-    actionButtonBloc: actionButtonBloc,
-    addedActions: addedActions
+    UpdatePrintedActions: UpdatePrintedActions
   })
 }
 
@@ -236,35 +236,47 @@ function MonitorAllScenarios() {
   }
 }
 function Monitor(scenarioId, scenarioData) {
+
   monitorScenario(scenarioId, newData => { ScenarioUpdated(newData, scenarioData); });
-}
-async function ScenarioUpdated(newData, oldData) {
 
-  if (typeof newData.actions === 'undefined') return;
-  if (typeof oldData.actions === 'undefined') {
-    AddNewAction(newData.actions[0], 0);
-    return;
-  }
+  async function ScenarioUpdated(newData, oldData) {
 
-  for (let i = 0; i < newData.actions.length; i++) {
-    const updatedAction = newData.actions[i];
-
-    if (oldData.actions.length < i + 1) {
-      AddNewAction(updatedAction, i);
+    if (typeof newData.actions === 'undefined') return;
+    if (typeof oldData.actions === 'undefined') {
+      AddNewAction(newData.actions[0], 0);
+      return;
     }
-    else if (typeof oldData.actions[i].scenarioID === 'undefined' && typeof updatedAction.scenarioID !== 'undefined') {
-      const newScenarioID = updatedAction.scenarioID
-      const clientSideAction = oldData.actions[i];
-      clientSideAction.scenarioID = newScenarioID;
 
-      if (currentlyWritingScenarioOn.scenarioId === oldData.id && currentlyWritingScenarioOn.actionId === i) {
-        document.dispatchEvent(currentlyWritingScenarioOn.interruptionEvent); //could have a similar event here for added actions.
+    for (let i = 0; i < newData.actions.length; i++) {
+      const updatedAction = newData.actions[i];
+
+      if (oldData.actions.length < i + 1) {
+        AddNewAction(updatedAction, i);
       }
+      else if (typeof oldData.actions[i].scenarioID === 'undefined' && typeof updatedAction.scenarioID !== 'undefined') {
+        const newScenarioID = updatedAction.scenarioID
+        const clientSideAction = oldData.actions[i];
+        clientSideAction.scenarioID = newScenarioID;
 
-      const newScenario = await getScenario(newScenarioID);
-      newScenario.id = newScenarioID;
-      scenarios.push(newScenario);
-      Monitor(updatedAction.scenarioID, newScenario);
+        if (currentlyWritingScenarioOn.scenarioId === oldData.id && currentlyWritingScenarioOn.actionId === i) {
+          document.dispatchEvent(currentlyWritingScenarioOn.interruptionEvent);
+        }
+
+        const newScenario = await getScenario(newScenarioID);
+        newScenario.id = newScenarioID;
+        scenarios.push(newScenario);
+        Monitor(updatedAction.scenarioID, newScenario);
+      }
+    }
+
+    function AddNewAction(newAction, newActionId) {
+      if (typeof oldData.actions === 'undefined') oldData.actions = [newAction];
+      else oldData.actions.push(newAction);
+      printedScenarios.forEach(printedScenario => {
+        if (printedScenario.id === scenarioId) {
+          printedScenario.UpdatePrintedActions(newAction, newActionId);
+        }
+      });
     }
   }
 }
