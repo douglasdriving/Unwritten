@@ -1,15 +1,4 @@
-#writingInterruption {
-    border-style: none;
-    padding: 0;
-    margin-top: 0;
-}
-
-#showNewScenario {
-    background-color: #953d3d;
-    margin-top: 10px;
-}
-
-#ingress {
+#ingress{
     font-weight: bold;
 }
 
@@ -22,7 +11,7 @@
     display: none;
 }
 
-.signature {
+.signature{
     font-style: italic;
     font-size: 13px;
     margin-top: 0px;
@@ -61,7 +50,6 @@
     border-style: solid;
     padding: 10px;
 }
-
 #addContentStatus {
     margin: 0;
 }
