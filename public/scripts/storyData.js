@@ -244,7 +244,6 @@ function Monitor(scenarioId, scenarioData) {
 
     if (initialFire){
       initialFire = false;
-      console.log('initial fire called');
       return;
     }
     

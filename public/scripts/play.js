@@ -127,8 +127,7 @@ function PlayScenario(scenario, instant) {
     const scenarioText = scenario.text;
     currentScenarioId = scenario.id;
     DisplayAddContentBlock(false);
-    let printTerminated = StartScenarioPrint();
-    CreateActionButtons();
+    StartScenarioPrint();
     MonitorActionAdditions();
     ScrollDown();
 
@@ -142,12 +141,10 @@ function PlayScenario(scenario, instant) {
         }
         let initialFire = true;
         AddPrintedScenario(scenario.id, (newAction, newActionId) => {
-            if (initialFire){
+            if (initialFire) {
                 initialFire = false;
-                console.log('initial fired action add');
                 return;
             }
-            console.log('actions added event was fired');
             let buttonExist = false;
             addedActions.forEach(a => {
                 if (a === newAction.action)
@@ -163,31 +160,15 @@ function PlayScenario(scenario, instant) {
             }
         });
     }
-    function CreateActionButtons() {
-        if (instant) {
-            LoadActionButtons(scenario.actions);
-        }
-        else {
-            const timeBeforePrintDone = Array.from(scenarioText).length * timeBetweenLetters;
-            setTimeout(() => {
-                if (printTerminated)
-                    return;
-                LoadActionButtons(scenario.actions);
-            }, timeBeforePrintDone + delayAfterPrintFinished);
-        }
-    }
+
     function StartScenarioPrint() {
 
-        let printTerminated = CreatePrintTerminationEvent();
+        let printTerminated = false;
+        addEventListener('terminatePrint', () => { printTerminated = true; });
         const scenarioTextBlock = Print();
         CreateScenarioContainer();
-        return printTerminated;
+        CreateActionButtons();
 
-        function CreatePrintTerminationEvent() {
-            let printTerminated = false;
-            addEventListener('terminatePrint', () => { printTerminated = true; });
-            return printTerminated;
-        }
         function CreateScenarioContainer() {
 
             const scenarioBlock = document.createElement('div');
@@ -262,6 +243,18 @@ function PlayScenario(scenario, instant) {
 
                     }
                 }
+            }
+        }
+        function CreateActionButtons() {
+            if (instant) {
+                LoadActionButtons(scenario.actions);
+            }
+            else {
+                const timeBeforePrintDone = Array.from(scenarioText).length * timeBetweenLetters;
+                setTimeout(() => {
+                    if (printTerminated) return;
+                    LoadActionButtons(scenario.actions);
+                }, timeBeforePrintDone + delayAfterPrintFinished);
             }
         }
     }

@@ -15,7 +15,6 @@
   background-color: #fcf8e7;
   color: #766a68;
   border-color: #766a68;
-  border-width: 2px;
   font-weight: normal;
   margin: 3px;
 }
@@ -143,9 +142,14 @@ p {
   margin-bottom: 5px;
 }
 
+a{
+  text-decoration: underline;
+}
+
 a:hover {
   color: blue;
   cursor: pointer;
+  text-decoration: none;
 }
 
 button:hover {

@@ -135,10 +135,10 @@
 }
 
 @media screen and (max-device-width: 480px) {
-    button {
+    /* button {
         min-height: 60px;
         min-width: 60px;
-    }
+    } */
 
     .scenarioContainer {
         min-height: 60px;
@@ -146,5 +146,9 @@
 
     #addContentBlock {
         min-height: 70px;
+    }
+
+    #addContentTextField{
+        min-height: 200px;
     }
 }
